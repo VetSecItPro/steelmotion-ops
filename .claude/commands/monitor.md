@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .monitor-history.json, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 description: "/monitor -- Post-Deploy Health Check: verify deployment health, check routes, functions, infrastructure, and error rates"
 allowed-tools: Bash(cat:*), Bash(ls:*), Bash(find:*), Bash(wc:*), Bash(curl:*), Bash(dig:*), Bash(openssl:*), Bash(node:*), Bash(npx:*), Bash(npm:*), Bash(bun:*), Bash(pnpm:*), Bash(yarn:*), Bash(git:*), Bash(jq:*), Bash(date:*), Bash(mkdir:*), Bash(touch:*), Bash(head:*), Bash(tail:*), Bash(grep:*), Bash(sort:*), Bash(uniq:*), Read, Write, Edit, Glob, Grep, Task, WebFetch, WebSearch, mcp__vercel__list_deployments, mcp__vercel__get_deployment, mcp__vercel__get_deployment_build_logs, mcp__vercel__get_runtime_logs, mcp__vercel__list_projects, mcp__vercel__get_project, mcp__vercel__web_fetch_vercel_url
@@ -956,3 +957,18 @@ Cleanup actions:
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| All healthy (95-100) | none — continue work | post-deploy verified |
+| Degraded (60-89) | /investigate | find what's slow or breaking |
+| Critical (<60) | /incident | possible production incident |
+| SSL expiring soon | /sec-ship --infra | infrastructure work needed |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

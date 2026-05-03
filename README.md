@@ -9,7 +9,7 @@ Built and maintained by [Steel Motion LLC](https://steelmotionllc.com), a milita
 
 > **Repository renamed 2026-05-03:** `claw-ops` → `steelmotion-ops`. GitHub auto-redirects from the old name; no action needed for existing clones.
 
-> **2026-05-03 architecture upgrade:** /gh-ship rewrote to AI-judgment paradigm (read + reason vs grep error tables) with multi-repo awareness, self-healing, and self-improvement via `.gh-ship-history.json`. 13 other repo-operating skills inherit 4 new shared standards: [AI-Judgment Paradigm](.claude/standards/AI_JUDGMENT_PARADIGM.md), [Self-Improvement Protocol](.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md), [Multi-Repo Awareness](.claude/standards/MULTI_REPO_AWARENESS.md), [Verify Before Destroy](.claude/standards/VERIFY_BEFORE_DESTROY.md). See [PR #10](../../pull/10) and [PR #11](../../pull/11) for details, and [the rewrite plan](.claude/commands/_plans/skills-collection-rewrite-plan.md) for what's next.
+> **2026-05-03 architecture upgrade:** /gh-ship rewrote to AI-judgment paradigm (read + reason vs grep error tables) with multi-repo awareness, self-healing, and self-improvement via `.gh-ship-history.json`. 13 other repo-operating skills inherit 5 new shared standards: [AI-Judgment Paradigm](.claude/standards/AI_JUDGMENT_PARADIGM.md), [Self-Improvement Protocol](.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md), [Multi-Repo Awareness](.claude/standards/MULTI_REPO_AWARENESS.md), [Verify Before Destroy](.claude/standards/VERIFY_BEFORE_DESTROY.md), [Skill Auto-Suggest Protocol](.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md). Every SITREP now ends with a "Suggested next" decision matrix so the skill chain is self-routing. See [PR #10](../../pull/10) and [PR #11](../../pull/11) for the initial rollout.
 
 ---
 

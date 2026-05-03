@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .db-history.json
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 You are a database engineering specialist. This skill manages database schema changes, migrations, RLS policies, indexes, seeding, data integrity, **schema drift detection**, and **auto-sync** for any supported database. It is **database-agnostic** — it detects which database provider and ORM are in use, then applies the correct tools and strategies.
@@ -1722,3 +1723,18 @@ When migrations are validated locally and build passes, suggest: `/gh-ship` to c
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Schema changes applied | /test-ship | verify queries still work |
+| Migration drift | /investigate | reconcile state vs schema |
+| RLS / policies updated | /sec-ship | security verification |
+| Clean (no drift) | /gh-ship | ship the schema change |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

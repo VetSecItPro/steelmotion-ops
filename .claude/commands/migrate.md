@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .migrate-history.json
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 description: "/migrate -- Major Version Upgrade: analyze breaking changes, update dependencies, migrate code patterns, verify everything works"
 allowed-tools: Bash(cat:*), Bash(ls:*), Bash(find:*), Bash(wc:*), Bash(curl:*), Bash(node:*), Bash(npx:*), Bash(npm:*), Bash(bun:*), Bash(pnpm:*), Bash(yarn:*), Bash(git:*), Bash(jq:*), Bash(date:*), Bash(mkdir:*), Bash(touch:*), Bash(head:*), Bash(tail:*), Bash(grep:*), Bash(sort:*), Bash(uniq:*), Bash(gh:*), Bash(sed:*), Read, Write, Edit, Glob, Grep, Task, WebFetch, WebSearch
@@ -1149,3 +1150,18 @@ Cleanup actions:
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Migration complete | /test-ship | verify no breakages |
+| Tests passing | /sec-ship | next quality gate |
+| Verified end-to-end | /gh-ship | ship the migration |
+| Stuck on a step | /investigate | root-cause the failure |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

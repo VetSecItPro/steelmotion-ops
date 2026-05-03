@@ -1,5 +1,12 @@
 # /gh-ship — AI-Judgment Git Pipeline
 
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) — read + reason, don't pattern-match
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .gh-ship-history.json, learn across runs
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
+
 **Commit → Push → PR → CI → Fix → Merge → Deploy → Verify → Cleanup → Audit → Improve.**
 
 Comprehensive shipping pipeline for ANY repo type. Adapts to the language/tools/CI/deploy mechanism it finds. Self-healing on partial failures. Self-improving via per-repo history. Multi-repo aware. Treats unknown situations as reasoning problems, not pattern-match misses.
@@ -971,3 +978,20 @@ A workspace with 3 sibling repos shouldn't make /gh-ship 3x as complex. One repo
 <!-- Part of steelmotion-ops (renamed from claw-ops 2026-05-03) -->
 <!-- Lessons learned from 2026-05-03 incident: ~/.claude/commands/_plans/skills-collection-rewrite-plan.md -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Success + deploy verified | /monitor | confirm prod health |
+| Success, no deploy yet | /monitor (manual URL) | verify the staging/preview |
+| Partial (deploy unverified) | /monitor | investigate why deploy didn't verify |
+| CI fix loop failed (3-strike) | /investigate | root-cause the unfixable failure |
+| Merged, branch cleanup blocked | /investigate | content-equivalence check failed unexpectedly |
+| Docs-only / chore commit | none — done | no need to monitor a doc change |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

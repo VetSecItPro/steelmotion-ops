@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .qatest-history.json, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 description: "/qatest — Autonomous QA/UAT: crawl all pages, test all interactions, validate all APIs, autofix issues, ship with confidence"
 allowed-tools: Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(bun *), Bash(curl *), Bash(mkdir *), Bash(date *), Bash(ls *), Bash(cat *), Bash(lsof *), Bash(kill *), Bash(git *), Bash(find *), Bash(grep *), Bash(node *), Read, Write, Edit, Glob, Grep, Task, WebSearch, WebFetch, mcp__playwright__browser_navigate, mcp__playwright__browser_screenshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_hover, mcp__playwright__browser_select_option, mcp__playwright__browser_evaluate, mcp__playwright__browser_close, mcp__playwright__browser_wait_for, mcp__playwright__browser_go_back, mcp__playwright__browser_go_forward, mcp__playwright__browser_press_key, mcp__playwright__browser_drag, mcp__playwright__browser_resize, mcp__playwright__browser_snapshot, mcp__playwright__browser_tab_list, mcp__playwright__browser_tab_new, mcp__playwright__browser_tab_select, mcp__playwright__browser_tab_close
@@ -1835,3 +1836,18 @@ Cleanup verification:
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Clean sweep | /perf or /a11y | next quality dimension |
+| Bugs found + fixed | /test-ship | add regression tests before re-running |
+| Bugs BLOCKED | /investigate | root-cause needed |
+| Pre-launch full pass | /sec-ship | security gate before ship |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.
