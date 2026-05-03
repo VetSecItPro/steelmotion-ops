@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .quality-history.json
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 **Tests. QA. Smoke. Performance. Accessibility. Everything quality, one command.**
@@ -208,3 +209,18 @@ grep -q ".quality-reports" .gitignore 2>/dev/null || echo ".quality-reports/" >>
 - `/ship` - quality + security + deploy (the full pipeline)
 - `/smoketest` - just the quick sanity check
 - `/launch-ready` - quality + security + compliance (pre-launch)
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| All passing | /sec-ship | security final check |
+| Issues found + fixed | /gh-ship | ship the fixes |
+| Issues BLOCKED | /investigate | root-cause |
+| Pre-launch full pass | /launch | launch readiness |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

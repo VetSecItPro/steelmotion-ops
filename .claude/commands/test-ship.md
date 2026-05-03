@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .test-ship-history.json, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 **One skill. Fully autonomous. Audit → Fix → Verify → Ship.**
@@ -1994,3 +1995,19 @@ Additional cleanup per protocol:
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| All passing, coverage up | /sec-ship | next quality gate |
+| Failures fixed + verified | /sec-ship | confirmed-clean → security check |
+| BLOCKED (3-strike) | /investigate | unfixable failure needs root-cause |
+| Flaky tests quarantined | /investigate the flake | flakiness has a root cause |
+| Coverage gaps deferred | none — operator review | judgment call |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

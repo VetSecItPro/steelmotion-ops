@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .deps-history.json
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 **Comprehensive dependency audit, update, and supply chain security sweep.**
@@ -798,3 +799,18 @@ Cleanup actions:
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Vulnerable patches applied | /sec-ship | confirm fix landed |
+| Major version bumps | /test-ship | regression check |
+| All clean / patched | /gh-ship | ship the dep updates |
+| Breaking changes flagged | /migrate | structured upgrade |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

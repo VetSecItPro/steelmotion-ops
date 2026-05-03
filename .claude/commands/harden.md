@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .harden-history.json
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 **Clean dead code. Update deps. Optimize. Align design. One command.**
@@ -182,3 +183,18 @@ grep -q ".harden-reports" .gitignore 2>/dev/null || echo ".harden-reports/" >> .
 - `/deps` - just dependency updates
 - `/perf` - just performance
 - `/ship` - harden + test + secure + deploy (use when you want to ship after hardening)
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Full sweep clean | /gh-ship | ship the hardening |
+| Issues found in sub-skills | /investigate the worst | root-cause priority items |
+| Comprehensive cleanup done | /quality | full quality follow-up |
+| Pre-launch hardening | /launch | run launch readiness |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

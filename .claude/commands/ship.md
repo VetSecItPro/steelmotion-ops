@@ -5,6 +5,7 @@
 > - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md)
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
 
 
 **Test. Secure. Commit. Deploy. Verify. One command.**
@@ -191,3 +192,18 @@ grep -q ".ship-reports" .gitignore 2>/dev/null || echo ".ship-reports/" >> .giti
 - `/sec-ship` - just security
 - `/monitor` - just health check
 - `/launch-ready` - even more thorough (adds compliance, a11y, perf, QA)
+
+---
+
+## Suggested next
+
+Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md), every SITREP MUST end with a "Suggested next" block. Use this decision matrix to pick:
+
+| Outcome | Recommended | Why |
+|---|---|---|
+| Pipeline succeeded, deployed | /monitor | confirm prod health |
+| Pipeline blocked at security | /sec-ship --comprehensive | resolve before re-running |
+| Pipeline blocked at tests | /investigate | root-cause |
+| Verified live | none — chain ended cleanly | done |
+
+**Skip if:** the operator has already directed the next step, or this run was a no-op.

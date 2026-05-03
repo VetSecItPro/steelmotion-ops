@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Claude Code Skills Installer
-# Usage: bash <(curl -s https://raw.githubusercontent.com/VetSecItPro/claw-ops/main/install.sh)
+# Usage: bash <(curl -s https://raw.githubusercontent.com/VetSecItPro/steelmotion-ops/main/install.sh)
 
-REPO="https://github.com/VetSecItPro/claw-ops.git"
+REPO="https://github.com/VetSecItPro/steelmotion-ops.git"
 TMPDIR=$(mktemp -d)
 COMMANDS_DIR="$HOME/.claude/commands"
 STANDARDS_DIR="$HOME/.claude/standards"
