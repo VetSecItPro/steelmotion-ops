@@ -75,7 +75,23 @@ Security work is judgment-heavy. A scanner finding is data; whether it's real, f
 /sec-ship --supply-chain       # Deps & artifacts only (Agents 1, 17)
 /sec-ship --owasp              # OWASP Top 10 Web + API + LLM (Agents 3, 6, 8)
 /sec-ship --fix SEC-XXX        # Fix one specific finding manually
+/sec-ship --key-rotation       # Walk operator through key rotation for a provider
 ```
+
+### `--key-rotation` mode (added 2026-05-03)
+
+Closes the loop between `/secrets-audit` (which finds OVERDUE rotations) and the operator actually rotating the key. Interactive walkthrough — each destructive step requires explicit confirmation.
+
+Flow:
+1. Run `/secrets-audit --check rotation` first to enumerate OVERDUE keys (or accept a `--provider <name>` arg)
+2. For each provider:
+   - Generate new key via the provider's CLI/dashboard (operator-driven; skill provides exact link/command)
+   - Update every `.env*` file that referenced the old key (after grep-find — never blind-replace)
+   - Restart consuming services and verify traffic flows on the new key
+   - Revoke the old key only after verification
+3. Append rotation event to `~/.openclaw/rotation-log.json` for audit trail (date, provider, old-key-fingerprint, new-key-fingerprint, who-restarted-what)
+
+This mode delegates the discovery half to `/secrets-audit` and adds the action half. It does NOT replace `/secrets-audit` — you can still run that standalone for audit-only work.
 
 ### Confidence gates
 
