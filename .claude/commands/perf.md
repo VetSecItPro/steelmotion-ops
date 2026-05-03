@@ -1,5 +1,12 @@
 # /perf — Performance Audit, Optimization & Continuous Improvement
 
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md)
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .perf-history.json
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+
+
 You are a performance engineering specialist. This skill audits codebases for performance issues, implements optimizations, and maintains performance over time through incremental checks.
 
 <!--

@@ -1,5 +1,12 @@
 # /cleancode — Technical Debt Reduction & Dead Code Elimination
 
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md)
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .cleancode-history.json
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+
+
 **Strategic codebase cleanup: dependency-graph-aware dead code removal, React/Next.js optimization, bundle reduction, pattern enforcement, and cruft elimination.**
 
 **FIRE AND FORGET** — Execute the entire pipeline without waiting for user input. Status updates every 5 minutes. Clean thoroughly but safely.

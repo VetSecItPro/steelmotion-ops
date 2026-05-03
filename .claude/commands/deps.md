@@ -1,5 +1,12 @@
 # /deps — Dependency Health, Updates & Supply Chain Security
 
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md)
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .deps-history.json
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+
+
 **Comprehensive dependency audit, update, and supply chain security sweep.**
 
 **FIRE AND FORGET** — Execute the entire pipeline without waiting for user input. Status updates every 5 minutes. Human intervention only for breaking changes.
