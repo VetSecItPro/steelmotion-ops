@@ -151,7 +151,27 @@ Before creating a new report, check for a recent incomplete one:
 /deps --licenses              # License compliance report only
 /deps --security              # Security vulnerabilities only
 /deps --unused                # Find unused dependencies only
+/deps --reproducibility       # Verify lockfile produces identical builds (added 2026-05-03)
 ```
+
+### `--reproducibility` mode
+
+Detects the "works on my machine, breaks in CI" class of bug at its root: lockfile drift, non-deterministic install ordering, post-install scripts with side effects, and `package.json` ↔ `package-lock.json` mismatch.
+
+What it checks:
+1. **`npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable` exits 0** — fails if lockfile is out of sync with `package.json`
+2. **Run install twice in a clean env, hash compare `node_modules/`** — flags packages that produce different content between identical installs (post-install scripts, native builds, timestamps embedded in artifacts)
+3. **Lockfile-vs-manifest drift** — every dep in `package.json` resolves to a pinned version in the lockfile; no extras, no orphans
+4. **CI deterministic-install check** — does `.github/workflows/*.yml` use `npm ci` (deterministic) vs `npm install` (non-deterministic)? Flag the latter
+5. **Cross-platform reproducibility** — when `arch=arm64` and `arch=x64` lockfiles diverge for the same `package.json`, flag (often the operator's laptop produces a different lockfile than CI's runner)
+
+Audit-only — never modifies the lockfile. Findings:
+- `LOCKFILE-DRIFT` — manifest and lockfile out of sync; rerun installer to regenerate
+- `INSTALL-NONDETERMINISTIC` — repeated installs produce different artifacts
+- `CI-USES-NPM-INSTALL` — CI is set up for non-deterministic install; recommend `npm ci`
+- `CROSS-PLATFORM-DRIFT` — different OS/arch produces different lockfile; investigate which deps differ
+
+Chains: failures from this mode usually indicate a deeper investigation needed via `/investigate`. The fix is rarely "tweak the lockfile" — it's "find the dep with the side effect."
 
 ---
 
