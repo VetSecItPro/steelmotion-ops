@@ -1,4 +1,11 @@
 ---
+
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) — read + reason, don't pattern-match
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .qatest-history.json, learn across runs
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+
 description: "/qatest — Autonomous QA/UAT: crawl all pages, test all interactions, validate all APIs, autofix issues, ship with confidence"
 allowed-tools: Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(bun *), Bash(curl *), Bash(mkdir *), Bash(date *), Bash(ls *), Bash(cat *), Bash(lsof *), Bash(kill *), Bash(git *), Bash(find *), Bash(grep *), Bash(node *), Read, Write, Edit, Glob, Grep, Task, WebSearch, WebFetch, mcp__playwright__browser_navigate, mcp__playwright__browser_screenshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_hover, mcp__playwright__browser_select_option, mcp__playwright__browser_evaluate, mcp__playwright__browser_close, mcp__playwright__browser_wait_for, mcp__playwright__browser_go_back, mcp__playwright__browser_go_forward, mcp__playwright__browser_press_key, mcp__playwright__browser_drag, mcp__playwright__browser_resize, mcp__playwright__browser_snapshot, mcp__playwright__browser_tab_list, mcp__playwright__browser_tab_new, mcp__playwright__browser_tab_select, mcp__playwright__browser_tab_close
 ---

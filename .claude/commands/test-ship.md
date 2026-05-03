@@ -1,5 +1,12 @@
 # /test-ship — Comprehensive Test Audit, Fix & Ship Pipeline
 
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) — read + reason, don't pattern-match
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .test-ship-history.json, learn across runs
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
+
+
 **One skill. Fully autonomous. Audit → Fix → Verify → Ship.**
 
 **FIRE AND FORGET** — Execute the entire pipeline without waiting for user input. Status updates every 5 minutes. Human intervention only for truly dangerous operations.

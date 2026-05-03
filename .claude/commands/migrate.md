@@ -1,4 +1,11 @@
 ---
+
+> **Standards inherited** (apply throughout this skill):
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md)
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to .migrate-history.json
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md)
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md)
+
 description: "/migrate -- Major Version Upgrade: analyze breaking changes, update dependencies, migrate code patterns, verify everything works"
 allowed-tools: Bash(cat:*), Bash(ls:*), Bash(find:*), Bash(wc:*), Bash(curl:*), Bash(node:*), Bash(npx:*), Bash(npm:*), Bash(bun:*), Bash(pnpm:*), Bash(yarn:*), Bash(git:*), Bash(jq:*), Bash(date:*), Bash(mkdir:*), Bash(touch:*), Bash(head:*), Bash(tail:*), Bash(grep:*), Bash(sort:*), Bash(uniq:*), Bash(gh:*), Bash(sed:*), Read, Write, Edit, Glob, Grep, Task, WebFetch, WebSearch
 ---
