@@ -1,376 +1,215 @@
-# /gh-ship — Full Git Pipeline: Commit → Push → PR → CI → Fix → Merge → Deploy → Cleanup
+# /gh-ship — AI-Judgment Git Pipeline
 
-You are a Git automation specialist. Execute the COMPLETE shipping pipeline autonomously from start to finish. **No stale branches, no uncommitted work, no half-finished PRs.** Everything ships professionally or rolls back cleanly.
+**Commit → Push → PR → CI → Fix → Merge → Deploy → Verify → Cleanup → Audit → Improve.**
 
-> **⚡ CONTEXT NOTE:** This skill is ~9K tokens. It runs as a single agent (no sub-agents needed — git operations are lightweight). Safe to invoke mid-conversation. If context pressure is high, the skill's checkpoint is the git state itself — commits, branches, and PRs survive any context reset.
+Comprehensive shipping pipeline for ANY repo type. Adapts to the language/tools/CI/deploy mechanism it finds. Self-healing on partial failures. Self-improving via per-repo history. Multi-repo aware. Treats unknown situations as reasoning problems, not pattern-match misses.
+
+Spec: `~/.claude/commands/_plans/skills-collection-rewrite-plan.md` (Phase 1 acceptance criteria there).
+
+---
+
+## PARADIGM: AI-judgment, not pattern-match
+
+This skill is **a planning document for Claude to execute**, not a bash script Claude runs verbatim. Bash blocks below are illustrative examples. The real decision tree is Claude reading the actual situation each step.
+
+Concretely:
+- "If `eslint` in CI log → run linter" is ANTI-PATTERN. Read the log. Reason about the failure. Pick the fix.
+- "Assume Vercel" is ANTI-PATTERN. Detect deploy mechanism (Vercel/Netlify/Fly/CF/poll-cron/none) from filesystem evidence + repo metadata.
+- "Auto-delete branches that look merged" is ANTI-PATTERN. Verify content equivalence. Verify session-ownership. Then delete.
+
+The skill should also FIND issues we didn't think to specify (proactive audit) and IMPROVE the CI workflow when patterns are suboptimal — not just execute the documented steps.
+
+---
 
 ## DISCIPLINE
 
 > Reference: [Superpowers Discipline Protocol](~/.claude/standards/STEEL_DISCIPLINE.md)
 
-Key enforcements for this skill:
+Steel principles applied to /gh-ship:
 
-- **Steel Principle #1:** "Deployment succeeded" requires curl'ing the endpoint and verifying 200 OK with expected content. Not "Vercel dashboard says success."
-- **Steel Principle #1:** "CI passes" requires reading the actual CI status. Not "it usually passes."
-- **3-strike rule:** CI failures get 3 fix attempts. After 3, escalate - there's likely a deeper issue than the immediate error.
-- **Gate before merge:** Preview deployment must be healthy AND CI must be green before merge attempt. Do not merge to bypass a problem.
+- **#1 (verification before claim):** "deploy succeeded" requires curl on the actual production URL with HTTP 200 + expected content. Not "Vercel dashboard says success." Not "merge command exited 0." Not "CI says green."
+- **#1 (CI passes):** read the actual CI status; don't assume.
+- **#3 (RED-GREEN-REFACTOR):** never skip a failing test to make CI pass. Fix the code or fix the test. Document why if you change the test.
+- **#4 (no implementation before approved design):** N/A directly, but applies to skill itself — gate every destructive action behind a verify step.
+- **3-strike rule:** CI failures get max 3 fix attempts. After 3, escalate — there's a deeper issue than the surface error.
+- **Verify before destroy:** every `git branch -D` is preceded by content-grep verification. Every force-push is `--force-with-lease`. Every `gh pr merge --admin` runs after CI passes (or is documented operator-allowed).
 
-### /gh-ship-Specific Rationalization Table
+### Rationalization defense
 
-| Rationalization | Reality | What to Do |
-|----------------|---------|------------|
-| "CI usually passes, skip waiting for it" | CI catches things humans miss. Waiting is cheaper than rolling back prod. | Wait for CI. Read the result. |
-| "Preview deploy looks good, merge now" | Preview != prod. Merge only after CI passes AND preview is verified | Both gates green, then merge |
-| "The test failure is probably flaky, retry merge" | Flaky tests mask real bugs. Don't cover them with retries. | Investigate the failure. Fix it or quarantine the test with a reason. |
-| "Force-push to main, just this once" | "Just this once" is how main gets broken | Never force-push to main. Use PRs. Always. |
-| "No time to write a good commit message" | Future-you debugging production will curse past-you | One-line title + explanation in body. Minimum. |
-| "Branch cleanup can wait" | Uncleaned branches become the graveyard others dig through | Clean up as part of the ship flow. Always. |
-| "The deploy completed, skip the monitor check" | Deploy completed != app working. Build succeeded != users can use it. | curl the endpoint. Check expected content. Then claim shipped. |
+| Rationalization | Reality | Do |
+|---|---|---|
+| "CI usually passes, skip waiting" | CI exists because humans miss things | Wait. Read result. |
+| "Preview looks good, merge now" | Preview ≠ prod | Both gates green, then merge |
+| "Test failure is probably flaky" | Flaky covers real bugs | Investigate. Fix or quarantine with reason. |
+| "Force-push to main, just this once" | "Just once" is how main breaks | Use PRs. Always. |
+| "Branch cleanup can wait" | Stale branches become a graveyard | Cleanup is part of ship. Always. |
+| "Deploy completed, skip verify" | Deploy completed ≠ users can use it | curl + content-check. Then claim shipped. |
+| "PR shows merged, branch is safe to -D" | Squash-merge has different SHAs; pre-existing local commits invisible to PR API | Content-grep verify before delete |
+| "It's a small fix, don't bother with the audit stage" | Small fixes are when audit catches stale config drift | Audit runs every time |
 
 ---
 
 ## CRITICAL RULES
 
-1. **NEVER ask for permission** - just do it
-2. **NEVER pause for confirmation** - proceed automatically
-3. **NEVER skip steps** - complete the full pipeline
-4. **FIX issues automatically** - don't report and stop, FIX and continue
-5. **Generate smart commit messages** - analyze the changes, write proper titles
-6. **Retry on failure** - up to 3 attempts for any fixable issue
-7. **Rollback on catastrophic failure** - restore original state if unrecoverable
-8. **Verify deployments** - check both preview and production are live
-9. **ALWAYS cleanup** - delete branches, close PRs, verify clean state
-10. **NEVER leave stale work** - if it can't ship, it must rollback
+1. **NEVER ask for permission.** Just do it.
+2. **NEVER pause for confirmation.** Proceed.
+3. **NEVER skip steps** unless a stage's pre-condition explicitly fails (e.g., "no diff to ship" → exit early; "no deploy mechanism detected" → skip Stage 11).
+4. **FIX issues automatically.** Don't report and stop.
+5. **Generate semantic commit messages.** Read the diff. Write `<type>(<scope>): <description>` in imperative mood, then a body explaining WHY.
+6. **Retry on transient failure.** Up to 3 attempts with exponential backoff for network ops.
+7. **Rollback on catastrophic failure.** Restore original state if unrecoverable.
+8. **Verify deployments at the actual URL.** HTTP 200 + expected content marker.
+9. **ALWAYS cleanup.** Branches deleted, PR closed, no uncommitted work, history.json updated.
+10. **NEVER leave stale work.** If it can't ship, rollback cleanly.
+11. **VERIFY before destroying.** Every `git branch -D` follows content-grep + session-ownership check.
+12. **WIP IS SACRED.** Branches existing BEFORE this run started are pre-existing operator work. Inspect-and-report only.
+13. **MULTI-REPO AWARE.** End-of-run report lists sibling repo state.
+14. **SELF-HEALING.** Every destructive action has a documented recovery path.
+15. **SELF-IMPROVING.** Every run appends to `.gh-ship-history.json`. Future runs read it.
+16. **DETECT, don't assume.** Language, tools, deploy mechanism, CI engine — all detected each run.
+17. **PROACTIVE AUDIT.** Stage 11.7 looks for issues NOT listed in the plan. Surface or fix per category.
+18. **IMPROVE CI YAML when suboptimal.** Stage 12.5 proposes fixes for unpinned actions, missing concurrency groups, over-broad permissions, missing timeouts, etc.
 
 ---
 
-## CI/CD WORKFLOW ARCHITECTURE
+## SESSION-SCOPED STATE (set in Stage 0, used throughout)
 
-**IMPORTANT:** Understand the deployment pipeline before proceeding.
-
-### Workflow Structure
-
-```
-┌─────────────────────┐
-│  Feature Branch     │
-│  (your changes)     │
-└──────────┬──────────┘
-           │
-           │ git push
-           ↓
-┌─────────────────────┐
-│  Pull Request       │
-│  (created by gh)    │
-└──────────┬──────────┘
-           │
-           │ triggers
-           ↓
-┌─────────────────────┐
-│  GitHub Actions: CI │──── Lint, TypeCheck, Security, Build, E2E Tests
-└──────────┬──────────┘
-           │
-           │ CI passes
-           ↓
-┌─────────────────────┐
-│  vercel[bot]        │──── Preview deployment (automatic)
-│  Preview Deploy     │
-└─────────────────────┘
-           │
-           │ PR merged
-           ↓
-┌─────────────────────┐
-│  Main Branch        │
-└──────────┬──────────┘
-           │
-           │ triggers BOTH
-           ↓
-     ┌─────┴─────┐
-     │           │
-     ↓           ↓
-┌────────┐  ┌───────────────┐
-│   CI   │  │  Migrations   │
-│ (again)│  │  Workflow     │
-└────┬───┘  └───────┬───────┘
-     │              │
-     │ passes       │ applies migrations
-     └──────┬───────┘
-            ↓
-┌─────────────────────┐
-│  vercel[bot]        │──── Production deployment (automatic)
-│  Production Deploy  │      (waits for CI if configured)
-└─────────────────────┘
-            │
-            ↓
-┌─────────────────────┐
-│  CLEANUP            │──── Delete branch, close PR, verify clean
-└─────────────────────┘
-```
-
-### Key Points
-
-1. **CI runs on BOTH pull_request AND push to main**
-   - This prevents broken code from bypassing checks via direct push
-   - CI must pass before production deployment
-
-2. **Database migrations run automatically**
-   - Separate workflow (`.github/workflows/deploy.yml`)
-   - Applies Supabase migrations on push to main
-   - Checks for new migrations in `supabase/migrations/`
-
-3. **Vercel deploys via GitHub bot**
-   - Preview: Automatic on PR creation/update
-   - Production: Automatic after merge to main
-   - **No manual Vercel CLI deployment needed**
-
-4. **Deployment Protection (RECOMMENDED)**
-   - Configure in Vercel dashboard: Settings → Git → "Wait for Checks"
-   - Select required checks: CI / Lint, CI / Build, CI / E2E Tests
-   - Vercel will NOT deploy if CI fails
-
-5. **Branch Protection (RECOMMENDED)**
-   - Configure in GitHub: Settings → Branches → main
-   - Require status checks to pass before merging
-   - Prevents direct push to main without PR review
-
-6. **Cleanup is MANDATORY**
-   - Branch deleted remotely and locally after merge
-   - PR closed and verified
-   - Local state clean (no uncommitted work)
-   - Status verified (no stale branches remain)
-
-### Manual Configuration Required
-
-These settings cannot be automated and must be configured manually:
-
-**Vercel Dashboard** (per project):
-- Go to: Vercel Dashboard → [Project] → Settings → Git
-- Enable: "Wait for Checks"
-- Select: CI workflow checks to wait for
-
-**GitHub Repository** (per project):
-- Go to: GitHub → [Repo] → Settings → Branches
-- Enable branch protection for `main`
-- Require: Status checks to pass before merging
-
----
-
-## STAGE 0: SAVE STATE & PRE-FLIGHT CHECKS
-
-### 0.1 Save Rollback State
 ```bash
 START_TIME=$(date +%s)
 ORIGINAL_BRANCH=$(git branch --show-current)
 ORIGINAL_COMMIT=$(git rev-parse HEAD)
 ORIGINAL_STASH=""
+SESSION_BRANCHES_CREATED=()  # ONLY auto-delete branches in this list
+HISTORY_FILE=".gh-ship-history.json"  # cwd-relative; auto-gitignored
+DEPLOY_MECHANISM=""  # set in Stage 0 detect (vercel|netlify|fly|cf|poll-cron|self-hosted-other|none)
+CI_ENGINE=""  # set in Stage 0 detect (github-actions|gitlab-ci|circleci|none)
+PROJECT_TYPE=""  # set in Stage 0 detect (node|python|go|rust|bash|docs|mixed|unknown)
 ```
-Store these for rollback if needed.
 
-### 0.2 Detect Stale Branches & Uncommitted Work
+---
 
-**Check for stale local branches:**
+## STAGE 0: PRE-FLIGHT + HISTORY READ + DETECTION
+
+### 0.1 Save rollback state
+
+Capture above state vars. Stash unstaged changes if any (`git stash push -m "gh-ship-auto-stash-$(date +%s)"`).
+
+### 0.2 Directory exclusion check
+
+Read `CLAUDE.md` (project, parent, ~). If it says "NO GIT" or "NEVER initialize a git repo here" for this dir, ABORT with explanation. Examples:
+- `~/vibecode-projects/n8n-workflows/` — managed via n8n UI, not git
+
+### 0.3 Environment sanity
+
+- Must be in a git repo (`git rev-parse --git-dir`)
+- Must have a remote (`git remote get-url origin`)
+- `gh` must be authenticated (`gh auth status`)
+- If any check fails, fix or abort with actionable message
+
+### 0.4 Detect language / tools / deploy mechanism / CI
+
+**Adapt to repo type. Don't assume.**
+
+| Signal | Tells you |
+|---|---|
+| `package.json` exists | Node project. Read its `scripts:` to find `lint`, `test`, `build` commands. |
+| `pyproject.toml` / `setup.py` | Python. Look for `pytest`, `ruff`, `black`. |
+| `Cargo.toml` | Rust. `cargo check` / `cargo test`. |
+| `go.mod` | Go. `go build` / `go test`. |
+| `bats` test files in `tests/bash/` | Bash project. Run bats. |
+| `.github/workflows/*.yml` | GitHub Actions CI. Inspect jobs to learn what runs. |
+| `.gitlab-ci.yml` | GitLab CI. |
+| `vercel.json` or `next.config.*` + `.vercel/` | Vercel deploy. |
+| `netlify.toml` | Netlify. |
+| `fly.toml` | Fly.io. |
+| `wrangler.toml` | Cloudflare Workers. |
+| Cron entry referencing a `deploy-*.sh` on a known host | Self-hosted poll-cron deploy (per ADR-041 pattern). |
+| None of the above | Pure-source repo, no deploy stage to verify. Skip Stage 11. |
+
+**Multi-mechanism caveats**: a repo can have BOTH Vercel preview AND a self-hosted prod deploy. Both must be verified.
+
+### 0.5 Read `.gh-ship-history.json` (self-improvement)
+
+If the file exists at repo root, read it. Extract:
+- `patterns_observed` (known CI failure shapes + the fixes that worked)
+- Last run's `outcome`. If `failed`, prepare for elevated caution.
+- `wip_branches_protected` from any prior run — sticky protection. Add to a NEVER-DELETE list.
+
+If the file doesn't exist, will be created in Stage 13.
+
+Add `.gh-ship-history.json` to `.gitignore` if not already there:
 ```bash
-# Find merged branches that weren't deleted
+grep -q '\.gh-ship-history\.json' .gitignore 2>/dev/null || echo '.gh-ship-history.json' >> .gitignore
+```
+
+### 0.6 Stale-branch detection (informational; don't act yet)
+
+```bash
 STALE_LOCAL=$(git branch --merged main | grep -v "main\|master\|\*" | xargs)
-if [ -n "$STALE_LOCAL" ]; then
-  echo "🧹 Cleaning up $(echo "$STALE_LOCAL" | wc -w) stale local branches..."
-  echo "$STALE_LOCAL" | xargs git branch -d
-  echo "✅ Deleted stale branches: $STALE_LOCAL"
-fi
 ```
 
-**Check for uncommitted changes in current branch:**
-```bash
-if [ -n "$(git status --porcelain)" ]; then
-  echo "📝 Found uncommitted work - will commit and ship"
-else
-  echo "❌ Nothing to ship - no changes detected"
-  exit 0
-fi
-```
+Note in run state. If any are present and clearly merged, they'll be reported in Stage 12 cleanup but NOT auto-deleted unless they're in `SESSION_BRANCHES_CREATED`.
 
-**Check for unmerged remote branches (warning only):**
-```bash
-# Warn about other unmerged branches
-REMOTE_BRANCHES=$(git branch -r | grep -v "HEAD\|main\|master" | wc -l)
-if [ "$REMOTE_BRANCHES" -gt 0 ]; then
-  echo "⚠️ Warning: $REMOTE_BRANCHES unmerged remote branches exist"
-  echo "   Run this again from those branches to ship them"
-fi
-```
+### 0.7 Comprehensive secrets + bad-content scan
 
-### 0.3 Directory Exclusion Check
-Check if current directory should NOT be a git repo (per CLAUDE.md rules):
-```bash
-# Read CLAUDE.md and check for "NO GIT" or "NEVER initialize a git repo" rules
-# If this directory is excluded, abort immediately with explanation
-```
-
-**Known excluded directories:**
-- `/Users/airborneshellback/vibecode-projects/n8n-workflows/` — managed via n8n UI, not git
-
-If in excluded directory → **ABORT** with message: "This directory is not version controlled per CLAUDE.md rules."
-
-### 0.4 Environment Checks
-Run ALL of these. If any fail, fix or abort:
+Use the conventional regex set (sk-*, ghp_*, AKIA*, AIza*, etc.) but ALSO reason about file content. If a file looks suspicious (large blob in `.env`, `credentials.json`, etc.) and is in the staged set, unstage and add to `.gitignore` even if no regex matched.
 
 ```bash
-# Must be in a git repo
-git rev-parse --git-dir > /dev/null 2>&1 || { echo "❌ Not a git repo"; exit 1; }
-
-# Must have a remote
-git remote get-url origin > /dev/null 2>&1 || { echo "❌ No remote configured"; exit 1; }
-
-# GitHub CLI must be authenticated
-gh auth status > /dev/null 2>&1 || { echo "❌ GitHub CLI not authenticated. Run: gh auth login"; exit 1; }
-
-# Check for uncommitted changes
-if [ -z "$(git status --porcelain)" ]; then
-  echo "❌ Nothing to ship - no changes detected"
-  exit 0
-fi
+# Conventional patterns (extend as needed; AI judgment fills gaps)
+SECRETS_REGEX='(API_KEY|SECRET_KEY|PRIVATE_KEY|sk-[a-zA-Z0-9]{32,}|ghp_[a-zA-Z0-9]{36}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----)'
 ```
 
-### 0.5 Detect Package Manager
-```bash
-if [ -f "bun.lockb" ]; then
-  PM="bun"; PM_RUN="bun run"; PM_INSTALL="bun install"
-elif [ -f "pnpm-lock.yaml" ]; then
-  PM="pnpm"; PM_RUN="pnpm run"; PM_INSTALL="pnpm install"
-elif [ -f "yarn.lock" ]; then
-  PM="yarn"; PM_RUN="yarn"; PM_INSTALL="yarn install"
-else
-  PM="npm"; PM_RUN="npm run"; PM_INSTALL="npm install"
-fi
-```
+If found, unstage + add the path glob to `.gitignore` + create `.env.example` with placeholders if relevant.
 
-### 0.6 Detect Linter/Formatter
-```bash
-if [ -f "biome.json" ] || [ -f "biome.jsonc" ]; then
-  LINTER="biome"; LINTER_FIX="npx @biomejs/biome check --write ."
-elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
-  LINTER="deno"; LINTER_FIX="deno fmt && deno lint --fix"
-else
-  LINTER="eslint"; LINTER_FIX="npx eslint --fix . && npx prettier --write ."
-fi
-```
+### 0.8 Large-file + build-artifact + .env detection
 
-### 0.7 Stash Unstaged Changes
-```bash
-# If there are unstaged changes (modified but not added), stash them
-UNSTAGED=$(git diff --name-only)
-if [ -n "$UNSTAGED" ]; then
-  git stash push -m "gh-ship-auto-stash-$(date +%s)"
-  ORIGINAL_STASH="yes"
-  echo "📦 Stashed unstaged changes for safety"
-fi
-```
-
-### 0.8 Safety Scans
-
-#### Comprehensive Secrets Detection
-```bash
-# Extended secrets pattern - catches most common API keys and tokens
-SECRETS_PATTERN='(
-  API_KEY|SECRET_KEY|PRIVATE_KEY|PASSWORD|ACCESS_TOKEN|CLIENT_SECRET|
-  DATABASE_URL|SUPABASE_SERVICE_ROLE|SUPABASE_ANON_KEY|
-  sk-[a-zA-Z0-9]{32,}|
-  sk_live_[a-zA-Z0-9]{24,}|sk_test_[a-zA-Z0-9]{24,}|
-  pk_live_[a-zA-Z0-9]{24,}|pk_test_[a-zA-Z0-9]{24,}|
-  ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|
-  github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}|
-  xox[baprs]-[a-zA-Z0-9-]{10,}|
-  AKIA[0-9A-Z]{16}|
-  AIza[0-9A-Za-z_-]{35}|
-  SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}|
-  SK[a-z0-9]{32}|
-  eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*|
-  -----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----
-)'
-
-SECRETS_FOUND=$(git diff --cached --name-only | xargs grep -l -E "$SECRETS_PATTERN" 2>/dev/null || true)
-```
-
-**If secrets found → AUTO-FIX:**
-1. Identify the file(s)
-2. Check if it's a `.env` file → Add `.env*` to `.gitignore`, unstage it
-3. Check if it's a config file with hardcoded secrets → Replace with `process.env.VAR_NAME`, create/update `.env.example`
-4. Unstage the problematic file: `git reset HEAD <file>`
-5. Log: "🔒 Removed secrets from commit: <file>"
-
-#### Large File Detection
-```bash
-# Find files over 50MB
-LARGE_FILES=$(find . -path ./.git -prune -o -type f -size +50M -print 2>/dev/null)
-```
-
-**If large files found → AUTO-FIX:**
-1. Check file type:
-   - **Binary (images, videos, etc.):**
-     - Add to `.gitignore`
-     - Unstage: `git reset HEAD <file>`
-     - Log: "📦 Large binary excluded: <file> - consider Git LFS"
-   - **Data files (JSON, CSV, SQL dumps):**
-     - Add to `.gitignore`
-     - Unstage
-     - Log: "📦 Large data file excluded: <file>"
-   - **Compiled/build artifacts:**
-     - Add to `.gitignore`
-     - Unstage
-     - Log: "🗑️ Build artifact excluded: <file>"
-
-#### .env Files Check
-```bash
-# Never commit .env files
-ENV_FILES=$(git diff --cached --name-only | grep -E '^\.env' || true)
-```
-
-**If .env files staged → AUTO-FIX:**
-1. Add `.env*` to `.gitignore` (if not already)
-2. Unstage: `git reset HEAD .env*`
-3. Create `.env.example` with placeholder keys (no values)
-4. Stage `.gitignore` and `.env.example`
-
-#### node_modules / Build Artifacts Check
-```bash
-# Never commit these
-EXCLUDED_DIRS="node_modules/|\.next/|dist/|build/|\.turbo/|\.vercel/"
-if git diff --cached --name-only | grep -qE "$EXCLUDED_DIRS"; then
-  echo "Build artifacts or node_modules detected"
-fi
-```
-
-**If found → AUTO-FIX:**
-1. Add to `.gitignore`
-2. Unstage: `git reset HEAD <dir>/`
-3. Stage `.gitignore`
+`find . -path ./.git -prune -o -type f -size +50M -print` → add to `.gitignore` and unstage.
+`git diff --cached --name-only | grep -E '^\.env'` → unstage; ensure `.env*` in `.gitignore`.
+`git diff --cached --name-only | grep -qE 'node_modules/|\.next/|dist/|build/|\.turbo/|\.vercel/'` → unstage; ensure in `.gitignore`.
 
 ---
 
-## STAGE 1: Pre-Push Local Validation
+## STAGE 0.5: MULTI-REPO WORKSPACE SCAN
 
-Before pushing, run local checks to catch errors early:
+If parent dir of cwd's repo contains other directories that are themselves git repos, this is a multi-repo workspace.
 
 ```bash
-# Only if package.json exists
-if [ -f "package.json" ]; then
-  # Type check (if script exists)
-  $PM_RUN typecheck --if-present 2>/dev/null || $PM_RUN tsc --noEmit 2>/dev/null || true
-
-  # Lint check (if script exists)
-  $PM_RUN lint --if-present 2>/dev/null || true
-
-  # Build check (for Next.js/Vite projects)
-  # Skip full build, just check for obvious errors
-fi
+WORKSPACE_PARENT=$(git rev-parse --show-toplevel | xargs dirname)
+SIBLING_STATES=()
+for sibling in "$WORKSPACE_PARENT"/*/; do
+  if [ -d "$sibling/.git" ] && [ "$(realpath $sibling)" != "$(git rev-parse --show-toplevel)" ]; then
+    pushd "$sibling" >/dev/null
+    name=$(basename "$sibling")
+    uncommitted=$(git status --porcelain | wc -l | tr -d ' ')
+    unpushed=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+    SIBLING_STATES+=("$name:uncommitted=$uncommitted:unpushed=$unpushed")
+    popd >/dev/null
+  fi
+done
 ```
 
-**If local validation fails → AUTO-FIX:**
-- Run `$LINTER_FIX` to auto-fix linting issues
-- For TypeScript errors: attempt to fix, or log and continue
+`SIBLING_STATES` is included in the final SITREP. /gh-ship does NOT cross-traverse to ship sibling work — operator runs /gh-ship from each repo separately. But surfacing the state prevents the "I shipped one repo and forgot the others" class of bug.
 
 ---
 
-## STAGE 2: Analyze Changes
+## STAGE 1: PRE-PUSH LOCAL VALIDATION
+
+Run language-appropriate checks. AI-judgment: pick the right tool for the project.
+
+For Node: `npm run typecheck`, `npm run lint`, `npm run build` — but only if those scripts exist. If they don't, run the underlying tools directly (`npx tsc --noEmit`, etc.) AND consider whether a missing script is itself an issue worth flagging in Stage 11.7 audit.
+
+For Python: `pytest tests/`, `ruff check`, `mypy` — same logic.
+
+For other languages: detect canonical equivalents.
+
+If validation fails:
+1. **Auto-fix what's auto-fixable** (formatter, lint --fix). Re-run.
+2. **For non-trivial errors** (typecheck, build): read the error, fix the underlying code, NEVER suppress with `--no-verify` or `as any`.
+3. **If genuinely stuck** after the diff is small: surface the error and ABORT — don't push broken code.
+
+---
+
+## STAGE 2: ANALYZE CHANGES
 
 ```bash
 git status --short
@@ -378,582 +217,583 @@ git diff --staged --stat
 git diff --stat
 ```
 
-- Count files changed
-- Identify types: source code, config, docs, tests, assets
-- Determine change category (feat/fix/refactor/docs/chore/test/style)
+Categorize the diff:
+- File count, total lines added/removed
+- Categories: source / config / docs / tests / assets / CI
+- Intent: feat / fix / refactor / docs / chore / test / style / perf / build / ci / sec
+- Scope: which subsystem? (e.g., `auth`, `api`, `ui`, `ci`)
 
-**If no changes after safety scans:** Report "Nothing to ship after safety filtering" and exit cleanly.
+This drives the commit message in Stage 3.
+
+If after safety scans (Stage 0.7-0.8) there's nothing left to commit: report "Nothing to ship after safety filtering" and exit.
 
 ---
 
-## STAGE 3: Generate Commit Message
+## STAGE 3: GENERATE COMMIT MESSAGE
 
-Analyze the diff content and generate a semantic commit message:
+Format: `<type>(<scope>): <description>`
 
-**Format:** `<type>(<scope>): <description>`
-
-| Type | When to Use |
-|------|-------------|
-| `feat` | New feature, new functionality |
-| `fix` | Bug fix, error correction |
-| `refactor` | Code restructure, no behavior change |
-| `docs` | Documentation only |
-| `chore` | Maintenance, dependencies, config |
-| `test` | Adding or fixing tests |
-| `style` | Formatting, whitespace, linting |
-| `perf` | Performance improvement |
-
-**Rules:**
-- Max 72 characters
+- Max 72 chars on title
 - Imperative mood ("Add feature" not "Added feature")
-- No period at end
-- Be specific about WHAT changed
-- Add scope if changes are focused (e.g., `fix(auth)`, `feat(api)`)
+- No trailing period
+- Specific about WHAT changed
+- Body explains WHY (why this approach, what alternative was rejected, what risk this closes)
 
-**Examples:**
-- `feat(reddit): Add comprehensive monitoring keywords`
-- `fix(schema): Resolve Supabase permission error`
-- `chore(deps): Update dependencies and lock file`
-- `refactor(api): Extract client into separate module`
+If the diff has multiple distinct concerns (rare in /gh-ship since usually one PR = one purpose), suggest splitting — but don't auto-split without operator confirmation.
+
+Examples:
+- `feat(reddit): Add monitoring keywords for new pain signals`
+- `fix(approvals): Collision-proof apr- ids by appending random suffix`
+- `chore(ci): Pin actions/checkout to SHA, add concurrency group`
 
 ---
 
-## STAGE 4: Stage & Commit
+## STAGE 4: STAGE & COMMIT
 
 ```bash
-# Stage all changes (safety-scanned files already excluded)
 git add -A
-
-# Commit with generated message
 git commit -m "$(cat <<'EOF'
-<generated-message>
+<type>(<scope>): <description>
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+<body explaining WHY>
+
+Co-Authored-By: Claude <model@anthropic.com>
 EOF
 )"
 ```
 
-**If pre-commit hooks fail → AUTO-FIX:**
-
-1. **ESLint/Biome errors:**
-   ```bash
-   $LINTER_FIX
-   git add -A
-   git commit -m "<message>"
-   ```
-
-2. **Prettier errors:**
-   ```bash
-   npx prettier --write .
-   git add -A
-   git commit -m "<message>"
-   ```
-
-3. **TypeScript errors:**
-   - Read the error output
-   - Fix the type issue in code
-   - Re-stage and commit
-
-4. **Other hook failures:**
-   - If fixable: fix and retry
-   - If not fixable after 3 attempts: `git commit --no-verify` with warning log
+If pre-commit hooks fail:
+- Linter/formatter errors → run auto-fix, re-stage, re-commit
+- TypeScript / type errors → fix in code, re-stage, re-commit
+- Other → diagnose, fix if possible, otherwise NEVER use `--no-verify` (Steel Principle: don't bypass safety hooks)
 
 ---
 
-## STAGE 5: Branch Management
+## STAGE 5: BRANCH MANAGEMENT
 
 ```bash
 CURRENT_BRANCH=$(git branch --show-current)
 ```
 
-**If on main/master → Create feature branch:**
-```bash
-# Generate branch name from commit message
-BRANCH_NAME="feature/$(echo '<commit-message>' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | cut -c1-50)"
-git checkout -b "$BRANCH_NAME"
-```
+If on `main` / `master`:
+- Generate branch name from commit type + scope + short description
+- `feature/...`, `fix/...`, `refactor/...`, `chore/...`, `sec/...`, `docs/...`
+- `git checkout -b "$BRANCH_NAME"`
+- **Add to `SESSION_BRANCHES_CREATED`** (used in Stage 12 cleanup)
 
-**If already on feature branch:** Continue on current branch.
+If already on a feature branch: continue, but note we did NOT create it (don't add to SESSION_BRANCHES_CREATED — it's pre-existing).
 
 ---
 
-## STAGE 6: Push to Remote
+## STAGE 6: PUSH TO REMOTE
 
 ```bash
 git push -u origin HEAD
 ```
 
-**If push rejected (branch diverged) → AUTO-FIX:**
-```bash
-git fetch origin
-git rebase origin/main
+If push rejected (branch diverged):
+- `git fetch origin && git rebase origin/main`
+- For lockfile conflicts (`package-lock.json`, `pnpm-lock.yaml`, `Cargo.lock`, `go.sum`): regenerate via `<pm> install`, re-stage, continue rebase
+- For generated files (`*.generated.ts`, `*.d.ts`): prefer theirs (origin's version)
+- For source files: prefer ours (our changes are intentional)
+- Resume: `git push --force-with-lease` (NEVER plain `--force`)
 
-# If rebase conflicts:
-# 1. For lock files - regenerate:
-if git diff --name-only --diff-filter=U | grep -qE "package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb"; then
-  git checkout --theirs package-lock.json pnpm-lock.yaml yarn.lock bun.lockb 2>/dev/null || true
-  $PM_INSTALL
-  git add package-lock.json pnpm-lock.yaml yarn.lock bun.lockb 2>/dev/null || true
-fi
-
-# 2. For generated files (*.generated.ts, *.d.ts): prefer theirs
-git checkout --theirs "*.generated.ts" "*.d.ts" 2>/dev/null || true
-
-# 3. For source files: prefer ours (our changes)
-# Manual review if complex conflicts
-
-# 4. Continue rebase
-git rebase --continue
-
-# 5. Force push (safe on feature branch)
-git push --force-with-lease origin HEAD
-```
-
-**If push fails (network) → Retry:**
-- Wait 2 seconds, retry
-- Wait 5 seconds, retry
-- Wait 10 seconds, retry
-- If still failing: log error and abort
+If network failure: retry with exponential backoff (2s, 5s, 10s).
 
 ---
 
-## STAGE 7: Create Pull Request
+## STAGE 7: CREATE PULL REQUEST
 
 ```bash
-# Check if PR already exists
-EXISTING_PR=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number' 2>/dev/null)
+EXISTING_PR=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number')
+```
 
-if [ -n "$EXISTING_PR" ]; then
-  echo "PR #$EXISTING_PR already exists, using it"
-  PR_NUMBER=$EXISTING_PR
-else
-  # Create new PR
-  PR_URL=$(gh pr create \
-    --title "<commit-message>" \
-    --body "$(cat <<'EOF'
+If PR exists, reuse. Otherwise:
+
+```bash
+gh pr create --title "<commit-title>" --body "$(cat <<'EOF'
 ## Summary
-<2-3 bullets describing the changes>
+<2-3 bullets — the WHY in compressed form>
 
 ## Changes
-<list key files changed>
+<key files; high-level not granular diff>
 
 ## Test Plan
 - [ ] CI passes
-- [ ] Vercel preview works
-- [ ] Changes verified
+- [ ] Preview deployment verified (if applicable)
+- [ ] [project-specific verification]
 
----
-🤖 Shipped with [Claude Code](https://claude.com/claude-code)
+🤖 Shipped via /gh-ship
 EOF
-)" 2>&1)
-
-  PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-fi
+)"
 ```
 
-**If PR creation fails → Diagnose:**
-- Rate limited: Wait 60 seconds, retry
-- Auth error: Log and abort (can't auto-fix)
-- Network error: Retry with backoff
-
----
-
-## STAGE 8: Monitor CI & Vercel Preview
-
-### CI/CD Architecture Overview
-
-**IMPORTANT:** The workflow has been restructured for safety and efficiency:
-
-1. **CI Workflow** (`.github/workflows/ci.yml`)
-   - Triggers on BOTH `pull_request` AND `push` to `main`
-   - Runs: Lint, TypeCheck, Security Audit, Build, E2E Tests
-   - Prevents broken code from reaching production
-
-2. **Database Migrations** (`.github/workflows/deploy.yml`)
-   - Runs after CI passes on push to main
-   - Applies Supabase migrations automatically
-
-3. **Vercel Deployment** (Automatic via GitHub Integration)
-   - Handled by `vercel[bot]` (Vercel GitHub App)
-   - Deploys preview on PR creation/update
-   - Deploys production after merge to main
-   - **Should be configured to "Wait for Checks"** in Vercel dashboard
-
-**No manual Vercel CLI deployment** - The vercel[bot] handles everything.
-
-### 8.1 Wait for CI Checks
+If `gh pr create` fails on GraphQL rate limit (common during heavy sessions), fall back to REST:
 ```bash
-MAX_WAIT=600  # 10 minutes
-ELAPSED=0
-INTERVAL=15
-
-while [ $ELAPSED -lt $MAX_WAIT ]; do
-  # Get all check statuses
-  CI_STATUS=$(gh pr checks "$PR_NUMBER" --json state --jq '.[].state' 2>/dev/null | sort -u)
-
-  if echo "$CI_STATUS" | grep -q "FAILURE"; then
-    echo "❌ CI failed - attempting fix"
-    break
-  elif echo "$CI_STATUS" | grep -q "PENDING"; then
-    echo "⏳ CI in progress..."
-    sleep $INTERVAL
-    ELAPSED=$((ELAPSED + INTERVAL))
-  elif echo "$CI_STATUS" | grep -q "SUCCESS"; then
-    echo "✅ CI passed!"
-    break
-  else
-    sleep $INTERVAL
-    ELAPSED=$((ELAPSED + INTERVAL))
-  fi
-done
-```
-
-### 8.2 Wait for Vercel Bot Deployment
-```bash
-# Vercel bot deploys automatically via GitHub integration
-# Check for vercel[bot] deployment status
-MAX_VERCEL_WAIT=300  # 5 minutes for Vercel
-VERCEL_ELAPSED=0
-
-while [ $VERCEL_ELAPSED -lt $MAX_VERCEL_WAIT ]; do
-  VERCEL_CHECK=$(gh pr checks "$PR_NUMBER" --json name,status,conclusion --jq '.[] | select(.name | contains("vercel")) | {name, status, conclusion}' 2>/dev/null)
-
-  if echo "$VERCEL_CHECK" | grep -q '"conclusion":"SUCCESS"'; then
-    echo "✅ Vercel deployment complete"
-    break
-  elif echo "$VERCEL_CHECK" | grep -q '"status":"IN_PROGRESS"'; then
-    echo "⏳ Vercel deployment in progress..."
-    sleep $INTERVAL
-    VERCEL_ELAPSED=$((VERCEL_ELAPSED + INTERVAL))
-  else
-    sleep $INTERVAL
-    VERCEL_ELAPSED=$((VERCEL_ELAPSED + INTERVAL))
-  fi
-done
-```
-
-### 8.3 Get Vercel Preview URL
-```bash
-# Get preview URL from vercel[bot] comment
-PREVIEW_URL=$(gh pr view "$PR_NUMBER" --json comments --jq '.comments[] | select(.author.login=="vercel") | .body' | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
-
-# Or from deployment checks
-if [ -z "$PREVIEW_URL" ]; then
-  PREVIEW_URL=$(gh pr checks "$PR_NUMBER" --json name,targetUrl --jq '.[] | select(.name | contains("vercel")) | .targetUrl' 2>/dev/null | head -1)
-fi
-```
-
-### 8.4 Verify Preview Deployment
-```bash
-# Check preview is accessible
-if [ -n "$PREVIEW_URL" ]; then
-  PREVIEW_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL" 2>/dev/null || echo "000")
-  if [ "$PREVIEW_STATUS" = "200" ]; then
-    echo "✅ Preview deployment live: $PREVIEW_URL"
-  else
-    echo "⚠️ Preview returned HTTP $PREVIEW_STATUS"
-  fi
-else
-  echo "⚠️ Vercel preview URL not found (check may still be pending)"
-fi
+gh api repos/:owner/:repo/pulls -X POST -f title="..." -f head=<branch> -f base=main -f body="..."
 ```
 
 ---
 
-## STAGE 9: Fix CI Failures (Auto-Remediation Loop)
+## STAGE 8: WAIT FOR CI + DEPLOY PREVIEW
 
-**Max 3 fix attempts.** For each failure:
+Adaptive based on detected `CI_ENGINE` and `DEPLOY_MECHANISM`.
 
-### 9.1 Get Failure Details
+### 8.1 CI checks (max 10 min)
+
 ```bash
-gh pr checks "$PR_NUMBER"
+# poll gh pr checks every 15s
+# success: all "SUCCESS" → continue to merge gate
+# failure: jump to Stage 9 (fix loop)
+# pending: keep polling
+```
+
+For `CI_ENGINE=github-actions`: `gh pr checks $PR_NUMBER --json state`
+For others: adapt the equivalent.
+
+### 8.2 Preview deployment verification (if applicable)
+
+For `DEPLOY_MECHANISM=vercel|netlify|cf-pages`:
+- Wait for deploy bot's checks to complete
+- Extract preview URL from PR comments OR `gh pr checks --json targetUrl`
+- `curl` the preview URL → expect HTTP 200
+- If responds with the expected content marker (page title, version string, etc.), continue
+- If 5xx or wrong content: investigate. Don't merge bad deploys.
+
+For `DEPLOY_MECHANISM=poll-cron|self-hosted-other`: skip preview (no preview URLs); rely on Stage 11 production verification.
+
+For `DEPLOY_MECHANISM=none`: skip Stage 8.2 entirely.
+
+---
+
+## STAGE 9: AI-JUDGMENT CI FIX LOOP
+
+**Max 3 attempts.** This is where most pattern-match-skill rewrites get the most improvement.
+
+### 9.1 Get failure detail
+
+```bash
 FAILED_RUN=$(gh run list --limit 5 --json databaseId,status,conclusion --jq '.[] | select(.conclusion=="failure") | .databaseId' | head -1)
-gh run view "$FAILED_RUN" --log-failed 2>/dev/null | tail -100
+gh run view "$FAILED_RUN" --log-failed | tail -200
 ```
 
-### 9.2 Identify & Fix Issue
+### 9.2 Reason about the failure
 
-| Error Pattern | Auto-Fix Action |
-|---------------|-----------------|
-| `eslint` / `Linting` | `$LINTER_FIX && git add -A && git commit -m "fix: Lint errors" && git push` |
-| `biome` | `npx @biomejs/biome check --write . && git add -A && git commit -m "fix: Biome errors" && git push` |
-| `prettier` / `Formatting` | `npx prettier --write . && git add -A && git commit -m "fix: Formatting" && git push` |
-| `tsc` / `TypeScript` / `Type error` | Read error, fix type in code, commit, push |
-| `test` / `jest` / `vitest` / `FAIL` | Read failing test, fix code or test, commit, push |
-| `build` / `Build failed` | Read error, fix build issue, commit, push |
-| `npm audit` / `vulnerability` | `$PM_INSTALL audit fix && git add -A && git commit -m "fix: Security vulnerabilities" && git push` |
-| `npm ERR!` / `dependency` | `rm -rf node_modules *.lock* && $PM_INSTALL && git add -A && git commit -m "fix: Regenerate dependencies" && git push` |
-| `ENOSPC` / `disk space` | Cannot auto-fix, log warning |
-| `rate limit` | Wait 60 seconds, retry |
-| `timeout` | Retry CI: `gh run rerun "$FAILED_RUN"` |
+Read the actual log. Don't grep for keywords; understand what failed. Then:
 
-### 9.3 After Fix
-- Push changes
-- Return to STAGE 8 (monitor CI again)
-- Decrement attempt counter
+1. **Check `.gh-ship-history.json` `patterns_observed`** for a known shape. If found and the prior fix worked: try it FIRST. If the prior fix didn't work last time: try a different approach.
 
-### 9.4 If 3 Attempts Failed
-- Log detailed error information
+2. **Match by meaning, not by string.** "linter complains about formatting" maps to "run formatter" regardless of whether the linter is biome / eslint / ruff / golangci-lint.
+
+3. **Apply the fix-strategy hint table below as starting points, not rules:**
+
+| Failure family | Strategy hint |
+|---|---|
+| Linter | Run project's linter --fix. Detect tool from project files. |
+| Formatter | Run project's formatter (prettier, gofmt, black, dprint, ruff format). |
+| Typechecker | Read error, inspect file:line, propose smallest correct change. NEVER suppress with `// @ts-ignore`, `# type: ignore`, etc. |
+| Test failure | Read assertion. Decide: code wrong (usual) vs test wrong (rare, only if test was written ahead of code). Fix the right side. NEVER skip the test. |
+| Build error | Read error, fix root cause. If due to missing CI env var: surface to operator with exact var name. |
+| Dependency / lockfile | Regenerate lockfile OR `<pm> audit fix` for advisories OR pin conflicting peer. Check history for what worked on this project before. |
+| Network / rate-limit / 5xx / timeout | Retry up to 3x with backoff. For CI rate-limit specifically, prefer `gh run rerun` over re-pushing. |
+| Pre-existing flaky test | Match against history. If flaky: retry once. If still flaky: report — DO NOT mask with quarantine unless operator-allowed. |
+| Disk space / runner exhaustion | Not auto-fixable. Report and abort. |
+| Auth / credential rotation | Operator-action required. Surface exactly which secret rotated + where to update. |
+| Container registry permission (e.g., GHCR 403) | Diagnose: workflow `permissions:` correct? Package-ACL missing repo? PAT expired? Provide fix instructions. |
+| **Unknown shape** | State the hypothesis. Try smallest correct fix. Append to `.gh-ship-history.json` regardless of outcome — negative knowledge is valuable. |
+
+### 9.3 Apply fix
+
+Make the change. Stage. Commit (`fix(ci): ...` scope). Push.
+
+### 9.4 Loop
+
+Return to Stage 8. Decrement attempt counter.
+
+### 9.5 After 3 attempts
+
+If unfixed:
+- Detailed error report (which fix attempts were tried, why each failed)
+- Append to `.gh-ship-history.json` with `outcome=ci-unfixable`
 - Do NOT merge broken code
-- Report: "CI unfixable after 3 attempts: <specific error>"
 - Keep PR open for manual review
-- Exit with error status
+- Exit with error status; SITREP shows BLOCKED
 
 ---
 
-## STAGE 10: Merge PR
+## STAGE 10: MERGE PR
 
-Once CI passes:
+Pre-condition: CI green AND (preview verified OR no preview deploy).
 
 ```bash
-# --admin bypasses GitHub branch protection's "required reviewers" gate.
-# This is ideal for solo dev workflows where no one else is reviewing PRs.
-# Important: --admin does NOT skip CI status checks — those still must pass.
-#
-# For team workflows, remove --admin and uncomment the review check below
-# to halt the pipeline when review approval is required:
-#
-#   REVIEW_STATUS=$(gh pr view "$PR_NUMBER" --json reviewDecision --jq '.reviewDecision')
-#   if [ "$REVIEW_STATUS" = "REVIEW_REQUIRED" ]; then
-#     echo "⚠️ PR requires review approval - cannot auto-merge"
-#     echo "PR ready for review: $(gh pr view $PR_NUMBER --json url --jq '.url')"
-#     exit 0
-#   fi
-#   gh pr merge "$PR_NUMBER" --squash --delete-branch
-
+# --admin bypasses GH branch protection's "required reviewers" gate.
+# Solo workflow assumption. For team workflows, remove --admin and add review check.
 gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
 ```
 
-**If merge fails:**
-- **Merge conflict:**
-  ```bash
+Note: `--delete-branch` works inconsistently with `--admin` per observation 2026-05-03. After merge, verify the remote branch was actually deleted; if not, explicit `git push origin --delete <branch>`.
+
+If merge fails:
+- **Conflict** → rebase on origin/main, force-with-lease, retry
+- **Branch protection** → log requirements + exit (operator-action)
+- **GraphQL rate limit** → fall back to REST: `gh api repos/:owner/:repo/pulls/$PR_NUMBER/merge -X PUT -f merge_method=squash`
+- **Network** → retry with backoff
+
+---
+
+## STAGE 11: VERIFY PRODUCTION DEPLOYMENT
+
+Adaptive per `DEPLOY_MECHANISM`.
+
+### 11.1 Wait for post-merge CI on main
+
+CI typically runs again on push to main. Poll until completed.
+
+If main-CI fails after merge: this is **bad** — broken code is on main. Stage 11 reports it loudly. Subsequent verification skipped.
+
+### 11.2 Wait for production deploy
+
+| Mechanism | How to wait |
+|---|---|
+| `vercel` | Poll `gh api repos/:owner/:repo/deployments` for `state=success` from `vercel[bot]` on `ref=main` |
+| `netlify` | Same pattern (different bot) |
+| `fly` | If Fly's GH workflow integration: poll. Else: `flyctl status`. |
+| `cf` | Cloudflare Pages: poll deployments API. |
+| `poll-cron` | Cron interval is known (typically 2-5 min). Poll deployed SHA on the host vs origin/main SHA until match. |
+| `self-hosted-other` | Operator-defined. Read project docs; if unclear, surface to operator. |
+| `none` | Skip. |
+
+### 11.3 Verify production at the actual URL
+
+```bash
+# Detect production URL from package.json `homepage`, repo `homepage`, or operator config
+PROD_URL=$(jq -r '.homepage // empty' package.json 2>/dev/null || \
+           gh api repos/:owner/:repo --jq '.homepage')
+
+# Verify
+HTTP_STATUS=$(curl -s -o /tmp/prod-resp -w "%{http_code}" "$PROD_URL" --max-time 30)
+
+# HTTP 200 alone isn't enough — content check
+if [ "$HTTP_STATUS" = "200" ] && grep -q "<expected-marker>" /tmp/prod-resp; then
+  PROD_VERIFIED="yes"
+else
+  PROD_VERIFIED="warning"  # surface manual-check note in SITREP
+fi
+```
+
+**Expected marker** is project-specific. For a Next.js app, could be the page title or a known UI element. Skill should detect it from the repo's recent commit history or fall back to "page returns HTML > 1KB" as a weak default.
+
+### 11.4 Verify squash-merged content actually landed
+
+This is the lesson from 2026-05-03. After merging a PR, before assuming Stage 11 is "done":
+
+```bash
+git fetch origin
+# the PR's merge_commit_sha
+MERGE_SHA=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')
+
+# verify it's on origin/main
+if git merge-base --is-ancestor "$MERGE_SHA" origin/main 2>/dev/null; then
+  echo "✅ PR merge commit is on origin/main"
+else
+  echo "❌ PR merge commit NOT on origin/main — propagation lag or merge anomaly"
+  # do NOT proceed to cleanup; surface for review
+fi
+```
+
+---
+
+## STAGE 11.5: VERIFIED-MERGE DETECTION (squash-safe, content-grep)
+
+This is THE check that prevents the "I deleted unmerged work because PR-state said merged" class of bug observed 2026-05-03.
+
+### Helper: `verify_branch_merged()`
+
+```bash
+verify_branch_merged() {
+  local branch="$1"
+  local source_sha=$(git rev-parse "$branch")
+
+  # Method 1: ancestor check (catches merge-commit merges)
+  if git merge-base --is-ancestor "$source_sha" main 2>/dev/null; then
+    echo "ancestor"; return 0
+  fi
+
+  # Method 2: PR-state lookup (catches squash-merge if PR exists)
+  local pr_info=$(gh pr list --head "$branch" --state all --json merged --jq '.[0]' 2>/dev/null)
+  if echo "$pr_info" | grep -q '"merged":true'; then
+    echo "squash-merged-via-pr"; return 0
+  fi
+
+  # Method 3: content equivalence (catches squash-merged + branch deleted)
+  if [ -z "$(git diff main..."$branch")" ]; then
+    echo "content-identical-to-main"; return 0
+  fi
+
+  # Genuinely unmerged
+  echo "UNMERGED"; return 1
+}
+```
+
+### Helper: `post_merge_verify()`
+
+```bash
+post_merge_verify() {
+  local branch="$1"
+  local merge_sha=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid' 2>/dev/null)
+  if [ -n "$merge_sha" ] && git merge-base --is-ancestor "$merge_sha" origin/main 2>/dev/null; then
+    return 0
+  fi
   git fetch origin main
-  git rebase origin/main
-  # Resolve conflicts (prefer incoming for lock files)
-  git push --force-with-lease
-  # Retry merge
-  ```
-- **Branch protection:** Log requirements and exit (can't bypass)
-- **Network error:** Retry with backoff
+  if [ -z "$(git diff origin/main..."$branch")" ]; then
+    return 0
+  fi
+  return 1  # divergent — DO NOT delete
+}
+```
+
+Used by Stage 12 cleanup before any `git branch -D`.
 
 ---
 
-## STAGE 11: Verify Production Deployment
+## STAGE 11.7: PROACTIVE AUDIT (NEW — find what we didn't specify)
 
-After merge to main, verify production deployment:
+This is the "scan for stuff we didn't think to look for" stage. Surface findings; fix some categories autonomously, queue others for operator review.
 
-### Overview
+### Categories to scan
 
-After PR merge to main:
-1. **CI runs automatically** on push to main (quality gate)
-2. **Database Migrations** workflow applies any new migrations
-3. **Vercel bot deploys** to production (if CI passes)
+**A. `.github/workflows/*.yml` health**
+- Action versions pinned to SHA (not just tag) — important for supply-chain security
+- `permissions:` block present and minimal (most workflows over-permission with default token)
+- `timeout-minutes:` set on each job (prevent runaway)
+- `concurrency:` group on deploy workflows (prevent races)
+- `paths:` filter on push triggers (skip irrelevant runs)
+- Direct `secrets.X` use vs OIDC (where supported)
 
-**IMPORTANT:** If "Wait for Checks" is configured in Vercel dashboard, production deployment will wait for CI to pass. This prevents broken code from reaching production.
+**B. Branch protection on main** (`gh api repos/:owner/:repo/branches/main/protection`)
+- Required status checks?
+- Linear history enforced?
+- Force-push allowed? (should be off)
+- Allow auto-merge? (should be off for safety)
 
-### 11.1 Wait for CI on Main Branch
+**C. Repo settings** (`gh api repos/:owner/:repo`)
+- `delete_branch_on_merge`: should be `true` (prevents stale-remote class of bug)
+- Allowed merge types sensible?
+- Issues enabled if public? Discussions if community-facing?
 
-After merge, CI runs again on main branch:
-```bash
-echo "⏳ Waiting for CI to run on main branch..."
+**D. Container registry health** (if image build present)
+- GHCR package's "Manage Actions Access" includes the workflow's repo? (the 2026-05-03 lesson)
+- Untagged versions accumulating? (cleanup candidate)
 
-MAX_WAIT=600  # 10 minutes
-ELAPSED=0
-INTERVAL=15
+**E. Repo file health**
+- `.gitignore` covers common bad things (`.env*`, `*.log`, `dist/`, `node_modules/`)
+- `LICENSE` present?
+- `README` not stale (last updated > 6 months ago + recent code commits)
+- Lockfile committed?
 
-while [ $ELAPSED -lt $MAX_WAIT ]; do
-  # Get latest workflow run on main
-  MAIN_CI_STATUS=$(gh run list --branch main --limit 1 --json status,conclusion --jq '.[0] | {status, conclusion}' 2>/dev/null)
+**F. Open PRs / issues**
+- PRs with no activity > 30 days → flag for triage (don't close)
+- Branches with no PR > 7 days old → flag for cleanup
+- Issues labeled `bug` open > 90 days → flag
 
-  if echo "$MAIN_CI_STATUS" | grep -q '"conclusion":"success"'; then
-    echo "✅ CI passed on main"
-    break
-  elif echo "$MAIN_CI_STATUS" | grep -q '"conclusion":"failure"'; then
-    echo "❌ CI failed on main - production deployment blocked"
-    PROD_VERIFIED="ci-failed"
-    break
-  elif echo "$MAIN_CI_STATUS" | grep -q '"status":"in_progress"'; then
-    echo "⏳ CI running on main..."
-    sleep $INTERVAL
-    ELAPSED=$((ELAPSED + INTERVAL))
-  else
-    sleep $INTERVAL
-    ELAPSED=$((ELAPSED + INTERVAL))
-  fi
-done
-```
+**G. CI runs trend** (`gh run list`)
+- Failure rate over last 20 runs > 30%? Flag the pattern.
+- Average run time creeping up? Surface.
 
-### 11.2 Wait for Vercel Production Deployment
+### Fix-vs-surface decision
 
-```bash
-# Vercel bot deploys to production after CI passes
-echo "⏳ Waiting for Vercel production deployment..."
+For each finding, decide:
+- **Fix autonomously** if: change is uncontroversial (e.g., add missing `timeout-minutes: 15` to a job that doesn't have one)
+- **Surface for operator review** if: change has tradeoffs (e.g., enabling branch protection blocks the operator's own admin-merge workflow)
 
-MAX_VERCEL_WAIT=300  # 5 minutes
-VERCEL_ELAPSED=0
-
-while [ $VERCEL_ELAPSED -lt $MAX_VERCEL_WAIT ]; do
-  # Check for vercel[bot] deployment on main branch
-  VERCEL_DEPLOY=$(gh api repos/:owner/:repo/deployments --jq '.[] | select(.ref=="main" and .creator.login=="vercel[bot]") | {id, state, environment}' 2>/dev/null | head -1)
-
-  if echo "$VERCEL_DEPLOY" | grep -q '"state":"success"'; then
-    echo "✅ Vercel production deployment successful"
-    break
-  elif echo "$VERCEL_DEPLOY" | grep -q '"state":"in_progress"'; then
-    echo "⏳ Vercel deploying to production..."
-    sleep $INTERVAL
-    VERCEL_ELAPSED=$((VERCEL_ELAPSED + INTERVAL))
-  else
-    sleep $INTERVAL
-    VERCEL_ELAPSED=$((VERCEL_ELAPSED + INTERVAL))
-  fi
-done
-```
-
-### 11.3 Get Production Domain & Verify
-```bash
-# Get production domain from repository homepage or package.json
-PROD_DOMAIN=$(gh api repos/:owner/:repo --jq '.homepage' 2>/dev/null || echo "")
-
-if [ -z "$PROD_DOMAIN" ]; then
-  # Fallback: read from package.json if exists
-  if [ -f "package.json" ]; then
-    PROD_DOMAIN=$(jq -r '.homepage // empty' package.json 2>/dev/null)
-  fi
-fi
-
-# Verify production is live
-if [ -n "$PROD_DOMAIN" ]; then
-  # Wait a moment for DNS/CDN to propagate
-  sleep 5
-
-  PROD_HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_DOMAIN" 2>/dev/null || echo "000")
-  if [ "$PROD_HTTP_STATUS" = "200" ]; then
-    echo "✅ Production live: $PROD_DOMAIN (HTTP 200)"
-    PROD_VERIFIED="yes"
-  else
-    echo "⚠️ Production returned HTTP $PROD_HTTP_STATUS"
-    echo "   (Deployment may still be propagating - check manually)"
-    PROD_VERIFIED="warning"
-  fi
-else
-  echo "ℹ️ Production domain not configured - skipping verification"
-  PROD_VERIFIED="skipped"
-fi
-```
-
-### 11.4 Check Database Migrations
-
-```bash
-# Verify database migrations workflow completed (if it ran)
-echo "Checking database migrations status..."
-
-MIGRATION_RUN=$(gh run list --workflow=deploy.yml --branch main --limit 1 --json status,conclusion --jq '.[0]' 2>/dev/null)
-
-if [ -n "$MIGRATION_RUN" ]; then
-  if echo "$MIGRATION_RUN" | grep -q '"conclusion":"success"'; then
-    echo "✅ Database migrations applied"
-  elif echo "$MIGRATION_RUN" | grep -q '"conclusion":"skipped"'; then
-    echo "ℹ️ No new migrations to apply"
-  elif echo "$MIGRATION_RUN" | grep -q '"conclusion":"failure"'; then
-    echo "⚠️ Database migrations failed - check workflow logs"
-    PROD_VERIFIED="migration-failed"
-  fi
-else
-  echo "ℹ️ No migration workflow found"
-fi
-```
+Autonomous fixes go in a separate `chore/audit-improvements-<date>` branch and PR. Operator-review items go in the SITREP.
 
 ---
 
-## STAGE 12: Cleanup & Final Verification
+## STAGE 12: CLEANUP & FINAL VERIFICATION
 
-**MANDATORY:** Ensure ZERO stale work remains.
+**Pre-condition:** Stage 11.5's `post_merge_verify` passed for the session's branch. If not, ABORT cleanup.
 
-### 12.1 Switch Back to Main
+### 12.1 Switch to main + pull
+
 ```bash
 git checkout main
 git pull origin main
 ```
 
-### 12.2 Delete Local Feature Branch
+### 12.2 Delete the session's feature branch
+
 ```bash
-# Delete the feature branch locally
-git branch -d "$BRANCH_NAME" 2>/dev/null || git branch -D "$BRANCH_NAME" 2>/dev/null || true
-echo "🗑️ Deleted local branch: $BRANCH_NAME"
+# Try -d first (safe; refuses if not merged-via-merge-commit)
+if git branch -d "$BRANCH_NAME" 2>/dev/null; then
+  echo "🗑️  Deleted (safe): $BRANCH_NAME"
+else
+  # -d refused. Likely squash-merge differing SHAs. Stage 11.5 already
+  # verified content is on main, so force-delete is OK.
+  git branch -D "$BRANCH_NAME"
+  echo "🗑️  Force-deleted (post-verify): $BRANCH_NAME"
+fi
 ```
 
-### 12.3 Verify Remote Branch Deleted
+### 12.3 Remote branch deletion (`gh pr merge --delete-branch` is unreliable)
+
 ```bash
-# Verify the remote branch was deleted (gh pr merge --delete-branch should have done this)
 REMOTE_BRANCH_EXISTS=$(git ls-remote --heads origin "$BRANCH_NAME" 2>/dev/null)
 if [ -n "$REMOTE_BRANCH_EXISTS" ]; then
-  echo "⚠️ Remote branch still exists - deleting..."
   git push origin --delete "$BRANCH_NAME"
-  echo "✅ Deleted remote branch: $BRANCH_NAME"
 fi
 ```
 
-### 12.4 Verify PR Closed
+### 12.4 Audit pre-existing branches (inspect-only — never delete)
+
+For every branch NOT in `SESSION_BRANCHES_CREATED`:
+- Run `verify_branch_merged $b` → categorize
+- If merged: report "can be deleted manually with: `git branch -D <b>`"
+- If unmerged + has open PR: "WIP, leaving alone"
+- If unmerged + no PR: "ORPHAN? Manual review needed"
+
+This is INFORMATIONAL only. /gh-ship never deletes pre-existing operator work.
+
+### 12.5 Stale remote branches
+
+`git fetch --prune` to drop remote-tracking branches whose origin counterparts are gone. Don't push-delete unless the operator has opted in.
+
+### 12.6 Verify clean repo state
+
 ```bash
-# Verify PR is merged and closed
-PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state')
-if [ "$PR_STATE" != "MERGED" ]; then
-  echo "⚠️ Warning: PR #$PR_NUMBER state is $PR_STATE (expected MERGED)"
-fi
+UNCOMMITTED=$(git status --porcelain | grep -v '^??' || true)
+[ -n "$UNCOMMITTED" ] && echo "⚠️  Tracked files modified — review"
+
+# Restore stash if we made one in Stage 0.1
+[ "$ORIGINAL_STASH" = "yes" ] && git stash pop
 ```
 
-### 12.5 Clean Up ALL Stale Local Branches
+---
+
+## STAGE 12.5: CI WORKFLOW IMPROVEMENT (NEW)
+
+If Stage 11.7 audit found fixable workflow anti-patterns:
+
+### Auto-fix categories (low controversy)
+
+- Pin unpinned actions: `actions/checkout@v4` → `actions/checkout@<SHA> # v4.2.x`
+- Add missing `permissions: { contents: read }` to workflows missing it
+- Add `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }` to long-running CI
+- Add `timeout-minutes: 15` to jobs missing it
+- Add path filters to deploy workflows to skip pure-doc PRs
+
+### Approach
+
 ```bash
-# Remove any other merged branches
-git fetch --prune
-STALE_BRANCHES=$(git branch --merged main | grep -v "main\|master\|\*" | xargs)
-if [ -n "$STALE_BRANCHES" ]; then
-  echo "🧹 Cleaning up additional stale branches..."
-  echo "$STALE_BRANCHES" | xargs git branch -d
-  echo "✅ Cleaned up: $STALE_BRANCHES"
-fi
+git checkout -b chore/ci-improvements-$(date +%Y%m%d)
+# apply YAML edits with WHY comments
+git add -A
+git commit -m "chore(ci): pin action SHAs + add concurrency/timeout/permissions
+
+Per /gh-ship Stage 12.5 audit findings. Each change has a WHY comment in the
+YAML noting which class of issue it closes:
+- Action pinning: supply-chain attack vector (mutable tags)
+- Concurrency: prevent deploy races on rapid-fire pushes
+- timeout-minutes: prevent runaway billing on stuck jobs
+- permissions: principle of least privilege for default token
+
+Co-Authored-By: Claude /gh-ship <noreply@anthropic.com>"
+
+git push -u origin HEAD
+gh pr create --title "chore(ci): /gh-ship audit improvements" \
+             --body "Auto-generated by /gh-ship Stage 12.5..."
 ```
 
-### 12.6 Verify Clean Repository State
-```bash
-# Final verification - no uncommitted work, no untracked files (except excluded ones)
-UNCOMMITTED=$(git status --porcelain 2>/dev/null)
-if [ -n "$UNCOMMITTED" ]; then
-  # Filter out .gitignored files
-  UNCOMMITTED_REAL=$(echo "$UNCOMMITTED" | grep -v "^??" || true)
-  if [ -n "$UNCOMMITTED_REAL" ]; then
-    echo "⚠️ Warning: Uncommitted changes remain:"
-    echo "$UNCOMMITTED_REAL"
-  fi
-fi
+**Do NOT auto-merge this PR.** It's a separate improvement, surfaced for operator review.
 
-# Check for any remaining feature/fix branches
-REMAINING_BRANCHES=$(git branch | grep -E "feature/|fix/|refactor/|experiment/" | wc -l)
-if [ "$REMAINING_BRANCHES" -gt 0 ]; then
-  echo "ℹ️ Note: $REMAINING_BRANCHES unshipped branches remain - run /gh-ship from those branches to ship them"
+---
+
+## STAGE 13: APPEND TO SELF-IMPROVEMENT HISTORY
+
+```bash
+RUN_ENTRY=$(cat <<JSONEOF
+{
+  "run_id": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "repo": "$(gh api repos/:owner/:repo --jq '.full_name')",
+  "duration_seconds": $((  $(date +%s) - START_TIME )),
+  "session_branches_created": ["${SESSION_BRANCHES_CREATED[@]}"],
+  "stages_reached": [...],
+  "ci_failures_encountered": [...],
+  "anomalies": [...],
+  "outcome": "$OUTCOME",
+  "deploy_verified": "$PROD_VERIFIED"
+}
+JSONEOF
+)
+
+# Append to .gh-ship-history.json
+if [ ! -f "$HISTORY_FILE" ]; then
+  echo '{"schema_version":1,"runs":[],"patterns_observed":{}}' > "$HISTORY_FILE"
 fi
+jq ".runs += [$RUN_ENTRY]" "$HISTORY_FILE" > "$HISTORY_FILE.tmp" && mv "$HISTORY_FILE.tmp" "$HISTORY_FILE"
 ```
 
-### 12.7 Restore Stashed Changes
+For every CI failure encountered in Stage 9, also update `patterns_observed`:
 ```bash
-# Restore stashed changes if any
-if [ "$ORIGINAL_STASH" = "yes" ]; then
-  git stash pop
-  echo "📦 Restored stashed changes"
-fi
+# pseudo-code
+patterns_observed[shape] = {
+  first_seen: existing_or_now,
+  count: existing_count + 1,
+  fix_known: <bool>,
+  last_successful_fix: <description>
+}
 ```
 
-### 12.8 Calculate Final Metrics
-```bash
-# Get final commit SHA
-FINAL_SHA=$(git rev-parse --short HEAD)
+This is the source of truth Stage 0.5 reads on the NEXT run.
 
-# Calculate total time
-END_TIME=$(date +%s)
-TOTAL_TIME=$((END_TIME - START_TIME))
-MINUTES=$((TOTAL_TIME / 60))
-SECONDS=$((TOTAL_TIME % 60))
+---
+
+## STAGE 14: SITREP
+
+```
+═══════════════════════════════════════════════════════════════
+🎉 /gh-ship — <success | partial | blocked>
+═══════════════════════════════════════════════════════════════
+
+📋 Run
+   Repo:        VetSecItPro/<repo>
+   Branch:      <branch> → main
+   Commit(s):   <short SHAs>
+   PR:          #<num> (merged | open | closed)
+   Duration:    <Xm Ys>
+
+🔗 Deploys
+   Preview:     <URL> ✅ HTTP 200
+   Production:  <URL> ✅ HTTP 200 + content marker found
+
+🔧 Auto-fixes applied
+   • Linter: <files fixed>
+   • Formatter: <files formatted>
+   • [details]
+
+🔍 Stage 11.7 Audit findings
+   Auto-fixed:
+   • <thing-1> — committed in chore/ci-improvements-<date>
+   Surfaced (operator review):
+   • <thing-2> — see PR #<num> or note: <text>
+
+🧹 Cleanup
+   Session branch: ✅ deleted (local + remote)
+   Pre-existing branches inspected: <N>
+     KEEP <branch>: WIP (no PR)
+     KEEP <branch>: open PR #<N>
+   Stale remote branches: <N pruned>
+
+🌐 Sibling repos in workspace
+   <name>: uncommitted=N unpushed=M
+   [run /gh-ship from inside if changes pending]
+
+📊 Self-improvement log
+   .gh-ship-history.json updated
+   Patterns observed total: <N>
+   New pattern this run: <shape>
+
+═══════════════════════════════════════════════════════════════
 ```
 
 ---
@@ -963,209 +803,113 @@ SECONDS=$((TOTAL_TIME % 60))
 If catastrophic failure at any stage:
 
 ```bash
-echo "🔄 Rolling back to original state..."
-
 # Restore original branch
 git checkout "$ORIGINAL_BRANCH" 2>/dev/null || git checkout -
 
 # Reset to original commit
 git reset --hard "$ORIGINAL_COMMIT"
 
-# Delete any created feature branch (both local and remote)
-if [ -n "$BRANCH_NAME" ] && [ "$BRANCH_NAME" != "$ORIGINAL_BRANCH" ]; then
-  git branch -D "$BRANCH_NAME" 2>/dev/null || true
-  git push origin --delete "$BRANCH_NAME" 2>/dev/null || true
-fi
+# Delete any session-created branches (local + remote)
+for b in "${SESSION_BRANCHES_CREATED[@]}"; do
+  if [ "$b" != "$ORIGINAL_BRANCH" ]; then
+    git branch -D "$b" 2>/dev/null || true
+    git push origin --delete "$b" 2>/dev/null || true
+  fi
+done
 
 # Close PR if created
-if [ -n "$PR_NUMBER" ]; then
-  gh pr close "$PR_NUMBER" --comment "Rolled back due to error" 2>/dev/null || true
-fi
+[ -n "$PR_NUMBER" ] && gh pr close "$PR_NUMBER" --comment "Rolled back due to error" 2>/dev/null
 
-# Restore stash if we stashed anything
-if [ "$ORIGINAL_STASH" = "yes" ]; then
-  git stash pop
-fi
+# Restore stash
+[ "$ORIGINAL_STASH" = "yes" ] && git stash pop
 
-echo "✅ Rolled back to: $ORIGINAL_COMMIT on $ORIGINAL_BRANCH"
+# Append failure entry to history
+echo "Rolled back to: $ORIGINAL_COMMIT on $ORIGINAL_BRANCH"
+```
+
+---
+
+## SELF-HEALING RECOVERY PATTERNS
+
+### Accidentally `git branch -D`'d a branch with unmerged work
+
+```bash
+# reflog has the SHA
+git reflog | grep <branch-name>
+# restore
+git branch <branch-name> <SHA-from-reflog>
+```
+
+### Force-pushed wrong content
+
+```bash
+# reflog of remote-tracking ref
+git reflog show origin/<branch>
+# revert origin via push --force-with-lease to the correct SHA
+git push origin <correct-SHA>:<branch> --force-with-lease
+```
+
+### Merged a bad PR
+
+```bash
+# revert the merge commit
+git checkout main
+git revert -m 1 <merge-SHA>
+git push
+```
+
+### Stash got lost
+
+```bash
+git fsck --lost-found
+# look in .git/lost-found/ for orphan stashes
 ```
 
 ---
 
 ## NETWORK RESILIENCE
 
-For ANY network operation, use this retry pattern:
+For any network operation:
 
 ```bash
 retry_with_backoff() {
-  local max_attempts=3
-  local delay=2
-  local attempt=1
-
+  local max_attempts=3 delay=2 attempt=1
   while [ $attempt -le $max_attempts ]; do
-    if "$@"; then
-      return 0
-    fi
-    echo "Attempt $attempt failed, retrying in ${delay}s..."
+    if "$@"; then return 0; fi
     sleep $delay
     delay=$((delay * 2))
     attempt=$((attempt + 1))
   done
-
   return 1
 }
-
-# Usage: retry_with_backoff git push origin HEAD
 ```
 
----
-
-## OUTPUT FORMAT - FINAL REPORT
-
-**On Success:**
-
-```
-═══════════════════════════════════════════════════════════════
-🎉 SHIPPED SUCCESSFULLY!
-═══════════════════════════════════════════════════════════════
-
-📋 Summary
-   Commit:      def456g
-   PR:          #42 (merged & closed)
-   Branch:      main
-   Total Time:  2m 34s
-
-🔗 Deployments
-   Preview:     https://rowan-abc123.vercel.app    ✅ HTTP 200
-   Production:  https://rowanapp.com               ✅ HTTP 200
-
-🔧 Auto-Fixes Applied
-   • ESLint: 3 files fixed
-   • Prettier: 1 file formatted
-   • Secrets: 0 detected
-   • Large files: 0 excluded
-
-🔒 Security Scan
-   • Secrets detection: ✅ passed
-   • .env files: ✅ none staged
-   • Credentials: ✅ none found
-
-🧹 Cleanup Status
-   • Feature branch: ✅ deleted (local & remote)
-   • PR state: ✅ merged & closed
-   • Stale branches: ✅ 2 cleaned up
-   • Repository: ✅ clean (no uncommitted work)
-
-📦 Package Manager: pnpm
-🔍 Linter: biome
-
-═══════════════════════════════════════════════════════════════
-```
-
-**On Partial Success (merged but deployment unverified):**
-
-```
-═══════════════════════════════════════════════════════════════
-⚠️ SHIPPED WITH WARNINGS
-═══════════════════════════════════════════════════════════════
-
-📋 Summary
-   Commit:      def456g
-   PR:          #42 (merged & closed)
-   Branch:      main
-   Total Time:  3m 12s
-
-🔗 Deployments
-   Preview:     https://rowan-abc123.vercel.app    ✅ HTTP 200
-   Production:  https://rowanapp.com               ⚠️ HTTP 503
-
-⚠️ Warnings
-   • Production deployment may still be in progress
-   • Verify manually: https://rowanapp.com
-
-🧹 Cleanup Status
-   • Feature branch: ✅ deleted
-   • PR state: ✅ merged & closed
-   • Repository: ✅ clean
-
-═══════════════════════════════════════════════════════════════
-```
-
-**On Failure:**
-
-```
-═══════════════════════════════════════════════════════════════
-❌ SHIP FAILED - ROLLED BACK
-═══════════════════════════════════════════════════════════════
-
-📋 Summary
-   Failed at:   Stage 9 (CI Fix)
-   Reason:      TypeScript error unfixable after 3 attempts
-   Time spent:  4m 18s
-
-❌ Error Details
-   src/api.ts:42 - Type 'string' is not assignable to type 'number'
-   src/api.ts:67 - Property 'foo' does not exist on type 'Bar'
-
-🔗 PR Status
-   https://github.com/VetSecItPro/rowan-app/pull/42
-   State: OPEN (needs manual review)
-
-🔄 Rollback Complete
-   Local state restored to: abc123f on main
-   Feature branch: deleted (local & remote)
-   PR: left open for manual review
-   Stashed changes: restored
-   Repository: clean
-
-═══════════════════════════════════════════════════════════════
-```
+For GitHub specifically:
+- GraphQL rate limit (5000/hr separate from REST 5000/hr): if exhausted, fall back to REST endpoint for the same operation
+- Watch loops should use REST polling (`gh api repos/.../actions/runs/<id>`) not GraphQL `gh pr checks --watch` to preserve quota
 
 ---
 
 ## RELATED SKILLS
 
 **Feeds from:**
-- `/test-ship` - run test-ship before gh-ship to ensure all tests pass and coverage is solid
-- `/sec-ship` - run sec-ship before gh-ship to ensure no vulnerabilities ship
-- `/smoketest` - quick pre-ship sanity check before committing to the full pipeline
-- `/subagent-dev` - subagent-dev produces code; gh-ship ships it
-- `/blog` - blog calls gh-ship automatically at Phase 4 to publish articles
-- `/investigate` - after a fix is confirmed, gh-ship commits and ships it
+- `/test-ship` — run before /gh-ship to ensure tests pass
+- `/sec-ship` — run before /gh-ship to ensure no vulns
+- `/smoketest` — quick pre-ship sanity
+- `/subagent-dev` — produces code; /gh-ship ships it
+- `/blog`, `/investigate` — both call /gh-ship for the publish/fix-ship handoff
 
 **Feeds into:**
-- `/monitor` - after gh-ship completes, run monitor to verify the production deployment is healthy
+- `/monitor` — after /gh-ship completes, run /monitor to verify production health
+- `/qatest` — run on preview deployment before merge
 
-**Pairs with:**
-- `/qatest` - run qatest on the preview deployment before allowing merge
-- `/monitor` - always follow gh-ship with monitor to confirm real-world health
-
-**Auto-suggest after completion:**
-When deployment is confirmed (HTTP 200 on production), suggest: `/monitor` to run a full post-deploy health check
+**Auto-suggest after success:** `/monitor` for full post-deploy health check.
 
 ---
 
 ## STATUS UPDATES
 
-This skill follows the [Status Update Protocol](~/.claude/standards/STATUS_UPDATES.md). See standard for emoji format and cadence rules.
-
----
-
-## SITREP
-
-> Reference: [SITREP Standard](~/.claude/standards/SITREP_FORMAT.md)
-
-At the end of every /gh-ship run, output:
-
-**Skill:** /gh-ship
-**Status:** COMPLETE / PARTIAL / BLOCKED
-**Branch:** [branch name]
-**Commits:** [count and short hashes]
-**PR:** [URL or "not created"]
-**CI:** [passed/failed/pending]
-**Merged:** [yes/no]
-**Deployed:** [preview URL / production URL / "not deployed"]
-**Cleanup:** [branch deleted yes/no]
+Provide brief status every 30-60s during execution. Format per [Status Update Protocol](~/.claude/standards/STATUS_UPDATES.md).
 
 ---
 
@@ -1173,28 +917,57 @@ At the end of every /gh-ship run, output:
 
 > Reference: [Resource Cleanup Protocol](~/.claude/standards/CLEANUP_PROTOCOL.md)
 
-### GH-Ship-Specific Cleanup
+Stage 12 + 12.5 cover all cleanup. No additional protocol needed.
 
-This skill already has comprehensive cleanup in Stage 12. No additional cleanup required.
-Stage 12 covers: branch deletion, PR verification, stash restoration, stale branch pruning, and clean state verification.
+---
+
+## DESIGN DECISIONS (WHY this structure)
+
+### Why AI-judgment over regex tables
+
+The previous version had ~15 rows of "if grep X then run Y." Real CI failures don't fit those rows. ruff E401 doesn't say "linter" — it says "Multiple imports on one line." A skill that pattern-matches misses this; a skill that reads + reasons handles it.
+
+### Why session-scoped branch tracking
+
+The 2026-05-03 incident: cleanup loop saw `feature/whatsapp-pair-ui-scaffold` (no PR) and could have deleted it as "unmerged garbage." It was actually operator's WIP. Solution: only auto-delete branches that THIS run created. Pre-existing is sacred.
+
+### Why content-grep verification before delete
+
+Squash-merge produces a NEW commit on main with different SHA. Ancestor checks fail. PR-state lookup helps but breaks when the PR was deleted. Content equivalence is the most robust signal: "is the diff between this branch and main empty?" → safe to delete.
+
+### Why proactive audit (Stage 11.7)
+
+The user's ask: "we can tell it to also check for other stuff that it might find but we didn't think to specify." Static fix tables can never be exhaustive. An audit stage that scans for known anti-patterns AND surfaces unknowns covers the long tail.
+
+### Why CI workflow improvement (Stage 12.5)
+
+Most repos accumulate workflow drift: unpinned actions, missing concurrency groups, over-permissioned tokens. /gh-ship sees these patterns across many runs. Surfacing fixes (auto-applied for safe categories, surfaced for review for tradeoffs) is high-leverage maintenance.
+
+### Why self-improvement history
+
+Same patterns of failure recur. ruff E401 on Python projects, GHCR 403 after a rename, idempotency-key collisions on millisecond-resolution ids. Without a log, every run rediscovers from scratch. With a log, future runs try the known-good fix first.
+
+### Why multi-repo report only (no cross-traverse)
+
+A workspace with 3 sibling repos shouldn't make /gh-ship 3x as complex. One repo per invocation. But the SITREP must surface sibling state — otherwise the operator forgets to ship the others.
 
 ---
 
 ## IMPORTANT REMINDERS
 
-- This skill runs FULLY AUTONOMOUSLY
-- Generate GOOD commit messages by reading the actual diff
-- FIX everything that's fixable, don't just report
-- NEVER ship broken code - if CI can't pass after 3 attempts, STOP
-- ALWAYS rollback cleanly on catastrophic failure
-- VERIFY both preview and production deployments
-- **ALWAYS cleanup - delete branches, close PRs, verify clean state**
-- **NEVER leave uncommitted work or stale branches**
-- The user trusts you to ship their code safely, correctly, and COMPLETELY
-- Check CLAUDE.md for directory exclusions before starting
-- A professional workflow means ZERO artifacts left behind
+- This skill runs FULLY AUTONOMOUSLY — no permission asking, no confirmation pausing
+- READ the diff for commit messages — don't generate generic ones
+- FIX everything that's fixable; don't just report
+- VERIFY before destroying (content-grep, session-ownership)
+- PROTECT pre-existing WIP (only delete what THIS run created)
+- AUDIT proactively (Stage 11.7) — find what we didn't specify
+- IMPROVE CI workflows (Stage 12.5) — propose safe upgrades for review
+- LEARN from history (`.gh-ship-history.json`)
+- SCAN siblings in multi-repo workspaces
+- ROLLBACK cleanly on catastrophic failure
+- The user trusts /gh-ship to ship code SAFELY, CORRECTLY, COMPLETELY, and to GET BETTER over time
 
-<!-- Claude Code Skill by Steel Motion LLC — https://steelmotion.dev -->
-<!-- Part of the Claude Code Skills Collection -->
-<!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
+<!-- /gh-ship by Steel Motion LLC — https://steelmotion.dev -->
+<!-- Part of steelmotion-ops (renamed from claw-ops 2026-05-03) -->
+<!-- Lessons learned from 2026-05-03 incident: ~/.claude/commands/_plans/skills-collection-rewrite-plan.md -->
 <!-- License: MIT -->
