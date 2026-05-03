@@ -44,10 +44,10 @@ Updated 2026-05-03.
 | **rowan-app** | OFF | PR #347 (open) — reverses 2026-04-27 gate decision in light of cost |
 | **kaulby-app** | OFF | PR #367 (open) |
 | **actnow-education** | n/a (all CI disabled) | 2026-05-03 — repo is being abandoned; all 4 workflows disabled via `gh api -X PUT .../disable` to stop burning Actions minutes. No PR needed. |
-| **styrby-app** | OFF (deferred) | Has uncommitted user work in tree; pickup next clean session |
+| **styrby-app** | OFF | PR #246 (open) — bundled with screenshot-runner relocation cleanup. Removed elaborate FCP-budget gate too; defer FCP enforcement to post-deploy Vercel Speed Insights. |
 | All other repos | n/a (already clean) | Confirmed by API scan 2026-05-03 |
 
-**Total: 6 repos had Lighthouse in CI; 4 PR'd, 2 deferred for clean-tree pickup.**
+**Total: 6 repos had Lighthouse in CI; 5 PR'd (#138 #147 #347 #367 #246), 1 disabled-via-API (actnow being abandoned).**
 
 ## When to add Lighthouse back to CI
 
