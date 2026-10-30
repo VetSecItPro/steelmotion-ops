@@ -15,7 +15,7 @@ The cheap-shipping playbook attacks all four multipliers:
 4. Reduce build time via Turbo remote cache + Vercel `ignoredBuildStep`
 
 Big-shipping teams (Vercel, Linear, Stripe, Shopify) all run this stack.
-The default GitHub + Vercel config is *uneconomical* on monorepos — it's
+The default GitHub + Vercel config is *uneconomical* on monorepos - it's
 on you to opt in to the optimizations.
 
 ---
@@ -23,13 +23,13 @@ on you to opt in to the optimizations.
 ## The 4 default gaps every monorepo has
 
 Without explicit configuration, a monorepo with mixed packages
-(e.g. `styrby-web` + `styrby-cli` + `styrby-mobile`) pays for:
+(e.g. `acme-web` + `acme-cli` + `acme-mobile`) pays for:
 
 | Gap | What it costs |
 |---|---|
 | **Workflows trigger on every PR** regardless of touched files | Web's lint/typecheck/build runs on a CLI-only PR. ~80% of CI minutes are this overhead. |
 | **No `ignoredBuildStep` in `vercel.json`** | Vercel builds the Next.js app on every push to main, even when only CLI/mobile/SQL changed. ~3 min × N PRs. |
-| **No `turbo.json` remote cache** | Every CI run re-builds packages whose source didn't change. Adds 1–3 min per workflow. |
+| **No `turbo.json` remote cache** | Every CI run re-builds packages whose source didn't change. Adds 1-3 min per workflow. |
 | **No merge queue + naive auto-merge** | N stacked PRs → N CI rebases → N Vercel deploys. Compound waste. |
 
 **Rule of thumb**: a properly-configured monorepo CI is ~85% cheaper
@@ -49,7 +49,7 @@ DAG**. Route each PR by its position in that DAG.
 | PR characteristic | Routing | Why |
 |---|---|---|
 | Independent (disjoint files, no logical deps) | **GitHub Merge Queue** OR cherry-pick batch into integration PR | Single CI run validates the combination; no per-PR rebase thrash. |
-| Linearly dependent (B builds on A) | **Stacked PRs** — B targets A's branch, not main | Each PR diff stays small; no rebase needed when A merges. |
+| Linearly dependent (B builds on A) | **Stacked PRs** - B targets A's branch, not main | Each PR diff stays small; no rebase needed when A merges. |
 | Overlap-conflicting (touch same files) | Serialize via auto-merge | Accept rebase cost as the price of safety; the alternative is interaction bugs. |
 | Mixed | Topological-sort cherry-pick into integration PR | Single CI on the rebased combination. |
 
@@ -63,7 +63,7 @@ DAG**. Route each PR by its position in that DAG.
 - Vercel does **one** prod build.
 
 **CI cost for N=5 independent PRs**:
-- Naive (auto-merge stacked): ~5–10 cycles (rebase thrash)
+- Naive (auto-merge stacked): ~5-10 cycles (rebase thrash)
 - Pattern B (stage-and-batch): 5 individual + 1 integration = 6
 - Single integration from start: 1
 - Pick based on confidence in agent output. Pattern B is the safe default.
@@ -82,19 +82,19 @@ for paths the workflow doesn't care about.
 on:
   pull_request:
     paths:
-      - 'packages/styrby-web/**'
-      - 'packages/styrby-shared/**'
+      - 'packages/acme-web/**'
+      - 'packages/acme-shared/**'
       - 'pnpm-lock.yaml'
       - 'package.json'
       - '.github/workflows/web-ci.yml'
   push:
     branches: [main]
     paths:
-      - 'packages/styrby-web/**'
-      - 'packages/styrby-shared/**'
+      - 'packages/acme-web/**'
+      - 'packages/acme-shared/**'
 ```
 
-Repeat per-package: `cli-ci.yml` filters `packages/styrby-cli/**` etc.
+Repeat per-package: `cli-ci.yml` filters `packages/acme-cli/**` etc.
 
 **Effect**: a CLI-only PR skips web's entire CI chain. Saves ~80% of
 the per-PR fixed overhead.
@@ -131,7 +131,7 @@ runs. Only the latest push runs.
 ```
 
 **Effect**: `pnpm install` returns in <10s on cache hit; Next.js incremental
-build uses `.next/cache`. Saves 30–90s per workflow.
+build uses `.next/cache`. Saves 30-90s per workflow.
 
 #### 2.4 GitHub Merge Queue (native, free on public repos)
 
@@ -165,15 +165,15 @@ exits 0 to skip the build, 1 to proceed.
 ```jsonc
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoredBuildStep": "bash -c 'git diff --quiet HEAD^ HEAD -- packages/styrby-web packages/styrby-shared package.json pnpm-lock.yaml turbo.json next.config.js && exit 0 || exit 1'"
+  "ignoredBuildStep": "bash -c 'git diff --quiet HEAD^ HEAD -- packages/acme-web packages/acme-shared package.json pnpm-lock.yaml turbo.json next.config.js && exit 0 || exit 1'"
 }
 ```
 
-**Read as**: if NO file in `packages/styrby-web`, `packages/styrby-shared`,
+**Read as**: if NO file in `packages/acme-web`, `packages/acme-shared`,
 or critical root files changed → exit 0 (skip build). Otherwise exit 1
 (build).
 
-For monorepos where Vercel ships one package (`packages/styrby-web`), this
+For monorepos where Vercel ships one package (`packages/acme-web`), this
 saves the entire ~3 min build cost on every CLI-only / mobile-only / SQL-only
 push.
 
@@ -192,7 +192,7 @@ push.
 }
 ```
 
-Use sparingly — preview deploys are valuable for QA. Better: rely on
+Use sparingly - preview deploys are valuable for QA. Better: rely on
 `ignoredBuildStep` to short-circuit cheaply.
 
 #### 3.3 Turbo + Vercel integration
@@ -205,7 +205,7 @@ having `turbo.json` in the repo root.
 
 ### Layer 4: Cache reuse across CI + Vercel
 
-#### 4.1 `turbo.json` — even minimal config unlocks remote cache
+#### 4.1 `turbo.json` - even minimal config unlocks remote cache
 
 ```jsonc
 {
@@ -239,7 +239,7 @@ npx turbo link
 
 CI runs then auto-share cache with Vercel and other CI runs.
 
-**Effect**: A CI run on a PR that doesn't touch `styrby-web` returns
+**Effect**: A CI run on a PR that doesn't touch `acme-web` returns
 the web build instantly from Vercel's remote cache.
 
 #### 4.2 GitHub Actions cache (npm/pnpm + `.next` + `.tsbuildinfo`)
@@ -252,10 +252,10 @@ See §2.3 above.
 
 For every new repo OR existing repo missing this stack:
 
-- [ ] **`turbo.json` at repo root** (even minimal — unlocks remote cache)
+- [ ] **`turbo.json` at repo root** (even minimal - unlocks remote cache)
 - [ ] **`vercel.json` with `ignoredBuildStep`** for any monorepo where Vercel
       only ships some packages
-- [ ] **Path filters on every `.github/workflows/*.yml`** — declare which
+- [ ] **Path filters on every `.github/workflows/*.yml`** - declare which
       paths trigger which workflow
 - [ ] **`concurrency:` block** on every workflow
 - [ ] **`actions/cache`** for `~/.pnpm-store` + `node_modules/.cache` +
@@ -357,7 +357,7 @@ Are PRs touching shared files?
 
 ## Cost worked example
 
-Monorepo with 5 PRs: 3 touch `packages/styrby-cli`, 2 touch `packages/styrby-web`.
+Monorepo with 5 PRs: 3 touch `packages/acme-cli`, 2 touch `packages/acme-web`.
 
 ### Without optimizations (default GitHub + Vercel)
 - 5 × full CI workflow (lint+test+build for ALL packages) = ~10 min × 5 = **50 min CI**
@@ -378,13 +378,13 @@ PR count grows or workflows are more expensive.
 
 ## Industry references
 
-- **Vercel**: [Skip a build step](https://vercel.com/docs/projects/overview#ignored-build-step) — official `ignoredBuildStep` doc
-- **GitHub**: [Merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue) — native batched-merge feature
-- **Turbo**: [Remote caching](https://turbo.build/repo/docs/core-concepts/remote-caching) — cross-CI cache sharing
-- **Linear blog**: [How Linear builds product](https://linear.app/blog/how-linear-builds-product) — small-PR + merge queue + Vercel ignoredBuildStep workflow
-- **Vercel engineering**: [Building Vercel](https://vercel.com/blog/how-vercel-uses-vercel) — internal monorepo patterns
-- **Shopify**: [Shopify monorepo CI](https://shopify.engineering/shopify-monorepo) — path-filtered workflows at scale
-- **Stripe**: [Sorbet at Stripe](https://stripe.com/blog/sorbet-stripes-type-checker-for-ruby) — incremental typecheck pattern (analog: TypeScript `.tsbuildinfo` caching)
+- **Vercel**: [Skip a build step](https://vercel.com/docs/projects/overview#ignored-build-step) - official `ignoredBuildStep` doc
+- **GitHub**: [Merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue) - native batched-merge feature
+- **Turbo**: [Remote caching](https://turbo.build/repo/docs/core-concepts/remote-caching) - cross-CI cache sharing
+- **Linear blog**: [How Linear builds product](https://linear.app/blog/how-linear-builds-product) - small-PR + merge queue + Vercel ignoredBuildStep workflow
+- **Vercel engineering**: [Building Vercel](https://vercel.com/blog/how-vercel-uses-vercel) - internal monorepo patterns
+- **Shopify**: [Shopify monorepo CI](https://shopify.engineering/shopify-monorepo) - path-filtered workflows at scale
+- **Stripe**: [Sorbet at Stripe](https://stripe.com/blog/sorbet-stripes-type-checker-for-ruby) - incremental typecheck pattern (analog: TypeScript `.tsbuildinfo` caching)
 
 ---
 
@@ -500,21 +500,138 @@ jobs:
 
 ## Decision: applying this to your repos
 
-For multi-repo accounts (e.g. one engineer working on
-styrby-app + clarus-app + rowan-app + vetsintech + steelmotion):
+For multi-repo accounts (one engineer working across several repos), sort them like this:
 
-| Repo | Has monorepo packages? | Apply this stack? | Priority |
-|---|---|---|---|
-| styrby-app | Yes (web + cli + mobile + shared) | Full stack | High — most PR traffic |
-| clarus-app | Single Next.js app | Layer 4 only (caching) | Low |
-| rowan-app | Single Next.js app | Layer 4 only (caching) | Low |
-| vetsintech | Single Next.js app | Layer 4 only (caching) | Low |
-| steelmotion | Single Next.js app | Layer 4 only (caching) | Low |
+| Repo shape | Apply this stack? | Priority |
+|---|---|---|
+| Monorepo (web + cli + mobile + shared packages) | Full stack | High - most PR traffic |
+| Single Next.js app | Layer 4 only (caching) | Low |
 
 The big wins are on monorepos. Single-package repos benefit mainly from
 caching (Layer 4) and merge queue (Layer 1.D).
 
 ---
 
+## Per-repo audit checklist (use this on cold sessions)
+
+When starting on a new repo (or returning to one) and asked to cut CI
+cost, walk through this list. Each step is independent - apply what
+fits, skip what doesn't. ~30 minutes of work yields 50-80% reduction in
+CI minutes for a typical Next.js + Playwright repo.
+
+### Step 1: Identify the dominant cost line
+
+Run: `gh run list --limit 50 --json name,conclusion,createdAt`
+
+Group by workflow name; multiply count × typical duration. The workflow
+with the highest product is your target. In one single-app repo (2026-05-04) it
+was `smart-e2e.yml` at ~40 min × every PR push = >90% of total CI minutes.
+
+### Step 2: Scan that workflow's `on:` block
+
+For each trigger, ask:
+- Does `paths` / `paths-ignore` exist? If no → most PRs are wasting it.
+- Does `concurrency` with `cancel-in-progress: true` exist? If no →
+  force-pushes burn duplicate runs.
+- Does the `if:` block skip drafts? If no → draft-and-iterate workflows
+  burn N runs before review.
+
+### Step 3: Derive the IGNORE list
+
+Universal ignores (every repo, every workflow):
+- `**/*.md`
+- `docs/**`
+- `LICENSE`
+- `CHANGELOG*.md`
+- `.github/ISSUE_TEMPLATE/**`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+
+Repo-class ignores (apply if present):
+- DB-migration repos: `<migrations-dir>/**` (Supabase: `supabase/migrations/**`,
+  Drizzle: `drizzle/**`, Prisma: `prisma/migrations/**`) - only IF a
+  separate drift-check workflow already gates them.
+- Marketing-asset repos: `public/marketing/**`, `public/screenshots/**`,
+  any `assets/**` dir not imported by app code.
+- Content repos: `content/**`, `posts/**`, blog markdown - assuming
+  static content, not MDX with logic.
+
+Repo-specific ignores (audit per-repo):
+- Sibling-package paths in monorepos when the workflow only cares about
+  one package (e.g. `apps/cli/**` ignored by web's E2E workflow).
+- Backend-only API routes if the E2E suite covers UI flows only.
+  (Caveat: only if you're confident no UI test exercises that endpoint.)
+
+Do NOT ignore:
+- `package.json`, `pnpm-lock.yaml` - version bumps absolutely affect
+  test outcomes
+- `.github/workflows/<the-workflow-itself>` - workflow changes need
+  to validate themselves
+- `playwright.config.*`, `vitest.config.*`, equivalent test configs
+- `next.config.*`, `middleware.ts`, build-time config
+- `scripts/**` if any of those scripts run as service_role or modify
+  shared state - security audit must still run
+
+### Step 4: Add the `if:` skip-draft + skip-token guards
+
+```yaml
+if: >-
+  !contains(github.event.head_commit.message || '', '[skip-e2e]') &&
+  !contains(github.event.pull_request.title || '', '[skip-e2e]') &&
+  github.event.pull_request.draft != true
+```
+
+Replace `skip-e2e` with the workflow's name (`skip-build`, `skip-test`,
+etc.). Document the opt-out token in CONTRIBUTING.md or PR template.
+
+### Step 5: Verify branch protection still passes
+
+If `main` requires the workflow's status checks via branch protection,
+a skipped workflow leaves the PR un-merge-able. Two options:
+- Make the check NOT required (preferred for expensive checks)
+- Or add a "neutral skip" job that always passes when the path filter
+  excludes the PR (more complex; only worth it if branch protection is
+  load-bearing for compliance)
+
+### Step 6: Estimate savings before merging
+
+For each ignored path category, count recent PRs that touched ONLY that
+category:
+
+```bash
+gh pr list --state merged --limit 50 --json files,number \
+  --jq '.[] | select(.files | all(.path | test("^(docs|supabase/migrations|public/marketing)/"))) | .number'
+```
+
+If you find ≥3 such PRs in the last 50, the path filter pays for itself
+in the next sprint.
+
+### Step 7: Land it as a single chore PR
+
+Title format: `chore(ci): skip <workflow> for irrelevant paths and draft PRs`
+
+Body includes:
+- The IGNORE list with one-line justification per entry
+- Estimated savings ("the merged PR #N would have skipped this")
+- Note that branch protection / drift-check still gates correctness
+
+### Worked example (a single-app repo, 2026-05-04)
+
+Cuts shipped:
+1. `paths-ignore` on `smart-e2e.yml`: `**/*.md`, `docs/**`,
+   `supabase/migrations/**`, `public/marketing/**`,
+   `public/screenshots/**`, `.github/ISSUE_TEMPLATE/**`,
+   `.github/PULL_REQUEST_TEMPLATE.md`, `CHANGELOG*.md`, `LICENSE`
+2. Draft PR skip via `pull_request.draft != true`
+3. Existing `[skip-e2e]` opt-out preserved
+
+Migrations were safe to ignore because `deploy.yml` runs drift-check
+on push to main against the prod registry.
+
+PR #348 (the 34-file migration cleanup that motivated this) would have
+skipped E2E entirely - saving ~40 min per push × the 3 pushes that PR
+took = ~2 hours of CI on one PR alone.
+
+---
+
 *Standard owner: this is a living document. Update as new GitHub /
-Vercel features ship. Last revision: 2026-04-28.*
+Vercel features ship. Last revision: 2026-05-04.*

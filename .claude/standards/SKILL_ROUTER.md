@@ -1,4 +1,4 @@
-# Skill Router Protocol — Intent to Skill Mapping
+# Skill Router Protocol - Intent to Skill Mapping
 
 **Version:** 1.0
 **Applies to:** Every Claude Code session globally
@@ -29,114 +29,139 @@ This document is the **intent-to-skill mapping table**. Reference it on every us
 
 ---
 
-## Intent → Skill Map
+<!-- BEGIN GENERATED INVENTORY - do not edit by hand, run generate-skill-router.py -->
 
-### Planning & Thinking
+## Intent to Skill Map
 
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "I'm thinking about...", "What if we...", "Should we...", "I have an idea...", "Let's explore...", "Should I build..." | `/brainstorm` | High | **Suggest** - "Sounds like a brainstorming session. Want me to run `/brainstorm` to explore this properly?" |
-| "Big feature", "new functionality", "architecture change", "multi-tenant", "re-architect", "overhaul", "redesign the system" | `/mdmp` | High | **Suggest** - "This is a significant change. Want me to run `/mdmp` for a structured multi-lens analysis?" |
-| "Audit the design system", "design tokens", "make this consistent", "design system audit" | `/design` | Medium | **Suggest** |
-| "Are we ready to launch?", "pre-launch check", "production readiness" | `/launch` | High | **Auto** |
+**33 skills, generated from the filesystem 2026-10-29 21:46.** 24 in `~/.claude/skills/`, 9 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
 
-### Debugging & Problem-Solving
+| Skill | Where | What it does | Route to it when the user says |
+|---|---|---|---|
+| `/a11y` | skills/ | Accessibility audit and remediation to WCAG 2.2 Level AA: automated scan, then the manual checks tooling cannot do (keyboard, screen reader, focus ord... | `accessibility`, `a11y`, `WCAG`, `screen reader`, `keyboard navigation`, `contrast`, `ARIA` |
+| `/cleancode` | skills/ | Technical-debt reduction and dead-code elimination: find genuinely unused code, duplication, and complexity, remove or refactor it safely with tests a... | `clean up code`, `dead code`, `technical debt`, `refactor`, `remove unused`, `simplify this`, `code smell` |
+| `/compliance` | skills/ | Privacy, data-protection and security-compliance work in one skill: audit against GDPR/CCPA/HIPAA/SOC2 as applicable, generate the policy and readines... | `compliance audit`, `GDPR`, `CCPA`, `HIPAA`, `SOC2`, `privacy audit`, `data compliance` |
+| `/db` | skills/ | Database schema, migrations, drift detection and data management, safely. | `DB migration`, `schema change`, `RLS policy`, `database drift`, `add a column`, `migrate the database`, `generate migration` |
+| `/deps` | skills/ | Dependency health and supply-chain safety: audit for vulnerable, outdated, abandoned and malicious packages across whatever ecosystems the repo actual... | `update deps`, `outdated packages`, `CVEs in dependencies`, `npm audit`, `upgrade dependencies`, `supply chain`, `is this package safe` |
+| `/design` | skills/ | Frontend design system work: auto-detects whether to generate a system from scratch or audit and improve an existing one. | `design system`, `make this look better`, `design audit`, `make it consistent`, `colour palette`, `dark mode`, `spacing` |
+| `/docs` | skills/ | Documentation audit and generation: find where docs are missing, stale or signature-echoing, then generate real ones - README, API reference, architec... | `generate docs`, `document this`, `write documentation`, `update the README`, `API docs`, `the docs are stale`, `document why` |
+| `/docs-sync` | skills/ | Keep a repo's documentation true to its code using a per-repo document register: each doc records the ANCHORS its claims depend on (resolved paths, sy... | `update the docs`, `update docs`, `update whatever documents this touched`, `update the applicable documents`, `record what we did`, `reflect the work in the docs`, `are my docs current` |
+| `/gh-ship` | skills/ | Disciplined git pipeline: validate, commit with a generated semantic message, push, open a PR, watch CI, fix failures at root cause, merge, verify the... | `ship it`, `commit and push`, `create PR`, `deploy`, `get this live`, `push this` |
+| `/incident` | skills/ | Structured production incident response: classify severity, mitigate user impact FIRST, find root cause with evidence, fix and verify, then write the ... | `production is down`, `users are reporting`, `urgent prod issue`, `site is down`, `outage`, `incident`, `emergency` |
+| `/investigate` | skills/ | Systematic root-cause debugging: gather evidence before forming a theory, test hypotheses against reality rather than guessing, find the actual cause ... | `not working`, `broken`, `cannot figure out`, `why is this happening`, `deep dive`, `debug this`, `keeps failing` |
+| `/launch` | skills/ | Launch-readiness gate: orchestrates the audit skills (sec-ship, test-ship, perf, a11y, deps, monitor) in audit-only mode, adds the five checks none of... | `ready to launch?`, `pre-launch check`, `launch readiness`, `are we ready to ship this`, `go/no-go`, `before we go live` |
+| `/mdmp` | skills/ | Military Decision-Making Process adapted for software: frame the problem, generate genuinely distinct courses of action, war-game each against seven s... | `big feature`, `new architecture`, `overhaul`, `re-architect`, `should we build or buy`, `plan this properly`, `multi-lens analysis` |
+| `/migrate` | skills/ | Major framework and library version migrations: Next 14->15, React 18->19, Tailwind 3->4, CRA->Vite, Express->Fastify and the like. | `migrate [framework]`, `major version upgrade`, `upgrade to [X]`, `Next 15`, `React 19`, `Tailwind 4`, `move from X to Y` |
+| `/monitor` | skills/ | Post-deploy health verification: discover what a project actually deploys to, check it at the real URL and in the runtime itself, score six weighted c... | `post-deploy check`, `is prod healthy?`, `health check`, `did the deploy work`, `check production`, `monitor` |
+| `/perf` | skills/ | Performance audit and optimization: measure a real baseline, find what actually costs time, fix at root cause, then re-measure and prove the delta. | `slow`, `performance`, `Lighthouse`, `bundle size`, `Core Web Vitals`, `LCP`, `INP` |
+| `/qatest` | skills/ | Autonomous QA and UAT: discover every route, drive every interactive element and user flow in a real browser, test the API surface, check accessibilit... | `full QA`, `test all pages`, `UAT`, `user acceptance testing`, `QA sweep`, `test everything`, `quality check before shipping` |
+| `/redteam` | skills/ | Active exploitation and multi-step attack-chain analysis against a LOCAL development instance only. | `red team`, `try to hack`, `attack this`, `exploit`, `chain analysis`, `prove the vuln` |
+| `/repo-bootstrap` | skills/ | Apply the standard project baseline to a fresh or under-configured repo: test framework + a CI gate that blocks merges, .gitignore, CHANGELOG, pre-com... | `new repo setup`, `bootstrap this repo`, `apply project standards`, `set up CI here`, `scaffold this repo`, `get this repo to baseline` |
+| `/sec-ship` | skills/ | AI-judgment security pipeline: discover the attack surface, fan out 17 specialist agents mapped to OWASP Top 10:2025, triage by exploitability, fix at... | `is this secure?`, `security audit`, `OWASP`, `vulnerabilities`, `check for CVEs`, `pentest this`, `before we launch` |
+| `/session-conventions` | skills/ | The operator's working formats and procedures, relocated out of ~/.claude/CLAUDE.md on 2026-08-27 so they load on demand instead of on every turn: the... | `recap`, `snapshot`, `status?`, `where are we`, `lessons learned`, `log this`, `what git commands can I run` |
+| `/smoketest` | skills/ | Fast pre-ship sanity check: run every cheap mechanical layer (types, build, lint, unit tests, page probes, headers, stray logs, env vars, dep advisori... | `smoke test`, `quick sanity check`, `does it still work`, `quick check before I ship`, `sanity check` |
+| `/test-ship` | skills/ | Test coverage audit, gap-fill and verification: find what business logic is untested, write real tests for it (not smoke tests), run the full suite, a... | `test coverage`, `add tests`, `TDD`, `missing tests`, `write tests`, `is this tested`, `coverage gap` |
+| `/worklog` | skills/ | End-of-session and end-of-day work journal. | `worklog`, `log the session`, `journal this`, `write up what we did`, `daily log`, `end of day`, `close out the session` |
+| `/backup-verify` | commands/ | Restic / Cloud-Backup Restore-Test | `test the restore`, `is my backup actually working`, `verify backups`, `restore-test`, `have we ever restored` |
+| `/brainstorm` | commands/ | /brainstorm - Socratic design exploration: one question at a time, 2-3 approaches with tradeoffs, HARD-GATE before implementation, writes approved spe... | `help me think through`, `explore approaches`, `what are the options`, `design this with me`, `I am not sure how to build this` |
+| `/browse` | commands/ | /browse - Unified Browser Control: navigate, inspect, screenshot, test, audit - combines Playwright MCP + higher-level operations | `open the site`, `click through`, `screenshot this page`, `check it in a browser`, `does the page work`, `inspect the DOM` |
+| `/critique-adversarial` | commands/ | /critique-adversarial - Hostile cut-editor for articles. | `cut this down`, `it is too long`, `tighten this article`, `hostile edit`, `what can I remove`, `make it sharper` |
+| `/cron-audit` | commands/ | Cron + Scheduled-Job Health Audit | `are crons working`, `audit my crons`, `check scheduled jobs`, `silent cron failures`, `deploy webhook stuck` |
+| `/dev` | commands/ | Start a clean development server (fast, resilient, self-healing) allowed-tools: Bash(git *), Bash(npm *), Bash(npx *), Bash(pnpm *), Bash(yarn *), Bas... | `start dev server` |
+| `/secrets-audit` | commands/ | Env Files, Backup Coverage, Key Rotation Health | `audit my secrets`, `are env files backed up`, `rotate API keys`, `key rotation`, `stale env vars`, `stale secrets` |
+| `/subagent-dev` | commands/ | /subagent-dev - Automated plan execution with two-stage review per task: dispatch implementer, then spec compliance reviewer, then code quality review... | `execute the plan` |
+| `/write-skill` | commands/ | /write-skill - TDD for skill creation: pressure-test a scenario WITHOUT the skill (RED), write the skill (GREEN), close loopholes via rationalization ... | `build a new skill` |
 
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Not working", "something's broken", "this bug", "figure out why", "it was working yesterday", "intermittent issue", "flaky test", "can't figure out", "deep dive and investigate" | `/investigate` | **Very High** | **Auto** - "This looks like a bug investigation. Running `/investigate`." |
-| "Production is down", "site is broken for users", "users are reporting", "urgent production issue" | `/incident` | **Very High** | **Auto** - "Production issue. Running `/incident` (includes postmortem)." |
-| "Performance is slow", "site feels laggy", "Lighthouse score", "bundle size", "LCP", "Core Web Vitals" | `/perf` | High | **Auto** |
-
-### Testing & QA
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Test the whole app", "full QA", "UAT", "end-to-end test", "test all pages" | `/qatest` | High | **Auto** |
-| "Quick smoke test", "basic check", "quick sanity check" | `/smoketest` | High | **Auto** |
-| "Test coverage", "add tests", "missing tests", "need unit tests", "TDD" | `/test-ship` | High | **Auto** |
-| "Red team", "attack", "try to hack", "pen test", "exploitation" | `/redteam` | High | **Suggest** (high-risk tool) |
-
-### Security & Compliance
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Security audit", "find vulnerabilities", "is this secure?", "OWASP", "security scan", "secure the app" | `/sec-ship` | **Very High** | **Auto** |
-| "Weekly security scan", "scan all repos" | `/sec-weekly-scan` | High | **Auto** |
-| "GDPR", "CCPA", "privacy policy", "data compliance", "cookie consent" | `/compliance` | High | **Auto** |
-| "Compliance docs", "enterprise security docs", "vendor questionnaire", "SOC 2 docs" | `/compliance-docs` | High | **Auto** |
-
-### Code Quality & Maintenance
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Clean up code", "technical debt", "dead code", "unused", "simplify", "refactor to clean" | `/cleancode` | High | **Auto** |
-| "Update dependencies", "package updates", "check deps", "outdated packages", "CVEs in deps" | `/deps` | High | **Auto** |
-| "Major version upgrade", "migrate Next.js", "upgrade React", "breaking changes" | `/migrate` | High | **Auto** |
-| "Add documentation", "document this", "generate docs", "why is this here?" | `/docs` | High | **Auto** |
-| "Accessibility", "a11y", "WCAG", "screen reader", "keyboard navigation" | `/a11y` | High | **Auto** |
-
-### Database & Data
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Database migration", "schema change", "RLS policy", "seed data", "database drift" | `/db` | High | **Auto** |
-
-### Ship It & Monitor
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Ship it", "commit and push", "create PR", "deploy this", "git flow" | `/gh-ship` | **Very High** | **Auto** |
-| "Is production healthy?", "post-deploy check", "is the deploy working?", "health check" | `/monitor` | High | **Auto** |
-| "Start dev server", "run the app", "fire up dev" | `/dev` | High | **Auto** |
-| "Browser test", "open in browser", "take a screenshot", "navigate to..." | `/browse` | Medium | **Auto** |
-| "Publish a blog", "write an article", "content pipeline" | `/blog` | High | **Auto** |
-
-### Marketing & Content
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "Marketing campaign", "go-to-market", "launch strategy", "marketing plan", "channel strategy", "messaging framework", "ICP", "target audience", "GTM" | `/marketing` | High | **Auto** |
-| "Write a landing page", "email sequence", "ad copy", "sales page", "CTA copy", "conversion copy", "onboarding copy", "pricing page copy", "rewrite this copy", "write copy for" | `/copy` | **Very High** | **Auto** |
-| "Write a post for LinkedIn", "tweet this", "Instagram caption", "social media posts", "content calendar", "post this to social", "social posts", "batch of posts", "TikTok script" | `/social` | **Very High** | **Auto** |
-
-### Meta Skills
-
-| User Intent Signals | Skill | Confidence | Auto/Suggest |
-|---------------------|-------|-----------|--------------|
-| "I want to build a new skill", "create a custom skill", "add a skill to claude" | `/write-skill` | **Very High** | **Auto** |
-| "Implement this plan", "execute the tasks", "build all these features with reviews" | `/subagent-dev` | High | **Auto** |
+<!-- END GENERATED INVENTORY -->
 
 ---
 
 ## Pipeline Triggers (Skill Chains)
 
-Some intents trigger a chain of skills. Announce the chain upfront.
+Some intents trigger a chain. Announce the chain upfront rather than running it silently.
+**Every skill named below was verified to exist on 2026-08-27.** Consolidated here from the former
+`SKILL_CHAINS.md`, which was a 269-line duplicate of this section naming 8 skills that do not exist.
 
 ### "Build this feature end-to-end"
 ```
-/brainstorm (or /mdmp) → /subagent-dev → /test-ship → /gh-ship → /monitor
+/brainstorm (or /mdmp for an expensive-to-reverse call) -> /subagent-dev -> /test-ship -> /gh-ship -> /monitor
 ```
 
 ### "Ship this safely"
 ```
-/test-ship → /sec-ship → /gh-ship → /monitor
+/smoketest (2 min gate) -> /test-ship -> /sec-ship -> /gh-ship -> /monitor
 ```
 
 ### "Full audit"
 ```
-/sec-ship → /perf → /a11y → /deps → /cleancode
+/sec-ship -> /perf -> /a11y -> /deps -> /cleancode
 ```
 
 ### "Fix production issue"
 ```
-/incident → /investigate → /gh-ship → /monitor
+/incident (mitigate first) -> /investigate (root cause) -> /gh-ship -> /monitor
 ```
 
-### "Launch a product / build a campaign"
+### "Make it look better / feel better"
 ```
-/marketing (strategy + channel plan) → /copy (landing page + email) → /social (social calendar) → /blog (launch post)
+/design -> /a11y -> /perf
 ```
+Contrast failures and focus indicators are fixed in the tokens by `/design`, not instance by instance.
+
+### "Are we ready to launch?"
+```
+/launch (audit-only orchestration, returns GO / CONDITIONAL / NO-GO) -> fix named blockers -> /gh-ship
+```
+`/launch` already runs the audit skills in audit-only mode. Do not run them separately first.
+
+### "Security, properly"
+```
+/sec-ship -> /redteam (only once sec-ship is clean, local instance only) -> /compliance
+```
+Multi-step exploit-chain analysis lives in `/redteam`, not `/sec-ship` (Steel Motion decision 2026-05-03).
+
+### "Schema or data change"
+```
+/db -> /test-ship -> /gh-ship -> /monitor
+```
+
+### "Build or change a skill"
+```
+/write-skill -> run it on a real task -> /worklog
+```
+
+### Content and research
+```
+/browse (research) -> /critique-adversarial (hostile cut of the draft)
+```
+The old "Marketing Suite" chain routed to three skills that were planned and never built (marketing,
+social, blog - written as bare names on purpose, because the slash-and-backtick form means "a real
+route target" and `--check` enforces it). This is the working equivalent.
+
+---
+
+> **Convention, enforced by `python3 ~/.claude/generate-skill-router.py --check`:** writing a skill in
+> any hand-written section as a slash-prefixed name inside backticks is a claim that the skill exists
+> and is routable. The check fails the run if it does not. To mention a skill that does not exist,
+> write its bare name as plain text. A comment saying a section is preserved is a claim; this is the
+> check. (This note originally used a literal slash-name placeholder and the check failed on it - the
+> doc explaining the rule broke the rule, which is the most honest possible self-test.)
+
+## Flag Reference (hand-written, preserved across regeneration)
+
+Moved here from `~/.claude/CLAUDE.md` on 2026-08-27. The generated inventory above lists every skill and its
+trigger phrases; it does NOT carry flags, because flags are not in skill frontmatter. This section is
+the only copy - do not delete it when regenerating.
+
+Always include the relevant flags when suggesting: `/sec-ship --comprehensive` is a different job
+from `/sec-ship --diff`, and the user should not have to remember which. The flags that actually
+differ:
+
+- `/sec-ship` - `--comprehensive` (deep; monthly + pre-launch), `--audit` (read-only), `--diff`
+  (pre-PR), `--infra` / `--code` / `--supply-chain` / `--owasp` (scope), `--fix SEC-XXX` (one
+  finding). Default daily mode unless the user signals otherwise.
+- `/redteam` - active exploitation; multi-step chain analysis lives here, not in `/sec-ship`
+  (Steel Motion decision 2026-05-03). Run after `/sec-ship` is clean, or pre-launch.
+- `/test-ship`, `/qatest`, `/perf` pick their own mode; no flag needed.
 
 ---
 
@@ -165,6 +190,26 @@ When multiple skills could match, use these tiebreakers:
 - Design review? → `/design --audit`
 - Performance review? → `/perf --audit`
 - Default: inline code review, no skill invoked
+
+### "Documentation" - three skills claim this space, they are not interchangeable
+- Docs are MISSING or thin, and need writing? -> `/docs` (the generate-and-audit engine)
+- Docs EXIST and may no longer be true? -> `/docs-sync` (reconciles them against the code)
+- Recording what THIS SESSION did and why? -> `/worklog` (the journal, not reference docs)
+- "Which documents did this change affect?" -> `/docs-sync`
+- **"Update the docs" / "update whatever documents this touched" -> `/docs-sync`.** There is no
+  `/update-docs` and one must not be created; a second skill on the same trigger surface splits the
+  routing and you get a different half of the job depending on which one matches first.
+- **APPENDING a record is a different act from reconciling a live document.** A new changelog entry,
+  a backlog row flipped to DONE, a lessons entry, an ADR: those belong to `/gh-ship` **Stage 2.5**,
+  which runs before the commit so they ship in the same PR. `/docs-sync` refuses to touch records by
+  design (its rule 2), because rewriting one destroys the only thing it is for. If the work is being
+  shipped, the records are already handled and `/docs-sync` runs as part of that stage.
+- "The docs are stale" -> `/docs-sync` if the repo has a register, `/docs` if it does not
+- Default: `/docs-sync --audit` when a register exists, otherwise `/docs`
+
+**Never run `/docs` to fix a `/docs-sync` finding.** One generates prose, the other repairs a
+specific claim a specific change invalidated. Regenerating a document to clear a broken anchor
+destroys everything in it that was still true.
 
 ### "I need to plan something"
 - Small idea / "thinking about" → `/brainstorm`

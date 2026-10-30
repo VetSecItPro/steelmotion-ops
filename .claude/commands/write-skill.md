@@ -1,15 +1,16 @@
 ---
-description: "/write-skill — TDD for skill creation: pressure-test a scenario WITHOUT the skill (RED), write the skill (GREEN), close loopholes via rationalization tables (REFACTOR). Produces a new skill that inherits all shared standards."
-allowed-tools: Bash(git *), Bash(mkdir *), Bash(date *), Bash(ls *), Bash(cat *), Read, Write, Edit, Glob, Grep, Task
+description: "/write-skill - TDD for skill creation: pressure-test a scenario WITHOUT the skill (RED), write the skill (GREEN), close loopholes via rationalization tables (REFACTOR). Produces a new skill that inherits all shared standards."
+allowed-tools: Bash(git *), Bash(mkdir *), Bash(date *), Bash(ls *), Bash(cat *), Read, Write, Edit, Glob, Grep, Agent
+when_to_use: Trigger phrases: "build a new skill", "create custom skill"
 ---
 
-# /write-skill — Meta-Skill for Creating Skills
+# /write-skill - Meta-Skill for Creating Skills
 
 **Steel Principle: No skill without a failing test first.**
 
 This is a meta-skill: a skill for building new skills. It applies TDD methodology to skill creation. First, you pressure-test a scenario WITHOUT the skill and observe where Claude fails. Then you write the skill to close those failure modes. Then you pressure-test again to close any remaining loopholes.
 
-**FIRE AND FORGET** — Describe what the skill should do. The skill guides you through RED → GREEN → REFACTOR.
+**FIRE AND FORGET** - Describe what the skill should do. The skill guides you through RED → GREEN → REFACTOR.
 
 > **When to use /write-skill:**
 > - You notice a pattern you wish Claude did automatically
@@ -74,7 +75,7 @@ Key enforcements for this skill:
 
 📋 Phase 4: Router Integration
    ├─ Added intent mapping to SKILL_ROUTER.md
-   ├─ Added ~/CLAUDE.md entry
+   ├─ Added ~/.claude/CLAUDE.md entry
    └─ ✅ Skill is globally discoverable
 
 ✅ Skill Ready
@@ -196,17 +197,17 @@ Now write the skill to close the observed failure modes.
 
 ```markdown
 ---
-description: "/[name] — [CSO-optimized description: specific, triggers on user intent, ~15-25 words]"
+description: "/[name] - [CSO-optimized description: specific, triggers on user intent, ~15-25 words]"
 allowed-tools: [specific tools only, not "all"]
 ---
 
-# /[name] — [Short Title]
+# /[name] - [Short Title]
 
 **Steel Principle: [The non-negotiable rule this skill enforces]**
 
 [2-3 sentence intro: what problem does this solve, what does it produce]
 
-**FIRE AND FORGET** — [How it runs]
+**FIRE AND FORGET** - [How it runs]
 
 > **When to use /[name]:**
 > - [Signal 1]
@@ -305,7 +306,7 @@ The description is the MOST IMPORTANT part for discovery. Rules:
 
 | Rule | Example |
 |------|---------|
-| Start with skill command | "/investigate — ..." |
+| Start with skill command | "/investigate - ..." |
 | Specific, not generic | "Systematic root-cause debugging" not "Helps with bugs" |
 | Include trigger keywords | "investigate", "debug", "not working" |
 | Mention the discipline | "evidence-first", "regression test mandatory" |
@@ -315,7 +316,7 @@ The description is the MOST IMPORTANT part for discovery. Rules:
 > "Helps you find and fix bugs"
 
 **Good description:**
-> "/investigate — Systematic Root-Cause Debugging: evidence-first investigation, hypothesis testing, minimal fix, regression test"
+> "/investigate - Systematic Root-Cause Debugging: evidence-first investigation, hypothesis testing, minimal fix, regression test"
 
 ### 2.3 Write the Skill
 
@@ -384,15 +385,14 @@ Edit `~/.claude/standards/SKILL_ROUTER.md`:
 
 Add to the appropriate category section (Planning, Debugging, Testing, Security, etc.).
 
-### 4.2 Add to ~/CLAUDE.md
+### 4.2 Regenerate the router (do NOT edit ~/.claude/CLAUDE.md)
 
-Edit `~/CLAUDE.md` under the "Skill Routing" section:
+The router is generated from each skill's frontmatter, so the trigger phrases belong in the new
+skill's `description` and `when_to_use`. Then run:
 
-```markdown
-| "[trigger phrase]" | `/[name]` | "[announcement]" |
+```bash
+python3 ~/.claude/generate-skill-router.py && ~/.claude/check-skill-router.sh
 ```
-
-Add to Auto-Invoke table or Suggest table based on confidence.
 
 ### 4.3 Verify Discoverability
 
@@ -401,7 +401,7 @@ Test the router:
 ```
 Task tool with model=sonnet:
 
-You are Claude Code. Read ~/CLAUDE.md for the skill routing rules.
+You are Claude Code. Read ~/.claude/CLAUDE.md for the skill routing rules.
 
 A user just sent: "[trigger phrase for the new skill]"
 
@@ -409,6 +409,17 @@ What would you do? Which skill would you invoke/suggest?
 ```
 
 The agent should identify the new skill. If not: the description/routing entry needs better keywords.
+
+**Then register it mechanically, because discoverability by agent judgement is not registration:**
+
+```bash
+~/.claude/check-skill-router.sh --fix   # regenerate from frontmatter
+~/.claude/check-skill-router.sh         # must exit 0
+```
+
+The guard fails both when the router content has drifted and when the skill COUNT on disk does not
+match the count named in the router, so a new skill cannot pass it without being registered. It
+compares content only and ignores the generator's timestamp, so it does not cry wolf on every run.
 
 ---
 
@@ -425,7 +436,12 @@ Before marking the skill complete:
 - [ ] Phases are specific (no placeholder steps)
 - [ ] CLEANUP protocol is specified
 - [ ] SITREP format follows the standard
-- [ ] Router entries added to SKILL_ROUTER.md and ~/CLAUDE.md
+- [ ] **`~/.claude/check-skill-router.sh` exits 0.** This is the registration step and it is NOT
+      optional. Do NOT hand-edit `SKILL_ROUTER.md`: it is GENERATED from skill frontmatter by
+      `generate-skill-router.py`, so a hand-added entry is discarded by the next regeneration and
+      a hand-maintained router measurably rots (31 skills named against an estate of 40, 6 routed
+      that did not exist, 15 live skills it had never heard of). Run
+      `~/.claude/check-skill-router.sh --fix`, then commit the regenerated router with the skill.
 - [ ] 3 consecutive pressure tests pass without new loopholes
 - [ ] Skill appears in the global skills list (globally available via `~/.claude/commands/`)
 
@@ -472,7 +488,7 @@ Before marking the skill complete:
 
 ### Router Integration
 - `SKILL_ROUTER.md`: entry added under [category]
-- `~/CLAUDE.md`: entry added under [Auto-Invoke/Suggest]
+- `~/.claude/CLAUDE.md`: entry added under [Auto-Invoke/Suggest]
 - Discoverability verified: PASS
 
 ### Handoff
@@ -510,5 +526,5 @@ Before marking the skill complete:
 - **Iterate until loopholes close** - a skill that's "mostly right" will be exploited
 - **Route integration matters** - a skill users can't find is a skill users don't use
 
-<!-- Claude Code Skill — Superpowers methodology adapted for Steel Motion skill architecture -->
+<!-- Claude Code Skill - Superpowers methodology adapted for Steel Motion skill architecture -->
 <!-- Incorporates writing-skills methodology from obra/superpowers (MIT License) -->

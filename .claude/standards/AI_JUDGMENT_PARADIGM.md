@@ -13,9 +13,9 @@ When the skill encounters errors, missing tools, unexpected situations:
 ## Why this matters
 
 Real-world failures don't fit fixed tables. Examples observed in production:
-- "ruff E401 (Multiple imports on one line)" — won't match `if grep "linter"`
-- "GHCR 403 due to package's Manage-Actions-Access list" — not in any standard fix table
-- "apr- id collision under same-millisecond POSTs" — looks like a flaky test, IS a real bug
+- "ruff E401 (Multiple imports on one line)" - won't match `if grep "linter"`
+- "GHCR 403 due to package's Manage-Actions-Access list" - not in any standard fix table
+- "apr- id collision under same-millisecond POSTs" - looks like a flaky test, IS a real bug
 
 Pattern-match skills miss these. AI-judgment skills handle them by reading + reasoning.
 
@@ -53,10 +53,10 @@ The strategy hints below are starting points, not rules:
 ## Detection over assumption
 
 Skills must ADAPT to whatever repo type they find. Don't assume:
-- Language (Node? Python? Rust? Go? Bash?) — detect from `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `bats` files
-- Test runner — read package.json scripts; fall back to canonical commands
-- Linter / formatter — same
-- Deploy mechanism (Vercel? Netlify? self-hosted? none?) — detect from config files
+- Language (Node? Python? Rust? Go? Bash?) - detect from `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `bats` files
+- Test runner - read package.json scripts; fall back to canonical commands
+- Linter / formatter - same
+- Deploy mechanism (Vercel? Netlify? self-hosted? none?) - detect from config files
 
 ## Reasoning over rules
 

@@ -1,24 +1,24 @@
 ---
-description: "/critique-adversarial — Hostile cut-editor for articles. Reads the full piece first, maps the thesis spine, then recommends cuts that TIGHTEN prose without damaging the argument. Classifies every passage: CUT / REWRITE / MOVE / KEEP. Never cuts blind."
-allowed-tools: Bash(cat *), Bash(wc *), Bash(grep *), Bash(mkdir *), Bash(date *), Read, Write, Edit, Glob, Grep, Task
+description: "/critique-adversarial - Hostile cut-editor for articles. Reads the full piece first, maps the thesis spine, then recommends cuts that TIGHTEN prose without damaging the argument. Classifies every passage: CUT / REWRITE / MOVE / KEEP. Never cuts blind."
+when_to_use: 'Trigger phrases: "cut this down", "it is too long", "tighten this article", "hostile edit", "what can I remove", "make it sharper". For prose, not code.'
+allowed-tools: Bash(cat *), Bash(wc *), Bash(grep *), Bash(mkdir *), Bash(date *), Read, Write, Edit, Glob, Grep, Agent
 ---
 
-# /critique-adversarial — Context-Aware Hostile Editor
+# /critique-adversarial - Context-Aware Hostile Editor
 
 **Cut only what won't hurt the argument.** This skill adapts the adversarial cut pattern for articles. It reads the entire piece first, identifies the thesis and how each section serves it, and only recommends cuts that tighten prose without weakening the argument. Some things that LOOK like fat are actually load-bearing. The skill knows the difference.
 
 **FIRE AND FORGET** - Point at a draft, receive a cut/rewrite/move/keep classification for every flagged passage with specific reasoning.
 
 > **When to use:**
-> - After `/blog` Phase 7 (the author's self-cut) to catch what the author left in
+> - After the author's own cut, to catch what the author left in
 > - Before shipping any long-form article
 > - When a piece feels bloated but you cannot see what to remove
 > - As a second-pass editor when you want hostile-but-informed feedback
 >
 > **When NOT to use:**
-> - Before the article has a clear thesis (run `/blog` angle phase first)
+> - Before the article has a clear thesis (settle the angle first)
 > - On first drafts before the author has cut (let them cut first; then adversarial catches what remains)
-> - On short-form copy (use `/copy` self-review checklist instead)
 
 ---
 
@@ -65,7 +65,7 @@ This skill follows the [Status Update Protocol](~/.claude/standards/STATUS_UPDAT
 ## OUTPUT STRUCTURE
 
 ```
-articles/drafts/YYYY-MM-DD-[slug]/
+articles/YYYY-MM-DD-[slug]/drafts/
 ├── critique-adversarial.md          # This skill's full report
 ├── critique-adversarial-applied.md  # Draft with approved changes applied
 ```
@@ -163,7 +163,7 @@ When classifying CUT or TRIM, specify which fat type:
 
 ## PHASE 4: REPORT
 
-Save to `articles/drafts/[slug]/critique-adversarial.md`:
+Save to `articles/YYYY-MM-DD-[slug]/drafts/critique-adversarial.md`:
 
 ```markdown
 # Adversarial Critique Report - [slug]
@@ -293,7 +293,7 @@ Do NOT auto-apply. Author has final authority on every cut.
 SITREP - /critique-adversarial
 ═══════════════════════════════════════════════════════════════
 
-  Draft reviewed:  articles/drafts/[slug]/draft-vN.md
+  Draft reviewed:  articles/YYYY-MM-DD-[slug]/drafts/draft-vN.md
   Word count:      [before] → [after] ([% reduction])
   Flags:           CUT:[N] REWRITE:[M] MOVE:[K] TRIM:[L] KEEP:[P]
 
@@ -308,11 +308,11 @@ SITREP - /critique-adversarial
   Verdict:         [APPLY ALL / APPLY SELECTIVELY / DO NOT APPLY]
 
   Files:
-    Report:        articles/drafts/[slug]/critique-adversarial.md
-    Applied:       articles/drafts/[slug]/critique-adversarial-applied.md
+    Report:        articles/YYYY-MM-DD-[slug]/drafts/critique-adversarial.md
+    Applied:       articles/YYYY-MM-DD-[slug]/drafts/critique-adversarial-applied.md
 
 ═══════════════════════════════════════════════════════════════
-                Next: /blog Phase 8 (fact pass) · or re-run
+                Next: fact pass · or re-run
 ═══════════════════════════════════════════════════════════════
 ```
 
@@ -321,21 +321,14 @@ SITREP - /critique-adversarial
 ## RELATED SKILLS
 
 **Feeds from:**
-- `/blog` Phase 7 (Cut) - author does the first cut; this skill catches what they left in
-- `/narrative` - when a narrative-driven piece needs structural critique
-- `/copy` - when conversion copy needs an adversarial edit pass
+- The author's own cut - this skill catches what they left in
 
 **Feeds into:**
-- `/blog` Phase 8 (Fact Pass) - tightened draft goes to fact-checking next
-- `/critique-panel` (future) - reader panel after adversarial cut
-- `/critique-eval` (future) - 9-dimensional scoring after adversarial cut
-
-**Pairs with:**
-- `/blog --flagship` mode - adversarial critique is standard for flagship pieces
-- `/narrative` - call this skill after `/narrative` produces a long story-driven piece
+- A fact pass - the tightened draft goes to fact-checking next
+- `/article` (project skill in the Steel Motion repo) - publishes the article once the cut and fact pass are done
 
 **Auto-suggest after completion:**
-- If cuts applied: "Cuts applied. Want to run `/blog` Phase 8 (fact pass) next?"
+- If cuts applied: "Cuts applied. Want a fact pass next?"
 - If no cuts applied: "Article is tight. Ready for fact pass?"
 - If argument weakened: "Flagged argument impact. Want to rework before applying?"
 

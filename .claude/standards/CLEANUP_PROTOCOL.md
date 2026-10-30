@@ -8,7 +8,7 @@
 
 ## The Problem
 
-Skills create resources during execution: browser instances, dev servers, test data, temporary files, git stashes, and dependency changes. When a skill finishes — or crashes mid-run — these resources persist. Over time, orphaned Chromium processes consume memory, held ports block other work, test data pollutes databases, and stale git artifacts clutter the repository.
+Skills create resources during execution: browser instances, dev servers, test data, temporary files, git stashes, and dependency changes. When a skill finishes - or crashes mid-run - these resources persist. Over time, orphaned Chromium processes consume memory, held ports block other work, test data pollutes databases, and stale git artifacts clutter the repository.
 
 **A skill that doesn't clean up after itself is not production-grade.**
 
@@ -16,14 +16,14 @@ Skills create resources during execution: browser instances, dev servers, test d
 
 ## The Principle
 
-**Leave no trace.** When a skill finishes, the system should be in the same state as before the skill ran — plus the intended outputs (report files, code fixes, generated content). Everything else is a leak and must be cleaned up.
+**Leave no trace.** When a skill finishes, the system should be in the same state as before the skill ran - plus the intended outputs (report files, code fixes, generated content). Everything else is a leak and must be cleaned up.
 
 Intended outputs:
 - Report files in `.[skill]-reports/` directories
 - Code changes (fixes, migrations, generated content)
 - Git commits on appropriate branches
 
-Everything else — dev servers, browser instances, test data, temp files, background processes — must be cleaned up before the skill exits.
+Everything else - dev servers, browser instances, test data, temp files, background processes - must be cleaned up before the skill exits.
 
 ---
 
@@ -47,7 +47,7 @@ Every resource created during a skill run must be registered in a cleanup manife
 | Installed dependencies | Package names stored | Revert if unintentional |
 | Port bindings | Port number stored | Verify port released |
 
-### Rule 2: Cleanup Runs ALWAYS — Success or Failure
+### Rule 2: Cleanup Runs ALWAYS - Success or Failure
 
 Cleanup is not optional. It runs:
 - On successful completion (final stage)
@@ -66,7 +66,7 @@ finally:
 
 ### Rule 3: Cleanup Order Matters
 
-Clean up in reverse order of creation (LIFO — last in, first out):
+Clean up in reverse order of creation (LIFO - last in, first out):
 
 ```
 1. Close browser instances (they hold the most memory)
@@ -80,7 +80,7 @@ Clean up in reverse order of creation (LIFO — last in, first out):
 
 ### Rule 4: Verify Cleanup Succeeded
 
-Don't just run the cleanup command — verify it worked:
+Don't just run the cleanup command - verify it worked:
 
 ```bash
 # Bad: Fire and forget
@@ -110,7 +110,7 @@ If cleanup fails, log it prominently in the report and warn the user:
 
 ```markdown
 ## ⚠️ Cleanup Warnings
-- Dev server on port 3000 could not be stopped (PID 12345 — kill manually)
+- Dev server on port 3000 could not be stopped (PID 12345 - kill manually)
 - 3 test records in `sm_test_data` could not be deleted (permission denied)
 ```
 
@@ -124,8 +124,8 @@ Skills generate artifacts that are useful DURING the run but become waste AFTER.
 
 | Artifact | Created By | Useful During | Delete When |
 |----------|-----------|---------------|-------------|
-| Screenshots (page health, responsive) | `/qatest`, `/design`, `/browse`, `/a11y` | Audit analysis, evidence linking | End of run — UNLESS linked to a finding in the report |
-| Before/after evidence screenshots | `/qatest`, `/design`, `/investigate` | Report evidence | **KEEP** — these are finding-linked evidence. Delete only if finding was FALSE POSITIVE |
+| Screenshots (page health, responsive) | `/qatest`, `/design`, `/browse`, `/a11y` | Audit analysis, evidence linking | End of run - UNLESS linked to a finding in the report |
+| Before/after evidence screenshots | `/qatest`, `/design`, `/investigate` | Report evidence | **KEEP** - these are finding-linked evidence. Delete only if finding was FALSE POSITIVE |
 | CSS inspection dumps | `/browse` | Debugging | End of run |
 | Live metric JSON files | `/perf` | Before/after comparison | **KEEP `baseline.json` and `current.json`** only. Delete intermediate measurement files. |
 | Route manifests | `/qatest` | Phase 1 discovery | End of run |
@@ -169,7 +169,7 @@ find "$REPORT_DIR" -name "live-metrics-*.json" -mtime +7 -delete 2>/dev/null
 echo "Cleaned $(find "$REPORT_DIR" -name "*.png" -mtime +7 | wc -l) old screenshots"
 ```
 
-### Rule 6a: Test Data MUST Be Deleted — No Exceptions
+### Rule 6a: Test Data MUST Be Deleted - No Exceptions
 
 Any data created in a database during skill execution MUST be deleted before the skill exits. This is not optional. Test data left in databases causes:
 - Confusion when users see test records in their app
@@ -184,7 +184,7 @@ Any data created in a database during skill execution MUST be deleted before the
 2. TRACK: Record every created record ID in the state file
 3. USE: Run tests against the created data
 4. DELETE: Remove ALL created records by ID or prefix
-5. VERIFY: SELECT count with prefix — must be 0
+5. VERIFY: SELECT count with prefix - must be 0
 6. LOG: Report how many records were created and deleted
 ```
 
@@ -209,7 +209,7 @@ Any data created in a database during skill execution MUST be deleted before the
 Every skill that creates a report or artifact directory MUST ensure it is gitignored:
 
 ```bash
-# Standard pattern — use in every skill's Stage 0
+# Standard pattern - use in every skill's Stage 0
 REPORT_DIR=".[skill]-reports"
 if [ ! -d "$REPORT_DIR" ]; then
   mkdir -p "$REPORT_DIR"
@@ -234,8 +234,8 @@ If a skill installs packages (devDependencies or otherwise), it MUST:
 ## Dependencies Modified
 | Package | Action | Reason | Permanent? |
 |---------|--------|--------|------------|
-| axe-core | Installed (devDep) | Required for accessibility scanning | Yes — needed for future /a11y runs |
-| @playwright/test | Installed (devDep) | Required for E2E testing | Yes — needed for future /test-ship runs |
+| axe-core | Installed (devDep) | Required for accessibility scanning | Yes - needed for future /a11y runs |
+| @playwright/test | Installed (devDep) | Required for E2E testing | Yes - needed for future /test-ship runs |
 ```
 
 ### Rule 8: Sub-Agent Cleanup is the Orchestrator's Responsibility
@@ -282,7 +282,7 @@ If a skill uses Start + Leave, it MUST:
 When a skill resumes from a crash/context reset, the first thing it does is check for orphaned resources from the previous run:
 
 ```bash
-# Resume protocol — orphan detection
+# Resume protocol - orphan detection
 STATE_FILE=".${SKILL}-reports/state-*.json"
 if [ -f $STATE_FILE ]; then
   # Check if previous run's dev server is still running
@@ -295,7 +295,7 @@ if [ -f $STATE_FILE ]; then
   # Check for orphaned browser processes
   PREV_BROWSER=$(jq -r '.resources.browserPid // empty' $STATE_FILE)
   if [ -n "$PREV_BROWSER" ] && kill -0 $PREV_BROWSER 2>/dev/null; then
-    echo "⚠️ Previous run's browser still running — killing"
+    echo "⚠️ Previous run's browser still running - killing"
     kill $PREV_BROWSER 2>/dev/null
   fi
 fi
@@ -352,7 +352,7 @@ Add this as the **second-to-last stage** of every skill (before the final Report
 ```markdown
 ## STAGE [N-1]: CLEANUP
 
-**No agent needed — orchestrator handles cleanup directly.**
+**No agent needed - orchestrator handles cleanup directly.**
 
 ### Actions (in order)
 
@@ -391,12 +391,12 @@ Add this as the **second-to-last stage** of every skill (before the final Report
    - Force-kill any lingering port holders
 
 8. **Final orphan sweep:**
-   - `pgrep -f "next dev|next-server|playwright|chromium"` — compare against pre-skill baseline
+   - `pgrep -f "next dev|next-server|playwright|chromium"` - compare against pre-skill baseline
    - Kill any new processes that the skill created
    - Log any processes that couldn't be killed
 
 9. **Update state file:**
-   - Set `resources` to `{}` (empty — all cleaned)
+   - Set `resources` to `{}` (empty - all cleaned)
    - Or log remaining orphans with warnings
 
 10. **Log cleanup results in report:**
@@ -437,13 +437,11 @@ Based on the resource audit, here are the cleanup requirements per skill:
 
 | Skill | Report Dir | Needs Gitignore Fix |
 |-------|-----------|:-------------------:|
-| `/compliance` | `.compliance/` | YES — add enforcement |
-| `/compliance-docs` | `.compliance-docs-reports/` | YES — add enforcement |
-| `/sec-weekly-scan` | `.security-reports/` | YES — add enforcement |
+| `/compliance` | `.compliance/` | YES - add enforcement |
 | `/sec-ship` | `.security-reports/` | Verify existing |
-| `/a11y` | `.a11y/` | YES — add enforcement |
-| `/browse` | `.browse/` | YES — add enforcement |
-| `/investigate` | `.investigate/` | YES — add enforcement |
+| `/a11y` | `.a11y/` | YES - add enforcement |
+| `/browse` | `.browse/` | YES - add enforcement |
+| `/investigate` | `.investigate/` | YES - add enforcement |
 
 ### Skills That Are Already Clean (No Cleanup Needed)
 
@@ -452,8 +450,7 @@ Based on the resource audit, here are the cleanup requirements per skill:
 | `/monitor` | Read-only, HTTP checks only, gitignore enforced |
 | `/incident` | Code changes are intentional, failed fixes reverted, gitignore enforced |
 | `/migrate` | Branch is intentional, gitignore enforced |
-| `/blog` | Content is intentional, delegates git to `/gh-ship` |
-| `/perf` | Live browser measurement added — now needs browser cleanup (see full cleanup table) |
+| `/perf` | Live browser measurement added - now needs browser cleanup (see full cleanup table) |
 | `/docs` | Minor: `/tmp/example.ts` orphan (fix this) |
 | `/mdmp` | Planning tool, minimal side effects |
 | `/smoketest` | Minimal side effects |

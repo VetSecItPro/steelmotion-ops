@@ -15,7 +15,7 @@ When the orchestrator (main Claude session) spawns sub-agents via the Task tool,
 
 ## Core Rules
 
-### Rule 1: Sub-Agent Return Budget — 500 Tokens Maximum
+### Rule 1: Sub-Agent Return Budget - 500 Tokens Maximum
 
 Every sub-agent prompt MUST include this instruction:
 
@@ -49,7 +49,7 @@ find .[skill]-reports/ -name "state-*.json" -mmin -120
 
 If found and work remains:
 - Read the state file
-- Report to user: "Resuming — X/Y steps already complete"
+- Report to user: "Resuming - X/Y steps already complete"
 - Skip completed work, resume from the next step
 - Never redo completed work
 
@@ -71,7 +71,7 @@ After every 3 sub-agents or phases, the orchestrator should:
 1. Ensure the state file is current on disk
 2. Assess whether context is getting heavy
 3. If heavy: summarize progress in a brief message and continue
-4. Do NOT stop to ask the user — continue working
+4. Do NOT stop to ask the user - continue working
 
 ### Rule 7: Lean Orchestrator Messages
 
@@ -79,7 +79,7 @@ Keep progress messages to the user short:
 
 **Good:**
 ```
-[3/8] Performance audit: 82/100 (B) — 0 critical, 2 warnings
+[3/8] Performance audit: 82/100 (B) - 0 critical, 2 warnings
 Report: .perf-reports/perf-20260212-103000.md
 ```
 
@@ -104,7 +104,7 @@ CONTEXT MANAGEMENT RULES (MANDATORY):
 1. Write all detailed output to disk (report files, logs, findings)
 2. Return ONLY a structured summary under 500 tokens
 3. DO NOT return full file contents, finding lists, or verbose output
-4. Your detailed work is preserved on disk — the orchestrator only needs the summary
+4. Your detailed work is preserved on disk - the orchestrator only needs the summary
 5. Use this return format:
 
 ---

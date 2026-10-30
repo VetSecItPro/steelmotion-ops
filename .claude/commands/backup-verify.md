@@ -1,26 +1,31 @@
-# /backup-verify — Restic / Cloud-Backup Restore-Test
+---
+description: Restic / Cloud-Backup Restore-Test
+when_to_use: Trigger phrases: "test the restore", "is my backup actually working", "verify backups", "restore-test", "have we ever restored", "backup health"
+---
+
+# /backup-verify - Restic / Cloud-Backup Restore-Test
 
 > **Standards inherited** (apply throughout this skill):
-> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) — read + reason, don't pattern-match
-> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) — log to `.backup-verify-history.json`, learn across runs
-> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) — scan siblings, surface in SITREP, never cross-traverse
-> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) — content-verify before destructive action
-> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) — every SITREP ends with "Suggested next"
+> - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) - read + reason, don't pattern-match
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.backup-verify-history.json`, learn across runs
+> - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) - scan siblings, surface in SITREP, never cross-traverse
+> - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) - content-verify before destructive action
+> - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) - every SITREP ends with "Suggested next"
 
 **A backup that has never been restored is not a backup. Test the restore path. Hash-compare. Drop the temp restore. Repeat monthly.**
 
 ## PARADIGM
 
-The 2026-05-03 `~/.hermes/.env` clobber proved both halves of the backup-rot pattern:
-1. **Coverage gap** — the file wasn't in `BACKUP_PATHS` (a `/secrets-audit` problem)
-2. **Restore was never tested** — even if it HAD been backed up, no one had ever attempted a restore from R2 to verify the credentials still worked, the bucket policy still allowed the operator's IP, and the restic password file was actually readable
+The 2026-05-03 `~/.service/.env` clobber proved both halves of the backup-rot pattern:
+1. **Coverage gap** - the file wasn't in `BACKUP_PATHS` (a `/secrets-audit` problem)
+2. **Restore was never tested** - even if it HAD been backed up, no one had ever attempted a restore from R2 to verify the credentials still worked, the bucket policy still allowed your IP, and the restic password file was actually readable
 
 This skill closes the second half. It assumes coverage exists (use `/secrets-audit` for the first half) and exercises the restore path on representative data.
 
 Anti-patterns:
-- "restic snapshots succeeded → backup is fine" — backup write succeeding doesn't mean restore will
-- "We tested restore once at install → still works" — credentials rotate, bucket policies drift, restic versions change
-- "The most recent snapshot is what matters" — operator may need to restore from a snapshot 3 weeks back; verify older snapshots are reachable too
+- "restic snapshots succeeded → backup is fine" - backup write succeeding doesn't mean restore will
+- "We tested restore once at install → still works" - credentials rotate, bucket policies drift, restic versions change
+- "The most recent snapshot is what matters" - you may need to restore from a snapshot 3 weeks back; verify older snapshots are reachable too
 
 ---
 
@@ -49,7 +54,7 @@ Steel principles applied:
 1. **NEVER restore over live data.** Restore goes to a temp dir. Hash-compare. Then delete the temp dir.
 2. **NEVER expose secrets during the test.** Restored content stays in temp dir at 0700; never `cat` it to console; only hash compare.
 3. **Read-only against the backup target.** This skill never deletes snapshots, never forgets, never re-init's the repo.
-4. **Multi-target aware.** Operator may have multiple backup targets (R2 for `claw-hq`, B2 archive for old data, GitHub for sanitized infra). Audit each target separately.
+4. **Multi-target aware.** Operator may have multiple backup targets (R2 for `host-a`, B2 archive for old data, GitHub for sanitized infra). Audit each target separately.
 5. **Verify credentials work BEFORE the restore attempt.** A 401 on auth means the backup config is stale; surface that as the finding instead of a confused restore-failed message.
 6. **History-driven.** `.backup-verify-history.json` per host tracks last successful restore-test date.
 7. **Sample, don't full-restore.** Pull a small representative subset (100MB cap or 10 files cap, whichever first). Full-restore tests are operator-driven, not automated.
@@ -61,7 +66,7 @@ Steel principles applied:
 
 ```
 /backup-verify                       # Default: latest snapshot, sample 10 files
-/backup-verify --host claw-hq        # Verify backup target for a remote host
+/backup-verify --host host-a        # Verify backup target for a remote host
 /backup-verify --target r2           # Restrict to a single named target
 /backup-verify --snapshot <id>       # Verify a specific snapshot, not latest
 /backup-verify --depth full          # Pull every path in BACKUP_PATHS (operator-driven, expensive)
@@ -105,7 +110,7 @@ Before any restore attempt:
 
 Read `.backup-verify-history-<host>.json`. Extract:
 - Last successful restore-test date per target
-- `flagged_targets[]` — operator-marked "leave alone" (e.g. mid-migration)
+- `flagged_targets[]` - you-marked "leave alone" (e.g. mid-migration)
 - Known-good sample-files used for hash comparison
 
 Auto-gitignore the history file.
@@ -122,11 +127,11 @@ For each target, sub-agent (haiku) attempts:
 - repo metadata fetch (`restic snapshots` or equivalent)
 
 Classifications:
-- `OK` — credentials valid, repo reachable
-- `CREDS-EXPIRED` — auth fails (401/403)
-- `REPO-UNREACHABLE` — network/DNS issue (5xx, timeout)
-- `MISCONFIG` — env vars missing, password file unreadable
-- `UNKNOWN` — fall through to operator review
+- `OK` - credentials valid, repo reachable
+- `CREDS-EXPIRED` - auth fails (401/403)
+- `REPO-UNREACHABLE` - network/DNS issue (5xx, timeout)
+- `MISCONFIG` - env vars missing, password file unreadable
+- `UNKNOWN` - fall through to you review
 
 ### Stage 3: Snapshot freshness check
 
@@ -135,9 +140,9 @@ For each `OK` target:
 1. List all snapshots, get most recent timestamp
 2. Compare against expected schedule (daily backup → most recent should be < 25h old)
 3. Classify:
-   - `FRESH` — within window
-   - `STALE` — last snapshot > 2× expected window
-   - `EMPTY` — no snapshots ever (new repo, or backup never ran)
+   - `FRESH` - within window
+   - `STALE` - last snapshot > 2× expected window
+   - `EMPTY` - no snapshots ever (new repo, or backup never ran)
 
 ### Stage 4: Restore-test (the actual restore)
 
@@ -146,7 +151,7 @@ For each `OK` + `FRESH` target:
 1. Pick a representative sample:
    - From the latest snapshot, pick small files (< 10 MB each) up to 10 files / 100 MB total
    - Prefer text files (env files, configs) over binary blobs (better signal-to-noise on hash compare)
-   - Skip secrets — restore everything else first; secrets get a separate verify if needed
+   - Skip secrets - restore everything else first; secrets get a separate verify if needed
 
 2. Restore to a temp dir (`mktemp -d`):
    ```
@@ -159,12 +164,12 @@ For each `OK` + `FRESH` target:
    - Compare
 
 4. Classifications:
-   - `RESTORED-MATCH` — restore worked, content matches live
-   - `RESTORED-DIFF` — restore worked but content differs from live (file changed since backup; this is EXPECTED for active files; not a failure)
-   - `RESTORE-FAILED` — restic command exited non-zero
-   - `MISSING-IN-SNAPSHOT` — file is in `BACKUP_PATHS` but not in the snapshot (coverage gap, restic exclusion bug, etc.)
+   - `RESTORED-MATCH` - restore worked, content matches live
+   - `RESTORED-DIFF` - restore worked but content differs from live (file changed since backup; this is EXPECTED for active files; not a failure)
+   - `RESTORE-FAILED` - restic command exited non-zero
+   - `MISSING-IN-SNAPSHOT` - file is in `BACKUP_PATHS` but not in the snapshot (coverage gap, restic exclusion bug, etc.)
 
-5. **Cleanup:** `rm -rf $TMPDIR` — verify it's gone before moving on (per VERIFY_BEFORE_DESTROY)
+5. **Cleanup:** `rm -rf $TMPDIR` - verify it's gone before moving on (per VERIFY_BEFORE_DESTROY)
 
 ### Stage 5: Snapshot retention check
 
@@ -185,17 +190,17 @@ If any target has issues: SITREP categorizes and recommends remediation.
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
-                       SITREP — /backup-verify
+                       SITREP - /backup-verify
 ═══════════════════════════════════════════════════════════════════════════════
 Run ID:     BV-20260503-190044
-Host:       claw-hq
-Targets:    1 (restic → R2 bucket claw-hq)
+Host:       host-a
+Targets:    1 (restic → R2 bucket host-a)
 Duration:   2m 51s
 
 ────────────────────────────────────────────────────────────────────────────────
  PER-TARGET STATUS
 ────────────────────────────────────────────────────────────────────────────────
-restic → R2 bucket claw-hq
+restic → R2 bucket host-a
   ✅ Credentials      OK
   ✅ Snapshot freshness  FRESH (last fire 2026-05-03 03:00 CDT, 16h ago)
   ✅ Restore test     RESTORED-MATCH (8 sample files, 1 RESTORED-DIFF as expected for active log)
@@ -205,7 +210,7 @@ restic → R2 bucket claw-hq
 ────────────────────────────────────────────────────────────────────────────────
  LAST KNOWN GOOD
 ────────────────────────────────────────────────────────────────────────────────
-Previous successful restore-test: 2026-04-03 (30 days ago — within monthly cadence)
+Previous successful restore-test: 2026-04-03 (30 days ago - within monthly cadence)
 
 ────────────────────────────────────────────────────────────────────────────────
  TEMP CLEANUP
@@ -216,7 +221,7 @@ Previous successful restore-test: 2026-04-03 (30 days ago — within monthly cad
 ────────────────────────────────────────────────────────────────────────────────
  SIBLING HOSTS NOT VERIFIED THIS RUN
 ────────────────────────────────────────────────────────────────────────────────
-nolan-prod   never verified — re-run /backup-verify --host nolan-prod
+host-b   never verified - re-run /backup-verify --host host-b
 
 ═══════════════════════════════════════════════════════════════════════════════
 ```
@@ -229,14 +234,14 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 
 | Outcome | Recommended | Why |
 |---|---|---|
-| All targets clean | none — re-verify monthly | clean state |
+| All targets clean | none - re-verify monthly | clean state |
 | CREDS-EXPIRED | /secrets-audit --rotate <provider> | rotate then re-verify |
 | MISSING-IN-SNAPSHOT (coverage gap) | /secrets-audit --check coverage | diagnose backup-path config |
 | RETENTION-DRIFT | /investigate the restic forget policy | retention misconfig needs root-cause |
-| RESTORE-FAILED | /investigate | could be repo corruption — needs deep look |
+| RESTORE-FAILED | /investigate | could be repo corruption - needs deep look |
 | Sibling host never verified | /backup-verify --host <sibling> | extend coverage |
 
-**Skip if:** the operator just did a manual restore-test outside the skill (rare, but they may have).
+**Skip if:** you just did a manual restore-test outside the skill (rare, but they may have).
 
 ---
 
@@ -246,19 +251,19 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 Full restores are expensive (R2 bandwidth + disk + time) and infrequent. Sample restores catch the same failure modes (creds, network, repo integrity) at a fraction of the cost. Operator can run `--depth full` when they want a real disaster-recovery rehearsal.
 
 ### Why hash-compare vs cat
-The point is to verify content arrived intact. Comparing hashes proves that without ever displaying restored content. Critical for env files — restored content stays out of stdout/logs.
+The point is to verify content arrived intact. Comparing hashes proves that without ever displaying restored content. Critical for env files - restored content stays out of stdout/logs.
 
 ### Why the temp dir is enforced at 0700
-Restored content is sensitive (operator's env files, config). Setting the temp dir permissions tightly prevents another process on the host from reading the restored files during the test window.
+Restored content is sensitive (your env files, config). Setting the temp dir permissions tightly prevents another process on the host from reading the restored files during the test window.
 
 ### Why the `RESTORED-DIFF` classification exists
 Active log files / databases have different content between the snapshot moment and "now." Without this classification, every active file would falsely register as a restore failure. Diff-from-live is expected for live-changing files; the test is whether restore *worked*, not whether content matches a moving target.
 
 ### Why per-host history files
-Same reason as `/cron-audit` and `/secrets-audit` — each host has its own backup config, schedule, and restore-test cadence. Cross-host comparisons would produce noise.
+Same reason as `/cron-audit` and `/secrets-audit` - each host has its own backup config, schedule, and restore-test cadence. Cross-host comparisons would produce noise.
 
 ### Why this is its own skill, not part of `/secrets-audit`
-`/secrets-audit` operates on the env-file ecosystem layer. `/backup-verify` operates on the backup-target layer (which covers more than secrets — includes data, configs, logs, the whole filesystem subset). Different domains, different mental models.
+`/secrets-audit` operates on the env-file ecosystem layer. `/backup-verify` operates on the backup-target layer (which covers more than secrets - includes data, configs, logs, the whole filesystem subset). Different domains, different mental models.
 
 ---
 

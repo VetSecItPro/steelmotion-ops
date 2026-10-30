@@ -1,15 +1,16 @@
 ---
-description: "/subagent-dev — Automated plan execution with two-stage review per task: dispatch implementer, then spec compliance reviewer, then code quality reviewer. Model selection per task. No task complete without review."
-allowed-tools: Bash(git *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(node *), Bash(cat *), Bash(ls *), Bash(find *), Bash(grep *), Bash(mkdir *), Bash(date *), Read, Write, Edit, Glob, Grep, Task
+description: "/subagent-dev - Automated plan execution with two-stage review per task: dispatch implementer, then spec compliance reviewer, then code quality reviewer. Model selection per task. No task complete without review."
+allowed-tools: Bash(git *), Bash(npx *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(node *), Bash(cat *), Bash(ls *), Bash(find *), Bash(grep *), Bash(mkdir *), Bash(date *), Read, Write, Edit, Glob, Grep, Agent
+when_to_use: Trigger phrases: "execute the plan", "implement all these tasks with review"
 ---
 
-# /subagent-dev — Automated Plan Execution with Two-Stage Review
+# /subagent-dev - Automated Plan Execution with Two-Stage Review
 
 **Steel Principle: No task complete without spec compliance review AND code quality review.**
 
 This skill is the execution engine for plans produced by `/brainstorm` or `/mdmp`. It dispatches a fresh sub-agent for each task, then runs TWO separate reviews before marking the task done. The implementer never marks their own work complete - review is mandatory.
 
-**FIRE AND FORGET** — Point at a spec/plan. The skill executes every task with full review cycle.
+**FIRE AND FORGET** - Point at a spec/plan. The skill executes every task with full review cycle.
 
 > **When to use /subagent-dev:**
 > - After `/brainstorm` produces an approved spec
@@ -120,7 +121,7 @@ Key rules for this skill:
 | Agent Role | Model | Why |
 |-----------|-------|-----|
 | Implementer (mechanical, 1-2 files, clear spec) | `sonnet` | Must write correct code, handle edge cases |
-| Implementer (integration, multi-file, judgment) | `sonnet` | Same — quality matters |
+| Implementer (integration, multi-file, judgment) | `sonnet` | Same - quality matters |
 | Implementer (architectural, cross-cutting) | `opus` | Complex reasoning about system-wide implications |
 | Spec Compliance Reviewer | `sonnet` | Reads code and compares to spec line-by-line |
 | Code Quality Reviewer | `sonnet` | Evaluates maintainability, tests, clean code |
@@ -484,9 +485,9 @@ OUTPUT: .subagent-dev-reports/final-review.md
    Branch: [name]
 
 Recommended handoff:
-1. /test-ship — Verify test coverage is comprehensive
-2. /sec-ship --diff — Security check on the changes
-3. /gh-ship — Commit, push, PR, deploy
+1. /test-ship - Verify test coverage is comprehensive
+2. /sec-ship --diff - Security check on the changes
+3. /gh-ship - Commit, push, PR, deploy
 
 Or you can review the worktree manually before proceeding.
 ```
@@ -578,5 +579,5 @@ When all tasks pass both review stages (SHIP verdict), suggest in order: `/test-
 - **Worktree isolates the work** - main branch stays clean during execution
 - **Every task has a complete trail** - implementer output + both reviews + commit
 
-<!-- Claude Code Skill — Superpowers methodology adapted for Steel Motion skill architecture -->
+<!-- Claude Code Skill - Superpowers methodology adapted for Steel Motion skill architecture -->
 <!-- Incorporates subagent-driven-development from obra/superpowers (MIT License) -->

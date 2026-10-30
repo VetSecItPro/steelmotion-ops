@@ -1,7 +1,10 @@
 # Skill Pattern Standard
 
 **Version:** 2.0
-**Applies to:** All skills in `~/.claude/commands/`
+**Applies to:** Both skill locations. Measured 2026-08-27: `~/.claude/commands/` holds 18 live
+`.md` command files and `~/.claude/skills/` holds 22 skill directories, **fully disjoint - no
+skill exists in both.** This is a half-finished migration, not a duplication. Treat the two as
+one estate of 40 until they are consolidated.
 **Companion to:** [SITREP Format](./SITREP_FORMAT.md), [Cleanup Protocol](./CLEANUP_PROTOCOL.md), [Status Updates](./STATUS_UPDATES.md)
 
 ---
@@ -40,7 +43,7 @@ Skills may adopt ANY of these patterns based on their use case:
 - Phase 3: Execute with live plan updates
 - Phase 4: Iterative verification
 - Phase 5: SITREP
-**Examples:** `/design`, `/marketing`, `/social`, `/copy`, `/narrative`, `/campaign`, `/prospect`, `/newsletter`
+**Examples:** `/design`
 
 ### Pattern B: TDD (RED-GREEN-REFACTOR)
 **Best for:** Meta-skills, skill creation, new code features. Ensures evidence-based output.
@@ -97,7 +100,7 @@ Skills may adopt ANY of these patterns based on their use case:
 ### 1. Frontmatter
 ```yaml
 ---
-description: "/[skill] — [one-line description optimized for discovery]"
+description: "/[skill] - [one-line description optimized for discovery]"
 allowed-tools: [specific tools, principle of least privilege]
 ---
 ```

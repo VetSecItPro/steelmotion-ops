@@ -1,0 +1,94 @@
+# Documentation staleness gate. TEMPLATE - copy to .github/workflows/docs-check.yml.
+#
+# SUBSTITUTE BEFORE USE. Two values, both marked <<< >>> below:
+#   <<<CHECKER_PATH>>>    where the vendored checker lives in THIS repo,
+#                         e.g. scripts/check-docs.py
+#   <<<REGISTER_PATH>>>   where the register lives in THIS repo. Drop the --register
+#                         flag entirely if it sits at docs/doc-register.json or is the
+#                         only root-level *DOC-REGISTER*.json, because the checker
+#                         discovers both without being told.
+#
+# The checker is VENDORED into the repo on purpose. CI cannot read ~/.claude, so a
+# workflow reaching for the canonical copy is one that only ever runs on the author's
+# laptop. Vendoring buys a silent-drift problem in exchange, which is why the register
+# declares checker_version and the gate reports a mismatch as SUSPECT.
+#
+# Contract, and the reason it is shaped this way:
+#   exit 0  clean                      -> pass
+#   exit 1  BROKEN, or a vacuous       -> FAIL. A broken anchor is proof, not suspicion.
+#           register that cannot fail
+#   exit 2  SUSPECT only               -> pass, but write the findings to the job summary.
+#   exit 3  no register / malformed /  -> FAIL. Silence about a missing register is how a
+#           two candidate registers       dead gate reports green for days.
+#
+# Suspect findings deliberately do NOT block. A gate that fails every pull request touching
+# a documented file trains people to disable it, and a disabled gate is worse than none
+# because the badge stays green.
+name: docs-check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '<<<CHECKER_PATH>>>'
+      - '<<<REGISTER_PATH>>>'
+      - '.github/workflows/docs-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '<<<CHECKER_PATH>>>'
+      - '<<<REGISTER_PATH>>>'
+
+permissions:
+  contents: read
+
+jobs:
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The touched-anchor detector diffs verified_sha..HEAD, so it needs history
+          # rather than a depth-1 clone. Without this every doc reads as unverified.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          # zoneinfo (stamp parsing) is stdlib from 3.9. No third-party dependency
+          # anywhere in the checker, deliberately: a merge gate that pip-installs is a
+          # merge gate that breaks on somebody else's yanked release.
+          python-version: '3.11'
+
+      - name: Confirm the checker is present and self-reports its version
+        run: |
+          test -f '<<<CHECKER_PATH>>>' || {
+            echo "::error::<<<CHECKER_PATH>>> is missing. The gate cannot run."
+            exit 1
+          }
+          python3 '<<<CHECKER_PATH>>>' --version
+
+      - name: Check documentation anchors
+        id: check
+        run: |
+          set +e
+          python3 '<<<CHECKER_PATH>>>' \
+            --register '<<<REGISTER_PATH>>>' \
+            --no-auto-bootstrap > docs-check.out 2>&1
+          rc=$?
+          set -e
+          cat docs-check.out
+          {
+            echo "## Documentation anchor check"
+            echo
+            echo '```'
+            cat docs-check.out
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$rc" in
+            0) echo "Clean." ;;
+            2) echo "::warning::Suspect documentation findings - review, not blocking." ;;
+            1) echo "::error::A documented anchor is proven broken, or the register cannot fail." ; exit 1 ;;
+            3) echo "::error::The register is missing, malformed, or ambiguous." ; exit 1 ;;
+            *) echo "::error::Unexpected exit $rc from the checker." ; exit 1 ;;
+          esac

@@ -90,7 +90,7 @@ With history:
 If a pattern recurs across MANY projects (e.g., "GHCR 403 from missing package-ACL"), consider promoting it from per-project history to:
 - A note in the skill's documentation
 - A `~/.claude/standards/` cross-reference
-- A `feedback_*` memory entry (per Anouar's memory system)
+- A `feedback_*` memory entry (per the operator's memory system)
 
 ## Application checklist
 
@@ -107,4 +107,4 @@ For any skill being audited for self-improvement:
 
 Per-project history files live at the repo root, gitignored. They never get committed. They survive across local sessions and Claude restarts because they're filesystem state.
 
-If the operator clones the repo fresh, history starts empty. That's fine — the skill builds it up over its first few runs in the new clone.
+If you clones the repo fresh, history starts empty. That's fine - the skill builds it up over its first few runs in the new clone.
