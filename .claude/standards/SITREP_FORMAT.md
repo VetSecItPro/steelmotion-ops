@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Every skill MUST conclude with a SITREP — a structured situation report that tells the user exactly what happened, what changed, and what to do next. The SITREP is the **single source of truth** for a skill run. A user who reads only the SITREP should know everything they need to know.
+Every skill MUST conclude with a SITREP - a structured situation report that tells the user exactly what happened, what changed, and what to do next. The SITREP is the **single source of truth** for a skill run. A user who reads only the SITREP should know everything they need to know.
 
 **The SITREP is NOT optional.** Even if the skill found nothing, even if everything passed, the SITREP confirms that the skill ran completely and what it covered.
 
@@ -38,10 +38,10 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 
 **What was examined:**
 - [X] pages / [Y] API routes / [Z] components / etc.
-- [Specific scope description — what was IN scope]
+- [Specific scope description - what was IN scope]
 
 **What was excluded:**
-- [Anything skipped and why — e.g., "--changed mode: 5 pages out of 19 tested"]
+- [Anything skipped and why - e.g., "--changed mode: 5 pages out of 19 tested"]
 
 ---
 
@@ -53,12 +53,12 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 | HIGH     | 0     | 0     | 0        | 0       |
 | MEDIUM   | 0     | 0     | 0        | 0       |
 | LOW      | 0     | 0     | 0        | 0       |
-| INFO     | 0     | —     | —        | —       |
+| INFO     | 0     | - | - | - |
 | **Total**| **0** | **0** | **0**    | **0**   |
 
 ---
 
-### Before / After [if applicable — when the skill modifies code]
+### Before / After [if applicable - when the skill modifies code]
 
 | Metric | Before | After | Delta |
 |--------|--------|-------|-------|
@@ -81,7 +81,7 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 
 ---
 
-### What Was Deferred [if applicable — with WHY]
+### What Was Deferred [if applicable - with WHY]
 
 | # | ID | Finding | Why Deferred | What Needs to Happen |
 |---|-----|---------|-------------|----------------------|
@@ -89,7 +89,7 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 
 ---
 
-### What Was Blocked [if applicable — with all attempts documented]
+### What Was Blocked [if applicable - with all attempts documented]
 
 | # | ID | Finding | Attempts | Why Blocked |
 |---|-----|---------|----------|-------------|
@@ -111,9 +111,9 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 
 ### Recommendations
 
-1. **[Next immediate action]** — [why and how]
-2. **[Follow-up action]** — [why and how]
-3. **[Longer-term suggestion]** — [why]
+1. **[Next immediate action]** - [why and how]
+2. **[Follow-up action]** - [why and how]
+3. **[Longer-term suggestion]** - [why]
 
 ### Suggested Next Skills
 
@@ -129,7 +129,7 @@ Every skill uses this exact structure, adapted for its domain. Sections marked `
 
 | Run | Date | Score/Result | Trend |
 |-----|------|-------------|-------|
-| #1 | [date] | [result] | — |
+| #1 | [date] | [result] | - |
 | #2 | [date] | [result] | [improving/stable/declining] |
 | **#3 (this run)** | [today] | [result] | [trend] |
 ```
@@ -178,7 +178,7 @@ The template above is the **skeleton**. Each skill fills in the sections relevan
 - `/investigate`: Root cause, hypothesis log, confidence level, pattern learned
 - `/cleancode`: Lines removed, complexity reduction, dead code eliminated
 
-### Infrastructure Skills (/dev, /monitor, /migrate, /db, /blog)
+### Infrastructure Skills (/dev, /monitor, /migrate, /db)
 
 **Emphasis:** Status (healthy/degraded/broken), what was done
 **Domain-specific additions:**
@@ -195,7 +195,7 @@ The SITREP is written to the report file AND displayed on screen. The on-screen 
 
 ```
 ═══════════════════════════════════════════════════════════════
-SITREP — /[skill-name]
+SITREP - /[skill-name]
 ═══════════════════════════════════════════════════════════════
 Project: [name]  |  Branch: [branch]  |  Duration: [Xm Ys]
 Mode: [mode]     |  Status: [COMPLETE/PARTIAL/BLOCKED]
@@ -219,10 +219,10 @@ FIXED (8)
   ...
 
 DEFERRED (1)
-  [ID] [one-line] — [why]
+  [ID] [one-line] - [why]
 
 BLOCKED (1)
-  [ID] [one-line] — [why] ([N attempts])
+  [ID] [one-line] - [why] ([N attempts])
 
 CLEANUP
   Browser: closed | Test data: 3 records deleted | Screenshots: 12 purged
@@ -234,7 +234,7 @@ NEXT STEPS
 HISTORY
   Run #1 (2026-03-01): [result]
   Run #2 (2026-03-15): [result]
-  Run #3 (today):      [result] — Trend: [improving/stable/declining]
+  Run #3 (today):      [result] - Trend: [improving/stable/declining]
 
 ───────────────────────────────────────────────────────────────
 Report: .[skill]-reports/[filename].md
@@ -245,16 +245,16 @@ Report: .[skill]-reports/[filename].md
 
 ## Rules
 
-1. **SITREP is ALWAYS the last thing displayed** — after cleanup, after report finalization
-2. **SITREP is written to the report file AND displayed on screen** — both are mandatory
-3. **Every section that has data must be included** — don't skip Deferred if there are deferred items
-4. **Empty sections are omitted** — if nothing was deferred, don't show the Deferred section
-5. **Findings table is ALWAYS shown** — even if all zeros (proves the skill ran and checked)
-6. **Before/After is required for any skill that modifies code** — show the improvement
-7. **Cleanup section is ALWAYS shown** — proves resources were handled
-8. **Next Steps must be actionable** — specific skill commands, not vague advice
-9. **Historical Context shown when previous runs exist** — helps track progress over time
-10. **Skill name is ALWAYS in the header** — user must know which skill produced this SITREP
+1. **SITREP is ALWAYS the last thing displayed** - after cleanup, after report finalization
+2. **SITREP is written to the report file AND displayed on screen** - both are mandatory
+3. **Every section that has data must be included** - don't skip Deferred if there are deferred items
+4. **Empty sections are omitted** - if nothing was deferred, don't show the Deferred section
+5. **Findings table is ALWAYS shown** - even if all zeros (proves the skill ran and checked)
+6. **Before/After is required for any skill that modifies code** - show the improvement
+7. **Cleanup section is ALWAYS shown** - proves resources were handled
+8. **Next Steps must be actionable** - specific skill commands, not vague advice
+9. **Historical Context shown when previous runs exist** - helps track progress over time
+10. **Skill name is ALWAYS in the header** - user must know which skill produced this SITREP
 
 ---
 

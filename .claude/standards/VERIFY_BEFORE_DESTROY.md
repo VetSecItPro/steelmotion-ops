@@ -10,7 +10,7 @@ Apply to any skill that:
 - Drops database tables / runs DESTRUCTIVE migrations
 - Closes / abandons / archives work
 
-Examples: `/gh-ship`, `/cleancode`, `/db`, `/migrate`, `/harden`
+Examples: `/gh-ship`, `/cleancode`, `/db`, `/migrate`
 
 ## Core principle
 
@@ -27,11 +27,11 @@ Examples: `/gh-ship`, `/cleancode`, `/db`, `/migrate`, `/harden`
 
 **Use this triangulation order:**
 
-1. **Method 1 (ancestor)**: `git merge-base --is-ancestor <branch-sha> main` — catches merge-commit merges
-2. **Method 2 (PR state)**: `gh pr list --head <branch> --state all` — catches squash-merge if PR exists
-3. **Method 3 (content equivalence)**: `[ -z "$(git diff main...<branch>)" ]` — catches squash-merged + branch deleted on remote
+1. **Method 1 (ancestor)**: `git merge-base --is-ancestor <branch-sha> main` - catches merge-commit merges
+2. **Method 2 (PR state)**: `gh pr list --head <branch> --state all` - catches squash-merge if PR exists
+3. **Method 3 (content equivalence)**: `[ -z "$(git diff main...<branch>)" ]` - catches squash-merged + branch deleted on remote
 4. If any of 1/2/3 returns true: branch IS merged, safe to delete
-5. If all return false AND no PR exists: branch has unmerged work — DO NOT delete
+5. If all return false AND no PR exists: branch has unmerged work - DO NOT delete
 
 ### Recovery if you got it wrong
 
@@ -74,7 +74,7 @@ SESSION_RESOURCES_CREATED+=("<resource-id>")
 # Pre-existing resources are inspect-only, never auto-deleted
 ```
 
-This prevents the "destroyed pre-existing operator work" class of bug.
+This prevents the "destroyed pre-existing you work" class of bug.
 
 ## Anti-patterns
 

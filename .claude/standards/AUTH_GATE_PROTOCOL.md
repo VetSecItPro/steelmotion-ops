@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Applies to:** Any skill that launches a Playwright browser and may encounter a login screen.
-**Skills affected:** `/browse`, `/qatest`, `/redteam`, `/fortress` (via `/redteam`), `/quality` (via `/qatest`)
+**Skills affected:** `/browse`, `/qatest`, `/redteam`
 
 ---
 
@@ -43,7 +43,7 @@ During skill initialization, the auth system was already detected (NextAuth, Sup
 ## Resolution (in priority order)
 
 ### Strategy 1: Service Token (API-only, fastest)
-If the app supports service token auth (like Mission Control's `x-service-token`):
+If the app supports service token auth (for example an `x-service-token` header):
 - Use the token for all API calls via curl (no browser auth needed)
 - For browser testing of protected pages, use Strategy 2 or 3
 
@@ -57,7 +57,7 @@ STEP 1: Create test user
      - Email: qatest_{unix_timestamp}@example.com
      - Username: qatest_{unix_timestamp}
      - Password: QaTest!{unix_timestamp}!Secure
-     - Role: operator (not admin - test with realistic permissions)
+     - Role: you (not admin - test with realistic permissions)
    - If signup API doesn't exist, check for:
      - Admin user creation API (POST /api/users)
      - Direct database seeding (if accessible via API)
@@ -145,7 +145,7 @@ During Phase 0 or route discovery, classify every route:
 | Supabase Auth | POST /auth/v1/signup | POST /auth/v1/token?grant_type=password | JWT (access + refresh) |
 | Clerk | POST /v1/sign_ups | POST /v1/sign_ins | Clerk session token |
 | Lucia | App-defined | App-defined | Database session |
-| Custom (like Mission Control) | POST /api/users or POST /api/auth/token | POST /api/auth/login | Cookie (mc_auth) |
+| Custom | POST /api/users or POST /api/auth/token | POST /api/auth/login | Cookie (session) |
 | No auth detected | N/A | N/A | Test everything directly |
 
 ---

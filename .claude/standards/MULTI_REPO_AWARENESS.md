@@ -4,7 +4,7 @@
 
 ## When to apply
 
-Apply to any skill that operates on a git repo: `/gh-ship`, `/sec-ship`, `/test-ship`, `/qatest`, `/ship`, `/monitor`, `/cleancode`, `/deps`, `/perf`.
+Apply to any skill that operates on a git repo: `/gh-ship`, `/sec-ship`, `/test-ship`, `/qatest`, `/monitor`, `/cleancode`, `/deps`, `/perf`.
 
 ## The pattern
 
@@ -41,17 +41,17 @@ The skill MUST NOT:
 ## Why this matters
 
 Real-world workspaces have multiple repos. Examples:
-- `~/vibecode-projects/nolan-openclaw/` contains `mission-control`, `nolan-infra`, etc.
+- `~/projects/platform/` contains `dashboard`, `infra-repo`, etc.
 - A monorepo with sub-projects each in their own git submodule
 
-If the skill operates on cwd silently, the operator forgets the others. Then they discover days later that "I shipped one repo but the sibling has uncommitted changes." Surfacing prevents this class of bug.
+If the skill operates on cwd silently, you forgets the others. Then they discover days later that "I shipped one repo but the sibling has uncommitted changes." Surfacing prevents this class of bug.
 
 ## SITREP integration
 
 ```
 🌐 Sibling repos in workspace
    mission-control: branch=main, uncommitted=0, unpushed=0  ✅
-   nolan-infra:     branch=main, uncommitted=2, unpushed=1  ⚠️
+   infra-repo:     branch=main, uncommitted=2, unpushed=1  ⚠️
                     [run /gh-ship from inside if changes pending]
 ```
 

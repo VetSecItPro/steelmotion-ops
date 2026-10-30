@@ -1,8 +1,14 @@
 # Agent Orchestration Protocol for Multi-Agent Skills
 
 **Version:** 1.0
-**Applies to:** All skills in `~/.claude/commands/` that spawn sub-agents via the Task tool
+**Applies to:** All skills in `~/.claude/commands/` **and** `~/.claude/skills/` that spawn subagents.
+
 **Companion to:** [Context Management Protocol](./CONTEXT_MANAGEMENT.md), [Status Update Protocol](./STATUS_UPDATES.md)
+
+> **Currency note, 2026-08-27.** The spawning tool is now **`Agent`**, not `Task` - the `Task*`
+> names refer to todo management. 18 skills defer to this document, so the old name was
+> propagating. Subagents **cannot nest**: a subagent must not spawn another, and `workflow()`
+> inside a child throws. Any design here implying a deep agent tree is wrong.
 
 ---
 
@@ -12,11 +18,41 @@
 
 ---
 
+## Persistent Agent Definitions vs Dynamic Spawning
+
+Two different mechanisms, and this document historically covered only the second.
+
+**Dynamic spawning** - a skill calls `Agent` mid-run with a prompt it composes. Right for
+work whose shape is only known at runtime. Everything below in this document is about this.
+
+**Persistent agent definitions** - `.md` files in `.claude/agents/` (project) or
+`~/.claude/agents/` (global) with frontmatter declaring `name`, `description`, `tools` and
+`model`, invoked by `subagent_type`. Right for a role you use repeatedly.
+
+**The tool list is the security boundary, and it is the reason to prefer a definition.**
+A dynamically spawned `general-purpose` agent carries `Tools: *` - full write access to the
+repo. A definition can withhold `Edit` and `Write`. Two consequences worth designing around:
+
+- A **verifier with no write tools cannot make a failing check pass by editing the check.**
+  That is Steel Principle 1 enforced by tool scope rather than by instruction, and
+  instructions are the layer that erodes under pressure.
+- An **implementer with a declared file scope and no git tools** cannot commit, so the parent
+  session stays the only thing that touches git history. This complements `gh-push-guard.py`,
+  which only covers push and PR-create.
+
+Definitions load **at session start**. A newly written agent file is not available in the
+session that created it. Field-test after a restart, never before.
+
+Reference implementations: `17.scratchpad/.claude/agents/readonly-verifier.md` and
+`scoped-implementer.md`.
+
+---
+
 ## Model Selection Guide
 
-Choose the right model for each agent based on what the task actually demands. **Do NOT default to the cheapest model.** Choose the model that will produce the best results for the task.
+Choose the right model for each agent based on what the task actually demands. **Do NOT default to inheriting the parent's model, and do not default to the cheapest one either.** Choose the cheapest model that will produce the right result for the task.
 
-### `haiku` — Literal Pattern Extraction Only
+### `haiku` - Literal Pattern Extraction Only
 
 Use ONLY when the task is pure text pattern matching with no judgment required:
 
@@ -29,9 +65,16 @@ Use ONLY when the task is pure text pattern matching with no judgment required:
 | Check if a file exists | Existence check |
 | Gather package.json dependency names | Reading a JSON file |
 
-**If you're unsure whether haiku is sufficient, use sonnet.** The cost difference is negligible on a Max subscription. The quality difference is not.
+**If you're unsure whether haiku is sufficient, use sonnet.** The quality difference matters.
 
-### `sonnet` — The Default for Most Agent Work
+**Cost is NOT negligible on a Max subscription (corrected 2026-10-16).** The weekly limit is the
+binding constraint. Measured 2026-10-16: subagents were ~90% of fresh input tokens and 91% of their
+calls ran on Opus 5.5, because a subagent with no `model` inherits the parent's. Always pass `model`
+and `effort` explicitly, and give every agent a `description` that leads with its task number when
+it has one (`#247 CySA+ currency check`). The rule and its table: `~/.claude/CLAUDE.md`
+section 8 "Subagents".
+
+### `sonnet` - The Default for Most Agent Work
 
 Use for anything that requires understanding context, making judgments, or writing code:
 
@@ -55,7 +98,7 @@ Use for anything that requires understanding context, making judgments, or writi
 | CSS/Tailwind analysis | Must understand utility interactions and overrides |
 | Document generation | Must produce professional, accurate, well-structured content |
 
-### `opus` — Complex Reasoning, Architecture, and High-Stakes Decisions
+### `opus` - Complex Reasoning, Architecture, and High-Stakes Decisions
 
 Use when the task demands deep reasoning, multi-step logic, or consequences of getting it wrong are significant:
 
@@ -75,7 +118,8 @@ Use when the task demands deep reasoning, multi-step logic, or consequences of g
 **Reasoning about code, writing fixes, analyzing patterns** → `sonnet`
 **Architecture decisions, high-stakes analysis, external-facing output** → `opus`
 
-Choose the model that produces the best result for the task. Cost is not a factor.
+Choose the cheapest model that produces the right result for the task. Opus needs a one-clause
+reason Sonnet would get it wrong; inheriting Opus by omission is not a choice.
 
 ---
 
@@ -144,9 +188,9 @@ All multi-agent skills follow a two-tier hierarchy:
 
 ### 1. Parallel Limits
 
-- **Max 2 agents running in parallel** — prevents resource contention
+- **Max 2 agents running in parallel** - prevents resource contention
 - **Scout agents** can run in parallel (they're read-only)
-- **Fix agents** run sequentially (they modify code — conflicts possible)
+- **Fix agents** run sequentially (they modify code - conflicts possible)
 - Process results and checkpoint BEFORE spawning the next batch
 
 ### 2. Agents Write to Disk
@@ -186,7 +230,7 @@ Every agent prompt MUST include these sections:
 [Clear, specific description of what to do]
 
 ## Files to Process
-[Exact file paths — never "scan everything"]
+[Exact file paths - never "scan everything"]
 
 ## What to Look For
 [Specific patterns with examples]
@@ -229,12 +273,14 @@ The orchestrator follows this loop for every skill:
    b. Prepare agent prompts with file batches
    c. Spawn agents (max 2 parallel)
    d. Collect agent summaries (< 500 tokens each)
+   d2. STOP each agent (TaskStop) the moment its report is handled. See "Agent lifecycle" below.
    e. Update state file on disk
    f. Update living document report on disk
    g. Output brief status to user
    h. Proceed to next batch or phase
 
 3. FINALIZE
+   - ListAgents: stop anything still listed as completed or idle; only agents still working remain
    - Run final verification (build, type check, lint)
    - Write SITREP conclusion to report
    - Update history file
@@ -243,15 +289,37 @@ The orchestrator follows this loop for every skill:
 
 ---
 
+## Agent lifecycle: the orchestrator stops every agent it is done with (operator directive, 2026-10-12)
+
+**The orchestrator owns each agent from dispatch to stop.** When an agent's report has been read and
+acted on (committed, routed, or recorded as no action), stop it with `TaskStop` in the same turn. Do not
+leave a finished agent registered: some keep background work running after their hand-back, and a list
+of finished agents hides the ones still working from the operator.
+
+- After each hand-back: handle it, then `TaskStop <agent id>`.
+- **An `isolation: "worktree"` agent that changed files leaves a worktree and a branch behind.** In
+  the same turn as its hand-back, merge its branch into yours or discard it, then
+  `git worktree remove <path>` and `git branch -D <branch>` once its commits are on your branch (or
+  deliberately thrown away). Measured 2026-10-17: one repo held 169 orphaned `wt-*` and
+  `worktree-agent-*` branches and 114 dead worktree entries.
+- Before any status reply, and at the end of a run: `ListAgents`, and stop every agent listed as
+  completed. Only agents still working stay.
+- A resumed agent (one you sent new scope to) is stopped only after its NEXT report, never on the strength
+  of an older one.
+- **Limit, measured 2026-10-12:** `TaskStop` marks the entry "killed" but does not delete it; no tool in
+  reach removes an agent entry. Say so plainly if asked to remove one; never claim it was removed.
+
+---
+
 ## Recovery from Context Reset
 
 If context is lost mid-skill:
 
 1. **Find the state file:** `.[skill]-reports/state-*.json` (most recent)
-2. **Read it** — it tells you exactly what's done and what's pending
+2. **Read it** - it tells you exactly what's done and what's pending
 3. **Find the living document:** `.[skill]-reports/[report]-*.md`
-4. **Resume from the next incomplete item** — NEVER re-run completed agents
-5. **Agent results are on disk** — don't re-scan what's already been scanned
+4. **Resume from the next incomplete item** - NEVER re-run completed agents
+5. **Agent results are on disk** - don't re-scan what's already been scanned
 
 ### Recovery Prompt
 
@@ -273,7 +341,7 @@ Each skill should define its own model table in its AGENT ORCHESTRATION section.
 
 | Agent Type | Model | Why |
 |-----------|-------|-----|
-| Inventory scanners | `haiku` | Listing files, counting routes, extracting names — no judgment |
+| Inventory scanners | `haiku` | Listing files, counting routes, extracting names - no judgment |
 | Security scanners | `sonnet` | Must assess exploitability, understand auth logic, evaluate risk |
 | Compliance analyzers | `sonnet` | Must reason about legal requirements vs code behavior |
 | Accessibility analyzers | `sonnet` | Must understand ARIA semantics, keyboard nav patterns, screen reader behavior |
@@ -285,7 +353,7 @@ Each skill should define its own model table in its AGENT ORCHESTRATION section.
 
 | Agent Type | Model | Why |
 |-----------|-------|-----|
-| Literal pattern finders | `haiku` | console.log, TODO, debugger — exact string matches |
+| Literal pattern finders | `haiku` | console.log, TODO, debugger - exact string matches |
 | Dead code analyzers | `sonnet` | Must trace dependency chains, understand usage context |
 | React/framework analyzers | `sonnet` | Must understand component logic, hooks, rendering |
 | Type analyzers | `sonnet` | Must understand TypeScript type system |
@@ -296,10 +364,10 @@ Each skill should define its own model table in its AGENT ORCHESTRATION section.
 
 | Agent Type | Model | Why |
 |-----------|-------|-----|
-| File inventory | `haiku` | Listing existing docs, counting coverage — no judgment |
+| File inventory | `haiku` | Listing existing docs, counting coverage - no judgment |
 | Content generators | `sonnet` | Must write professional, accurate documentation |
 | Code analyzers (for docs) | `sonnet` | Must understand code to document the WHY, not just the WHAT |
-| Link validators | `haiku` | URL existence checks — no judgment |
+| Link validators | `haiku` | URL existence checks - no judgment |
 | Report synthesizers | `sonnet` | Must create coverage narrative and recommendations |
 
 ---
@@ -311,8 +379,8 @@ Before any skill begins its main work, the orchestrator MUST verify prerequisite
 ### Required Pre-Flight Checks (All Skills)
 
 ```
-1. Git state: Is the working tree clean? (warn if uncommitted changes — they could interfere with rollback)
-2. Build passes: Run `pnpm build` or equivalent — if the build is already broken, stop and tell the user
+1. Git state: Is the working tree clean? (warn if uncommitted changes - they could interfere with rollback)
+2. Build passes: Run `pnpm build` or equivalent - if the build is already broken, stop and tell the user
 3. Dependencies installed: Check node_modules exists and is current (run install if needed)
 4. Disk space: Ensure the reports directory can be created
 5. Previous run check: Look for incomplete state files from the last 2 hours (offer to resume)
@@ -373,7 +441,7 @@ During pre-flight, after checking prerequisites:
 4. Pass this context to relevant agents so they can:
    - Skip re-analyzing deferred items that haven't changed
    - Note when a previously deferred item can NOW be fixed (conditions changed)
-   - Reference the decision history ("this was deferred twice before because X — revisiting because Y has changed")
+   - Reference the decision history ("this was deferred twice before because X - revisiting because Y has changed")
    - Avoid recommending the same action that was already rejected
 ```
 
@@ -406,24 +474,24 @@ When an agent returns STATUS: FAILED or PARTIAL:
 ```
 1. READ the failure summary (from the agent's return message)
 2. CLASSIFY the failure:
-   a. TRANSIENT — timeout, rate limit, temporary error
+   a. TRANSIENT - timeout, rate limit, temporary error
       → Retry ONCE with the same prompt
       → If retry fails → mark as BLOCKED, continue to next agent
-   b. SCOPE — agent ran out of tool calls before finishing
+   b. SCOPE - agent ran out of tool calls before finishing
       → Split the batch: re-run with half the files
       → If still fails → mark remaining files as DEFERRED
-   c. CODE — agent encountered an error in the code it was analyzing/fixing
+   c. CODE - agent encountered an error in the code it was analyzing/fixing
       → Record the error in the report
       → Mark the specific finding as BLOCKED with the error details
       → Continue to next agent (don't let one failure stop the pipeline)
-   d. BUILD — fix agent's change broke the build
+   d. BUILD - fix agent's change broke the build
       → Agent should have already rolled back (per its instructions)
       → If not rolled back → orchestrator runs git checkout on the affected files
-      → Mark the finding as BLOCKED ("fix broke build — needs manual review")
+      → Mark the finding as BLOCKED ("fix broke build - needs manual review")
       → Continue to next agent
 
 3. UPDATE the state file and living document with the failure details
-4. CONTINUE — never stop the entire pipeline because one agent failed
+4. CONTINUE - never stop the entire pipeline because one agent failed
 ```
 
 ### Retry Limits
@@ -521,7 +589,7 @@ This skill follows the **[Agent Orchestration Protocol](~/.claude/standards/AGEN
 
 ## SITREP Requirements (Before/After State Documentation)
 
-Every skill run MUST end with a SITREP (Situation Report) that documents the before and after state. This is not optional — it's the historical record that future runs will read for context.
+Every skill run MUST end with a SITREP (Situation Report) that documents the before and after state. This is not optional - it's the historical record that future runs will read for context.
 
 ### Required SITREP Sections
 
@@ -571,14 +639,14 @@ Narrative summary of the work done. Be specific:
 
 #### 3. What Was Deferred and Why
 
-Every DEFERRED item gets documented with the reason. This is critical for historical awareness — future runs will read this.
+Every DEFERRED item gets documented with the reason. This is critical for historical awareness - future runs will read this.
 
 ```markdown
 ### Deferred Items
 
 | ID | Finding | Why Deferred | Conditions to Revisit |
 |----|---------|-------------|----------------------|
-| CC-015 | Complex pricing function (complexity 22) | No test coverage — refactoring without tests is too risky | Revisit after test-ship adds tests for this module |
+| CC-015 | Complex pricing function (complexity 22) | No test coverage - refactoring without tests is too risky | Revisit after test-ship adds tests for this module |
 | SEC-008 | Rate limiting on webhook endpoint | Webhooks need to accept high throughput from Stripe | Revisit if abuse is detected in production logs |
 ```
 
@@ -593,7 +661,7 @@ Every BLOCKED item with the specific blocker:
 
 | ID | Finding | Blocker | What Needs to Happen |
 |----|---------|---------|---------------------|
-| CC-031 | Unused dep 'legacy-auth' | Removing it breaks build — hidden transitive dependency | Investigate which module actually needs it, then remove properly |
+| CC-031 | Unused dep 'legacy-auth' | Removing it breaks build - hidden transitive dependency | Investigate which module actually needs it, then remove properly |
 ```
 
 #### 5. Recommendations
@@ -604,8 +672,8 @@ Actionable next steps. Reference specific findings and other skills when relevan
 ### Recommendations
 
 1. Run `/test-ship` to add tests for the pricing module before refactoring (blocked CC-015)
-2. Schedule `/deps` run — 3 dependencies have known CVEs that couldn't be auto-updated
-3. Consider running `/perf` — removed 2,400 lines of dead code which may improve bundle size
+2. Schedule `/deps` run - 3 dependencies have known CVEs that couldn't be auto-updated
+3. Consider running `/perf` - removed 2,400 lines of dead code which may improve bundle size
 ```
 
 #### 6. Historical Context (if previous runs exist)
@@ -617,18 +685,18 @@ Reference what changed since the last run:
 
 This is run #4 for this project.
 - Run #3 (2026-02-10): 12 issues fixed, 3 deferred. CC-015 still deferred (same reason).
-- CC-022 was deferred in runs #2 and #3 — resolved this run because tests were added.
+- CC-022 was deferred in runs #2 and #3 - resolved this run because tests were added.
 - Overall trend: Codebase health improving. Technical debt reduced 45% since run #1.
 ```
 
 ### SITREP Quality Standards
 
-- **Specific, not vague** — "Removed 23 unused exports from 12 files" not "cleaned up dead code"
-- **Quantified** — Numbers, percentages, before/after deltas
-- **Decision-aware** — Document WHY things were deferred, not just that they were
-- **Forward-looking** — What should happen next, what conditions would change deferred decisions
-- **Cross-skill aware** — Reference other skills when recommendations involve them
-- **Honest** — If something wasn't fixed because it was too hard or risky, say so. Don't hide it.
+- **Specific, not vague** - "Removed 23 unused exports from 12 files" not "cleaned up dead code"
+- **Quantified** - Numbers, percentages, before/after deltas
+- **Decision-aware** - Document WHY things were deferred, not just that they were
+- **Forward-looking** - What should happen next, what conditions would change deferred decisions
+- **Cross-skill aware** - Reference other skills when recommendations involve them
+- **Honest** - If something wasn't fixed because it was too hard or risky, say so. Don't hide it.
 
 ---
 

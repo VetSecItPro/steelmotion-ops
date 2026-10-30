@@ -1,15 +1,16 @@
 ---
-description: "/brainstorm — Socratic design exploration: one question at a time, 2-3 approaches with tradeoffs, HARD-GATE before implementation, writes approved spec"
-allowed-tools: Bash(git *), Bash(mkdir *), Bash(date *), Bash(ls *), Read, Write, Edit, Glob, Grep, WebSearch, Task
+description: "/brainstorm - Socratic design exploration: one question at a time, 2-3 approaches with tradeoffs, HARD-GATE before implementation, writes approved spec"
+when_to_use: 'Trigger phrases: "help me think through", "explore approaches", "what are the options", "design this with me", "I am not sure how to build this". Use BEFORE implementation, when the shape of the solution is still open. Hard-gates on an approved spec.'
+allowed-tools: Bash(git *), Bash(mkdir *), Bash(date *), Bash(ls *), Read, Write, Edit, Glob, Grep, WebSearch, Agent
 ---
 
-# /brainstorm — Socratic Design Exploration
+# /brainstorm - Socratic Design Exploration
 
 **Steel Principle: NO implementation code until the design is user-approved and the spec is written.**
 
 This skill turns vague ideas into validated, implementable designs BEFORE a single line of code is written. It's lighter than `/mdmp` (no military-style 6-lens analysis) but still enforces the discipline that separates "threw something together" from "designed something properly."
 
-**FIRE AND FORGET** — Describe the idea. The skill asks one question at a time, explores 2-3 approaches, and produces an approved spec ready for `/subagent-dev`.
+**FIRE AND FORGET** - Describe the idea. The skill asks one question at a time, explores 2-3 approaches, and produces an approved spec ready for `/subagent-dev`.
 
 > **When to use /brainstorm:**
 > - "I'm thinking about adding X"
@@ -72,9 +73,9 @@ Key enforcements for this skill:
    └─ ✅ Core requirements clear
 
 🎯 Phase 3: Approach Exploration
-   ├─ Approach A: [name] — [one-line description]
-   ├─ Approach B: [name] — [one-line description]
-   ├─ Approach C: [name] — [one-line description]
+   ├─ Approach A: [name] - [one-line description]
+   ├─ Approach B: [name] - [one-line description]
+   ├─ Approach C: [name] - [one-line description]
    └─ Recommendation: [A/B/C] because [reason]
 
 📝 Phase 4: Spec Writing
@@ -495,5 +496,5 @@ When this skill finishes with an approved spec, suggest: `/subagent-dev [spec pa
 - **The spec is the contract** - between planning and execution
 - **Escalate to /mdmp** if the topic grows beyond brainstorm scope (architectural, multi-team, multi-concern)
 
-<!-- Claude Code Skill — Superpowers methodology adapted for Steel Motion skill architecture -->
+<!-- Claude Code Skill - Superpowers methodology adapted for Steel Motion skill architecture -->
 <!-- Incorporates brainstorming discipline from obra/superpowers (MIT License) -->

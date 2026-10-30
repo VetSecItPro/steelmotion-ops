@@ -7,6 +7,7 @@ set -euo pipefail
 REPO="https://github.com/VetSecItPro/steelmotion-ops.git"
 TMPDIR=$(mktemp -d)
 COMMANDS_DIR="$HOME/.claude/commands"
+SKILLS_DIR="$HOME/.claude/skills"
 STANDARDS_DIR="$HOME/.claude/standards"
 
 echo "Installing Claude Code Skills..."
@@ -15,7 +16,17 @@ echo "Installing Claude Code Skills..."
 git clone --quiet --depth 1 "$REPO" "$TMPDIR/claude-code-skills"
 
 # Create directories
-mkdir -p "$COMMANDS_DIR" "$STANDARDS_DIR"
+mkdir -p "$COMMANDS_DIR" "$SKILLS_DIR" "$STANDARDS_DIR"
+
+# Copy skill folders
+FOLDERS_COPIED=0
+for dir in "$TMPDIR/claude-code-skills/.claude/skills/"*/; do
+  [ -d "$dir" ] || continue
+  name=$(basename "$dir")
+  rm -rf "${SKILLS_DIR:?}/$name"
+  cp -R "$dir" "$SKILLS_DIR/$name"
+  FOLDERS_COPIED=$((FOLDERS_COPIED + 1))
+done
 
 # Copy skills
 SKILLS_COPIED=0
@@ -37,7 +48,8 @@ done
 rm -rf "$TMPDIR"
 
 echo ""
-echo "Installed $SKILLS_COPIED skills to $COMMANDS_DIR"
+echo "Installed $FOLDERS_COPIED skills to $SKILLS_DIR"
+echo "Installed $SKILLS_COPIED commands to $COMMANDS_DIR"
 echo "Installed $STANDARDS_COPIED standards to $STANDARDS_DIR"
 echo ""
 echo "Restart Claude Code to use your new skills."

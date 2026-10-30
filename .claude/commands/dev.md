@@ -1,9 +1,10 @@
 ---
 description: Start a clean development server (fast, resilient, self-healing)
-allowed-tools: Bash(git *), Bash(npm *), Bash(npx *), Bash(pnpm *), Bash(yarn *), Bash(sleep *), Bash(cat *), Bash(node *), Bash(mkdir *), Bash(ls *), Bash(head *), Bash(tail *), Bash(grep *), Bash(find *), Bash(xargs *), Bash(kill *), Bash(pkill *), Bash(pgrep *), Bash(lsof *), Bash(echo *), Bash(source *), Bash(export *), Bash(df *), Bash(du *), Bash(ps *), Bash(wc *), Bash(stat *), Bash(vm_stat *), Bash(PATH=*), Bash(open *), Bash(curl *), Bash(rm *), Read, Write, Edit, Glob, Grep, Task
+allowed-tools: Bash(git *), Bash(npm *), Bash(npx *), Bash(pnpm *), Bash(yarn *), Bash(sleep *), Bash(cat *), Bash(node *), Bash(mkdir *), Bash(ls *), Bash(head *), Bash(tail *), Bash(grep *), Bash(find *), Bash(xargs *), Bash(kill *), Bash(pkill *), Bash(pgrep *), Bash(lsof *), Bash(echo *), Bash(source *), Bash(export *), Bash(df *), Bash(du *), Bash(ps *), Bash(wc *), Bash(stat *), Bash(vm_stat *), Bash(PATH=*), Bash(open *), Bash(curl *), Bash(rm *), Read, Write, Edit, Glob, Grep, Agent
+when_to_use: Trigger phrases: "start dev server", "run the app"
 ---
 
-# /dev — Just Works
+# /dev - Just Works
 
 **One command. No flags to remember. It figures out what's wrong and fixes it.**
 
@@ -20,8 +21,8 @@ That's it. Server starts on port 5888. If something's broken, it fixes it automa
 > Reference: [Superpowers Discipline Protocol](~/.claude/standards/STEEL_DISCIPLINE.md)
 
 Key enforcements for this skill:
-- **Steel Principle #1:** NO completion claims without fresh verification evidence — curl the port and confirm the app responded with 200
-- **Steel Principle #4:** NO declaring "server started" based on log tail alone — hit the URL
+- **Steel Principle #1:** NO completion claims without fresh verification evidence - curl the port and confirm the app responded with 200
+- **Steel Principle #4:** NO declaring "server started" based on log tail alone - hit the URL
 - Never kill processes outside this project (other projects' dev servers stay untouched)
 
 ### Dev-Specific Rationalization Table
@@ -38,7 +39,7 @@ Key enforcements for this skill:
 ## Usage
 
 ```bash
-/dev 5888        # Start on port 5888 — handles everything
+/dev 5888        # Start on port 5888 - handles everything
 /dev             # Start on port 3000 (default)
 /dev 5888 -v     # Verbose: show all monitoring/healing output
 /dev 5888 -m     # Minimal: just start, skip smart features
@@ -58,7 +59,7 @@ You don't need to think about any of this. It just happens:
 | Low system memory (<1GB free) | Kills stale Node processes, clears cache |
 | Server crashes | Auto-restarts with graduated recovery (4 levels) |
 | Repeated crashes | Escalates: cache clear → dep reinstall → nuclear clean |
-| Other projects' dev servers | Left alone — only kills processes from current project |
+| Other projects' dev servers | Left alone - only kills processes from current project |
 
 **You only see output when something needed fixing.** Otherwise, it just starts.
 
@@ -66,10 +67,10 @@ You don't need to think about any of this. It just happens:
 
 ## Execution Rules
 
-- **NO permission requests** — just execute
-- **NO flags to remember** — smart by default
-- **Turbopack enabled** — faster rebuilds, stable HMR
-- **Silent unless needed** — only shows output when fixing something
+- **NO permission requests** - just execute
+- **NO flags to remember** - smart by default
+- **Turbopack enabled** - faster rebuilds, stable HMR
+- **Silent unless needed** - only shows output when fixing something
 
 ---
 
@@ -146,14 +147,14 @@ for PID in $(pgrep -f "next dev" 2>/dev/null || true); do
 done
 ```
 
-This avoids killing other projects' dev servers — only targets processes on the requested port or belonging to the current project directory.
+This avoids killing other projects' dev servers - only targets processes on the requested port or belonging to the current project directory.
 
 ### 3.2 Check Dependencies Freshness
 
 ```bash
 if [ -f "package.json" ] && [ -d "node_modules" ]; then
   if [ "package.json" -nt "node_modules" ]; then
-    # package.json is newer — deps may be stale
+    # package.json is newer - deps may be stale
     echo "📦 Installing dependencies..."
     $PKG install
   fi
@@ -190,7 +191,7 @@ fi
 # macOS: check if system memory is critically low (< 1GB free)
 FREE_MEM_MB=$(vm_stat 2>/dev/null | awk '/Pages free/ {free=$3} /Pages speculative/ {spec=$3} END {printf "%.0f", (free+spec)*4096/1048576}')
 if [ -n "$FREE_MEM_MB" ] && [ "$FREE_MEM_MB" -lt 1024 ] 2>/dev/null; then
-  echo "⚠️  Low memory (${FREE_MEM_MB}MB free) — killing stale Node processes"
+  echo "⚠️  Low memory (${FREE_MEM_MB}MB free) - killing stale Node processes"
   pkill -f "next-server" 2>/dev/null || true
   # Also clear .next to reduce memory footprint on startup
   rm -rf .next
@@ -227,7 +228,7 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
     PORT=$PORT $PKG run dev --turbo
     EXIT_CODE=$?
   else
-    # Level 4: Nuclear — full clean
+    # Level 4: Nuclear - full clean
     pkill -f "next-server" 2>/dev/null || true
     rm -rf .next node_modules .swc
     find . -maxdepth 1 -name '*.tsbuildinfo' -delete 2>/dev/null || true
@@ -236,7 +237,7 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
     EXIT_CODE=$?
   fi
 
-  # Exit 0 = clean stop, 130 = Ctrl+C (SIGINT) — user stopped intentionally
+  # Exit 0 = clean stop, 130 = Ctrl+C (SIGINT) - user stopped intentionally
   if [ $EXIT_CODE -eq 0 ] || [ $EXIT_CODE -eq 130 ]; then
     break
   fi
@@ -244,7 +245,7 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
   RESTART_COUNT=$((RESTART_COUNT + 1))
 
   if [ $RESTART_COUNT -lt $MAX_RESTARTS ]; then
-    echo "⚠️  Server crashed (exit $EXIT_CODE) — auto-recovering (level $((RESTART_COUNT + 1))/4)..."
+    echo "⚠️  Server crashed (exit $EXIT_CODE) - auto-recovering (level $((RESTART_COUNT + 1))/4)..."
     sleep 2
   fi
 done
@@ -320,9 +321,9 @@ No emoji, no fixes, just starts. Use when you know everything is fine.
 
 | Flag | What It Does |
 |------|--------------|
-| (none) | Smart mode — auto-fixes everything silently |
-| `-v` | Verbose — show all checks and monitoring |
-| `-m` | Minimal — skip smart features, just start fast |
+| (none) | Smart mode - auto-fixes everything silently |
+| `-v` | Verbose - show all checks and monitoring |
+| `-m` | Minimal - skip smart features, just start fast |
 
 ---
 
@@ -340,11 +341,11 @@ No emoji, no fixes, just starts. Use when you know everything is fine.
 
 ## Why This Design
 
-1. **No flags to memorize** — Smart behavior is the default
-2. **Silent success** — Only shows output when there's something to report
-3. **Graduated recovery** — Tries simple fixes first, escalates if needed
-4. **Fast path preserved** — If nothing's wrong, startup is ~3-5s
-5. **Escape hatches exist** — `-m` for minimal, `-v` for verbose
+1. **No flags to memorize** - Smart behavior is the default
+2. **Silent success** - Only shows output when there's something to report
+3. **Graduated recovery** - Tries simple fixes first, escalates if needed
+4. **Fast path preserved** - If nothing's wrong, startup is ~3-5s
+5. **Escape hatches exist** - `-m` for minimal, `-v` for verbose
 
 The goal: You type `/dev 5888` and forget about it. It either works, or it tells you why it can't.
 
@@ -392,16 +393,16 @@ At the end of every /dev run, output:
 
 ### Dev-Specific Cleanup
 
-This skill uses **Start + Leave** dev server policy — the dev server is its primary output and should remain running.
+This skill uses **Start + Leave** dev server policy - the dev server is its primary output and should remain running.
 
 Cleanup disclosure (in output when skill finishes):
 1. **Dev server disclosure:** Always display: "Dev server running on port [PORT] (PID [PID]). Stop with: `kill [PID]` or Ctrl+C"
-2. **Lockfile changes:** If Level 3/4 recovery deleted and regenerated the lockfile, warn: "Lockfile was regenerated — review `git diff` on lockfile before committing"
+2. **Lockfile changes:** If Level 3/4 recovery deleted and regenerated the lockfile, warn: "Lockfile was regenerated - review `git diff` on lockfile before committing"
 3. **Recovery disclosure:** If the restart loop triggered recovery, report which level was reached and what was cleaned
 
 Note: `/dev` is exempt from the "Stop dev server" cleanup rule because its entire purpose is to START a dev server. The disclosure requirement still applies.
 
-<!-- Claude Code Skill by Steel Motion LLC — https://steelmotion.dev -->
+<!-- Claude Code Skill by Steel Motion LLC - https://steelmotion.dev -->
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->
