@@ -13,7 +13,8 @@ when_to_use: 'Trigger phrases: "generate docs", "document this", "write document
 | `audit.md` | Phase 1 | the five audit dimensions and what each looks for |
 | `reference.md` | Phase 2 | generation targets, formats, SITREP |
 
-**Standards inherited:** [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
+**Standards inherited:** [Domain Language](~/.claude/standards/DOMAIN_LANGUAGE.md) ·
+[AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
 [Steel Discipline](~/.claude/standards/STEEL_DISCIPLINE.md) ·
 [Self-Improvement](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) ·
 [Agent Orchestration](~/.claude/standards/AGENT_ORCHESTRATION.md) ·
@@ -54,6 +55,9 @@ documentation. The rule prevents drift; the skill fixes drift that already happe
    When auditing, flag stale docs as higher priority than gaps.
 6. **Where the project has living deliverables** (an ADR catalogue, a per-phase tech doc), update
    THOSE rather than generating a competing set.
+7. **Use the glossary, do not compete with it.** If `GLOSSARY.md` exists, generated docs use its
+   terms and link to it instead of redefining a term inline. This skill never creates a glossary;
+   that happens with the operator present (`standards/DOMAIN_LANGUAGE.md`).
 
 ## Modes
 

@@ -2,7 +2,7 @@
 
 ## Report
 
-`.db-reports/DB-<YYYYMMDD-HHMM>.md`, written progressively.
+`.reports/db/DB-<YYYYMMDD-HHMM>.md`, written progressively.
 
 ```markdown
 # Database Report: <project>
@@ -50,7 +50,7 @@ every policy, which is a silent hole.
 
 ## History
 
-`.db-reports/history.json`: migrations applied per environment, and `patterns_observed` for
+`.reports/db/history.json`: migrations applied per environment, and `patterns_observed` for
 drift causes that recur (a specific console habit, an env that always lags).
 
 ## SITREP

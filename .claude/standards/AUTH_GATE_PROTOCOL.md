@@ -43,7 +43,7 @@ During skill initialization, the auth system was already detected (NextAuth, Sup
 ## Resolution (in priority order)
 
 ### Strategy 1: Service Token (API-only, fastest)
-If the app supports service token auth (for example an `x-service-token` header):
+If the app supports service token auth (like Mission Control's `x-service-token`):
 - Use the token for all API calls via curl (no browser auth needed)
 - For browser testing of protected pages, use Strategy 2 or 3
 
@@ -145,7 +145,7 @@ During Phase 0 or route discovery, classify every route:
 | Supabase Auth | POST /auth/v1/signup | POST /auth/v1/token?grant_type=password | JWT (access + refresh) |
 | Clerk | POST /v1/sign_ups | POST /v1/sign_ins | Clerk session token |
 | Lucia | App-defined | App-defined | Database session |
-| Custom | POST /api/users or POST /api/auth/token | POST /api/auth/login | Cookie (session) |
+| Custom (like Mission Control) | POST /api/users or POST /api/auth/token | POST /api/auth/login | Cookie (mc_auth) |
 | No auth detected | N/A | N/A | Test everything directly |
 
 ---

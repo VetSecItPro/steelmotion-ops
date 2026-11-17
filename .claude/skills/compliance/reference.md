@@ -2,7 +2,7 @@
 
 ## Audit / docs report
 
-`.compliance-reports/COMP-<YYYYMMDD-HHMM>.md`.
+`.reports/compliance/COMP-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Compliance Report: <project>

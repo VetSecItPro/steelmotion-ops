@@ -20,7 +20,7 @@ average** - the same blocker-beats-average rule as `/launch`.
 
 ## Report
 
-`.qatest-reports/QA-<YYYYMMDD-HHMM>.md`.
+`.reports/qatest/QA-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # QA Report: <project>

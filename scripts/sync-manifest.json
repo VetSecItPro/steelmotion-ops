@@ -1,0 +1,71 @@
+{
+  "skills": [
+    "a11y",
+    "architecture-survey",
+    "brainstorm",
+    "cleancode",
+    "compliance",
+    "db",
+    "deps",
+    "design",
+    "docs",
+    "docs-sync",
+    "gh-ship",
+    "incident",
+    "investigate",
+    "launch",
+    "mdmp",
+    "migrate",
+    "monitor",
+    "perf",
+    "qatest",
+    "redteam",
+    "repo-bootstrap",
+    "sec-ship",
+    "smoketest",
+    "test-ship"
+  ],
+  "commands": [
+    "backup-verify",
+    "browse",
+    "critique-adversarial",
+    "cron-audit",
+    "dev",
+    "secrets-audit",
+    "subagent-dev",
+    "write-skill"
+  ],
+  "standards": [
+    "AGENT_ORCHESTRATION",
+    "AI_JUDGMENT_PARADIGM",
+    "AUTH_GATE_PROTOCOL",
+    "BACKLOG_STANDARD",
+    "CHANGELOGS_SHIP_WITH_RELEASES",
+    "CI_VERCEL_COST_OPTIMIZATION",
+    "CLEANUP_PROTOCOL",
+    "CONTEXT_MANAGEMENT",
+    "DOMAIN_LANGUAGE",
+    "MULTI_REPO_AWARENESS",
+    "SELF_IMPROVEMENT_PROTOCOL",
+    "SITREP_FORMAT",
+    "SKILL_AUTOSUGGEST_PROTOCOL",
+    "SKILL_PATTERN",
+    "SKILL_ROUTER",
+    "STATUS_UPDATES",
+    "STEEL_DISCIPLINE",
+    "TESTS_SHIP_WITH_CODE",
+    "VERIFY_BEFORE_DESTROY"
+  ],
+  "exclude": [
+    "skills/gh-ship/provenance-archive.md",
+    "skills/docs-sync/self.txt"
+  ],
+  "tools": [
+    "ci-local.sh",
+    "generate-skill-router.py",
+    "check-skill-router.sh",
+    "templates/backlog.md",
+    "agents/readonly-verifier.md",
+    "agents/scoped-implementer.md"
+  ]
+}

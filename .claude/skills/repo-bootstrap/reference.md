@@ -2,7 +2,7 @@
 
 ## Report
 
-`.bootstrap-reports/BOOT-<YYYYMMDD-HHMM>.md`.
+`.reports/bootstrap/BOOT-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Bootstrap Report: <repo>

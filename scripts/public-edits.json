@@ -1,0 +1,42 @@
+[
+  {
+    "file": "skills/gh-ship/stages.md",
+    "old": "holds the how. The story\nbehind each rule is in `provenance-archive.md`; do not read it during a run. Carry this state:",
+    "new": "holds the how. Carry this state:"
+  },
+  {
+    "file": "skills/gh-ship/stages.md",
+    "old": "**0g Content safety.** The global pre-commit hook (`~/.claude/git-hooks/pre-commit`) runs gitleaks on\nevery commit, so do not re-run a secrets regex here. **Exception:** a repo-local",
+    "new": "**0g Content safety.** If a global pre-commit hook already runs gitleaks on every commit (check\n`git config --global core.hooksPath`), do not re-run it here. **Otherwise, and always when no such hook\nexists, run `gitleaks protect --staged --redact` yourself after Stage 4's `git add`; if gitleaks is not\ninstalled, stop and say so.** The same holds when a repo-local"
+  },
+  {
+    "file": "skills/gh-ship/SKILL.md",
+    "old": "| `provenance-archive.md` | never during a run | the incidents and measurements behind each rule |\n",
+    "new": ""
+  },
+  {
+    "file": "skills/gh-ship/SKILL.md",
+    "old": " `/worklog` is\nthe session journal and deliberately not part of this pipeline.",
+    "new": ""
+  },
+  {
+    "file": "standards/SKILL_ROUTER.md",
+    "old": "/write-skill -> run it on a real task -> /worklog",
+    "new": "/write-skill -> run it on a real task"
+  },
+  {
+    "file": "standards/SKILL_ROUTER.md",
+    "old": "- Recording what THIS SESSION did and why? -> `/worklog` (the journal, not reference docs)\n",
+    "new": ""
+  },
+  {
+    "file": "standards/SKILL_ROUTER.md",
+    "old": "There is no\n  `/update-docs` and one must not be created;",
+    "new": "There is no\n  separate update-docs skill and one must not be created;"
+  },
+  {
+    "file": "skills/docs-sync/test_check_docs.py",
+    "old": "\"\"\"Backlog #144. A stamp",
+    "new": "\"\"\"A stamp"
+  }
+]

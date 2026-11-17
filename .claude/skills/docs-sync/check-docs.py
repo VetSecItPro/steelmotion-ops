@@ -62,7 +62,7 @@ BROKEN, SUSPECT, INFO = "broken", "suspect", "info"
 # Anchors extracted from prose by pattern reproduce every false positive a naive grep
 # makes, then inherit them into a register whose selling point is arithmetic certainty.
 # A harvested anchor is a guess wearing a schema. Documents quote counter-examples
-# ("not `audit-pages.py` but `canvas-audit-pages.py`") and record old names in rename
+# ("not `audit-pages.py` but `site-audit-pages.py`") and record old names in rename
 # histories; both are SUPPOSED not to exist. So harvested anchors can never fail a
 # build - the cost asymmetry is brutal, because a false BROKEN in a merge gate invites
 # somebody to edit a governing document until CI stops complaining.
@@ -651,7 +651,7 @@ def changed_since(root: Path, sha: str, doc: str | None = None) -> set[str] | No
     stale against its own reconciliation. Permanently, with no sequence of commits
     that clears it, because the commit that would clear it recreates the condition.
 
-    That was measured in 17.scratchpad on 2026-09-12 and filed as backlog #144. The
+    That was measured on a real repo on 2026-09-12. The
     danger was never a false failure - the finding is SUSPECT and does not gate - it
     is that a checker which is always yellow is a checker people stop reading, which
     costs the real findings sitting next to it.
@@ -723,7 +723,7 @@ def _shown(hits: list[str]) -> str:
 
 
 def gitignored(root: Path, rels: list[str], use_git: bool) -> set[str]:
-    """Ask git, rather than guess. Skill output lives in gitignored .*-reports/
+    """Ask git, rather than guess. Skill output lives in gitignored .reports/*/
     directories by house rule; demanding those be registered is pure noise, and a
     checker that emits noise is a checker somebody switches off."""
     if not use_git or not rels:

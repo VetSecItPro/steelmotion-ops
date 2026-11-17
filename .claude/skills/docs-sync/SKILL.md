@@ -13,7 +13,8 @@ when_to_use: 'Trigger phrases: "update the docs", "update docs", "update whateve
 | `curation.md` | Phase 1 and Phase 3 | what may become an anchor, how to classify a document, and the six ways this has gone wrong |
 | `reference.md` | Phase 0 and Phase 6 | register schema v2, finding kinds, exit codes, stamp format, SITREP format |
 
-**Standards inherited:** [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
+**Standards inherited:** [Domain Language](~/.claude/standards/DOMAIN_LANGUAGE.md) ·
+[AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
 [Steel Discipline](~/.claude/standards/STEEL_DISCIPLINE.md) ·
 [Status Updates](~/.claude/standards/STATUS_UPDATES.md) ·
 [Sitrep Format](~/.claude/standards/SITREP_FORMAT.md) ·
@@ -90,6 +91,9 @@ document corroborates.
    a declared field nothing enforces, a count that does not say what it counts, a vendored checker
    whose version has drifted: each reports itself on every run. A documented trap is not a control,
    and an advisory gate that looks like a real one is worse than no gate because the badge stays green.
+7. **`GLOSSARY.md` IS A LIVE DOCUMENT.** Register it like any other; a term that names a code symbol
+   carries that symbol as an anchor, so a rename that strands a term is a finding. Repair the term
+   only when the code change made it false; changing what a term MEANS is the operator's call.
 
 ## Modes
 

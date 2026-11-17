@@ -2,7 +2,7 @@
 
 ## Report
 
-`.test-reports/TEST-<YYYYMMDD-HHMM>.md`.
+`.reports/test/TEST-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Test Coverage Report: <project>

@@ -7,7 +7,7 @@ method that mutates state.
 
 Read `targets.md`. Determine, and record in the report header: the deploy target class(es), the
 observability backend, the live capability state (cloud session alive or not), any project-owned
-verification tooling to reuse, and whether a baseline exists in `.monitor-reports/`.
+verification tooling to reuse, and whether a baseline exists in `.reports/monitor/`.
 
 Resolve the URL to check: an explicit argument, else `$PROD_URL`, else `package.json` `homepage`,
 else the repo's `homepage` field, else the platform's project domain. If none resolves and the target
@@ -106,7 +106,7 @@ Compute each category per the table in `SKILL.md`. **Renormalise across only the
 actually measured** and show the arithmetic, so a 95 from four categories is not mistaken for a 95
 from six. DEFERRED categories are listed with the capability that was missing.
 
-Write `.monitor-reports/MON-<YYYYMMDD-HHMM>.md` per `reference.md`, append to `history.json`, and
+Write `.reports/monitor/MON-<YYYYMMDD-HHMM>.md` per `reference.md`, append to `history.json`, and
 emit the SITREP with the grade, the findings ordered by severity, and "Suggested next".
 
 Compare against the previous report where one exists: score delta, routes that changed state, and

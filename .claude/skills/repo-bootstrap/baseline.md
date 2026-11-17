@@ -10,6 +10,8 @@ Detect the stack first. Apply only the missing pieces, matched to the language a
 4. **CHANGELOG.md** if the repo ships a versioned artefact
 5. **Pre-commit hooks** - format + lint on staged files
 6. **Cost-optimisation config** - path filters, ignored-build-step, turbo/cache where warranted
+7. **`.ci-local`** - one shell line that mirrors the CI gate locally; `bash ~/.claude/ci-local.sh`
+   runs it and stamps the commit, and the push guard refuses `gh pr create` until it passed on HEAD
 
 ## Documentation register (`--docs-register`, OPT-IN, deliberately not in the baseline)
 
@@ -60,6 +62,11 @@ this repo's deploy target. `--agents` is therefore opt-in, not part of the defau
 that wrote it. Verification of this element is therefore deferred to the next session - say so in
 the report rather than claiming it works.
 
+## Backlog standard
+
+Every repo's backlog starts from `~/.claude/templates/backlog.md` and follows
+`~/.claude/standards/BACKLOG_STANDARD.md`. Copy the template to `<name>-backlog.md`.
+
 ## Living project docs (`--docs`)
 
 Three files, seeded on day one, so the repo starts accumulating its own instructions instead of
@@ -88,6 +95,12 @@ section yet, omit the section.
 The workflow runs the real commands (detected from the manifest) and **is a required status check**.
 Key properties, per the CI cost standard:
 
+- **`concurrency` with `cancel-in-progress: true` on every pull_request workflow** - a new
+  push must stop the old run instead of letting both bill. Lock-holding jobs are the exception below.
+- **Few jobs, one install.** Each job pays checkout, setup and whole-minute rounding; small checks run as
+  steps of one job (one Next.js site repo Content CI: 13 jobs cost about 22 minutes a run for seconds of work).
+- **Ubuntu runners.** macOS bills 10x and Windows 2x; a non-Ubuntu runner carries
+  `# runner-justified: <why>` on the line above, or `ci-hygiene-check.py` reports it every session.
 - **`concurrency` with `cancel-in-progress: false` on any lock-holding job** (deploy, helm, terraform,
   kubectl) - cancelling mid-lock strands the release. Pure-check jobs may cancel.
 - **`timeout-minutes` on every job.**
@@ -104,8 +117,9 @@ protection.
 ## .gitignore
 
 Stack artefacts (`node_modules/`, `.next/`, `dist/`, `__pycache__/`, `target/`), `.env*`, OS files,
-and the skill-report directories (`.sec-ship-reports/`, `.perf-reports/`, etc. - all skill output is
-gitignored per the global rule). Never ignore the lockfile.
+and `/.reports/` (all skill output and the local CI ledger and stamps live there; name it
+in the repo's own `.gitignore`, not only the machine's global one, so another clone or CI never tracks it).
+Never ignore the lockfile.
 
 ## Cost-optimisation (per the CI/Vercel cost standard)
 

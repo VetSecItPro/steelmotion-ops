@@ -2,7 +2,7 @@
 
 ## Report
 
-`.migrate-reports/MIG-<YYYYMMDD-HHMM>.md`.
+`.reports/migrate/MIG-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Migration Report: <from> -> <to>

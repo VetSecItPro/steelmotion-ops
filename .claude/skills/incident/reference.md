@@ -2,7 +2,7 @@
 
 ## Report / postmortem
 
-`.incident-reports/INC-<YYYYMMDD-HHMM>.md`, written live during the incident and finalised at Stage 6.
+`.reports/incident/INC-<YYYYMMDD-HHMM>.md`, written live during the incident and finalised at Stage 6.
 
 ```markdown
 # Incident: <symptom>
@@ -42,7 +42,7 @@ defensiveness and hidden causes.
 
 ## History
 
-`.incident-reports/history.json`: severity, TTM, root-cause class, and `patterns_observed` for
+`.reports/incident/history.json`: severity, TTM, root-cause class, and `patterns_observed` for
 recurring incident shapes - so a repeat symptom starts Stage 2 with the last confirmed cause in hand.
 
 ## SITREP

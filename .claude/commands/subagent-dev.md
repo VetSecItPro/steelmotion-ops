@@ -137,7 +137,7 @@ Key rules for this skill:
 ## OUTPUT STRUCTURE
 
 ```
-.subagent-dev-reports/
+.reports/subagent-dev/
 ├── SUBDEV-YYYYMMDD-HHMMSS.md     # Living execution report
 ├── state-YYYYMMDD-HHMMSS.json    # Resumable state
 ├── tasks/
@@ -200,8 +200,8 @@ If baseline fails: STOP. Report the broken baseline. User must fix main before s
 ### 0.4 Create Infrastructure
 
 ```bash
-mkdir -p .subagent-dev-reports/tasks
-grep -q ".subagent-dev-reports" .gitignore || echo ".subagent-dev-reports/" >> .gitignore
+mkdir -p .reports/subagent-dev/tasks
+grep -q ".reports/subagent-dev" .gitignore || echo ".reports/subagent-dev/" >> .gitignore
 ```
 
 ---
@@ -259,7 +259,7 @@ You are implementing task [N] of [total] from the spec at [path].
 ## Context Management
 
 - Write all detailed output (full diffs, test output, reasoning) to:
-  `.subagent-dev-reports/tasks/task-[N]-implementer.md`
+  `.reports/subagent-dev/tasks/task-[N]-implementer.md`
 - Return ONLY a summary under 500 tokens
 
 ## Return Format
@@ -274,7 +274,7 @@ TESTS_ADDED: [count]
 BUILD: PASS | FAIL
 TESTS: [X/Y passing]
 CONCERNS: [if any, brief]
-OUTPUT: .subagent-dev-reports/tasks/task-[N]-implementer.md
+OUTPUT: .reports/subagent-dev/tasks/task-[N]-implementer.md
 ---
 ```
 
@@ -331,7 +331,7 @@ MISSING: [list of spec items not implemented]
 EXTRA_SCOPE: [list of work beyond spec]
 FILE_MISMATCHES: [files changed that shouldn't have been, or missing]
 EVIDENCE: [specific file:line references proving findings]
-OUTPUT: .subagent-dev-reports/tasks/task-[N]-spec-review.md
+OUTPUT: .reports/subagent-dev/tasks/task-[N]-spec-review.md
 ---
 ```
 
@@ -390,7 +390,7 @@ STRENGTHS: [what was done well]
 CRITICAL: [issues that must be fixed]
 IMPORTANT: [issues that should be fixed]
 MINOR: [notes for later]
-OUTPUT: .subagent-dev-reports/tasks/task-[N]-quality-review.md
+OUTPUT: .reports/subagent-dev/tasks/task-[N]-quality-review.md
 ---
 ```
 
@@ -462,7 +462,7 @@ SCOPE_DRIFT: [any work beyond spec]
 INTEGRATION_ISSUES: [cross-task problems]
 REGRESSION_RISK: [areas likely affected]
 OVERALL: [summary paragraph]
-OUTPUT: .subagent-dev-reports/final-review.md
+OUTPUT: .reports/subagent-dev/final-review.md
 ---
 ```
 
@@ -501,7 +501,7 @@ Or you can review the worktree manually before proceeding.
 ### Subagent-Dev-Specific Cleanup
 
 1. **Worktree preservation** - Do NOT delete worktree. User will use it for `/test-ship`, `/gh-ship`, or merge.
-2. **Agent output files** - Keep in `.subagent-dev-reports/tasks/` for audit trail. Auto-clean after 30 days.
+2. **Agent output files** - Keep in `.reports/subagent-dev/tasks/` for audit trail. Auto-clean after 30 days.
 3. **State file** - Keep for resume capability. Auto-clean after 7 days of completion.
 4. **No test data** - should not have been created outside tests
 5. **Build/test artifacts** - node_modules, .next/, etc. belong to worktree, not a cleanup issue
@@ -545,7 +545,7 @@ Or you can review the worktree manually before proceeding.
 ### Handoff
 - Next: `/test-ship` → `/gh-ship`
 - Worktree: [path] (preserved)
-- Reports: `.subagent-dev-reports/`
+- Reports: `.reports/subagent-dev/`
 ```
 
 ---

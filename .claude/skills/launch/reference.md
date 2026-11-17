@@ -2,7 +2,7 @@
 
 ## Report
 
-`.launch-reports/LAUNCH-<YYYYMMDD-HHMM>.md`.
+`.reports/launch/LAUNCH-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Launch Readiness: <project>
@@ -12,11 +12,11 @@
 ## Scorecard
 | Domain | Weight | Score | Threshold | Status | Underlying report |
 |---|---|---|---|---|---|
-| Security | 20% | 88 | 85 | PASS | .sec-ship-reports/... |
-| Test coverage | 12% | 74 | 70 | PASS | .test-reports/... |
-| Performance | 12% | 91 | 80 | PASS | .perf-reports/... |
-| Accessibility | 12% | 82 | 80 | PASS | .a11y-reports/... |
-| Dependencies | 8% | 95 | 85 | PASS | .deps-reports/... |
+| Security | 20% | 88 | 85 | PASS | .reports/sec-ship/... |
+| Test coverage | 12% | 74 | 70 | PASS | .reports/test/... |
+| Performance | 12% | 91 | 80 | PASS | .reports/perf/... |
+| Accessibility | 12% | 82 | 80 | PASS | .reports/a11y/... |
+| Dependencies | 8% | 95 | 85 | PASS | .reports/deps/... |
 | Content | 10% | 100 | 90 | PASS | this report |
 | SEO | 6% | 88 | 80 | PASS | this report |
 | User flow | 12% | 100 | 95 | PASS | this report |

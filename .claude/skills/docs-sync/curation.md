@@ -22,7 +22,7 @@ An anchor is something the document **instructs you to run or read**, and that t
 ## The six ways this has gone wrong, all measured
 
 1. **Specimens read as defects.** A naming rule reading "not `audit-pages.py` but
-   `canvas-audit-pages.py`" produced two broken anchors. The proposed repair - edit the citation
+   `site-audit-pages.py`" produced two broken anchors. The proposed repair - edit the citation
    until CI is green - would have deleted the rule's own worked examples from the file that loads
    into every session in that repo. **A document quotes what is WRONG as often as what is right, and
    any tool that treats a mention as a dependency attacks negations and history first, because that

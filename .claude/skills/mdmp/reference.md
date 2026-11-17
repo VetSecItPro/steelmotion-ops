@@ -2,7 +2,7 @@
 
 ## Decision record
 
-`docs/decisions/` or `.mdmp-reports/MDMP-<YYYYMMDD>-<slug>.md`. This outlives the decision and is
+`docs/decisions/` or `.reports/mdmp/MDMP-<YYYYMMDD>-<slug>.md`. This outlives the decision and is
 the artifact people read in a year.
 
 ```markdown

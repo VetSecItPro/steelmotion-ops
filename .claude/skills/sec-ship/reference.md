@@ -5,7 +5,7 @@ initializing the report (Stage 0.6), writing the SITREP (Stage 6), or resuming a
 
 ## Report persistence
 
-`.sec-ship-reports/<YYYYMMDD-HHMMSS>.md` is the source of truth. Updated continuously so it survives
+`.reports/sec-ship/<YYYYMMDD-HHMMSS>.md` is the source of truth. Updated continuously so it survives
 compaction and session loss. Append-only: re-runs ADD under a new run-id header, never overwrite.
 
 Initialize at Stage 0.6:
@@ -59,10 +59,10 @@ re-litigating settled work.
 
 ### Resume protocol
 
-On invocation: read the newest `.sec-ship-reports/*.md` for this project. If its status is
+On invocation: read the newest `.reports/sec-ship/*.md` for this project. If its status is
 `in-progress` and it is under an hour old, resume from the last logged step. Otherwise start fresh.
 
-## Self-improvement: `.sec-ship-history.json`
+## Self-improvement: `.reports/sec-ship/history.json`
 
 Read at Stage 0.5 (reconciliation), appended at Stage 5. Auto-gitignored.
 
@@ -143,7 +143,7 @@ Self-improvement
    patterns_observed total / new this run / known recurred
 
 Reports
-   .sec-ship-reports/<run-id>.md, findings/agent-*.json, attack-surface.md
+   .reports/sec-ship/<run-id>.md, findings/agent-*.json, attack-surface.md
 ===============================================================
 ```
 

@@ -2,6 +2,12 @@
 
 > Cross-repo standard for minimizing CI compute and Vercel build minutes
 > while preserving correctness signal. Apply this to every repo you ship.
+>
+> **Rewritten in place 2026-11-02.** The old "recommended default" (Pattern B: N PRs
+> plus an integration PR) cost N+1 CI runs and contradicted the operator's rule: one work block,
+> one branch, one PR. It is replaced below by the single-branch work-block default. The measured
+> repo table replaces the old priority table, which rated one Next.js site repo "Low" while it was 83% of
+> the October bill.
 
 ## Executive principle
 
@@ -9,7 +15,7 @@
 **Vercel cost scales with deploy count × build time.**
 
 The cheap-shipping playbook attacks all four multipliers:
-1. Reduce PR count via batching when fixes are independent
+1. Reduce PR count: one work block = one branch = one PR (see "The work-block default")
 2. Reduce workflow scope via path filters (don't run web's CI on CLI-only PRs)
 3. Reduce per-PR overhead via merge queue + concurrency cancellation
 4. Reduce build time via Turbo remote cache + Vercel `ignoredBuildStep`
@@ -41,32 +47,31 @@ than a default one for the same correctness signal.
 
 Apply each layer independently. Each compounds the previous savings.
 
-### Layer 1: PR routing (DAG-aware merging)
+### Layer 1: The work-block default (one branch, one PR)
 
-The mental model: **every multi-PR session has an implicit dependency
-DAG**. Route each PR by its position in that DAG.
+**The default, for every session in every repo: one work block = one branch = one PR.**
 
-| PR characteristic | Routing | Why |
-|---|---|---|
-| Independent (disjoint files, no logical deps) | **GitHub Merge Queue** OR cherry-pick batch into integration PR | Single CI run validates the combination; no per-PR rebase thrash. |
-| Linearly dependent (B builds on A) | **Stacked PRs** - B targets A's branch, not main | Each PR diff stays small; no rebase needed when A merges. |
-| Overlap-conflicting (touch same files) | Serialize via auto-merge | Accept rebase cost as the price of safety; the alternative is interaction bugs. |
-| Mixed | Topological-sort cherry-pick into integration PR | Single CI on the rebased combination. |
+The loop:
+1. Cut one branch (and one worktree if another session shares the repo) for the block.
+2. Commit each task on it locally. Push the branch freely with `/gh-ship --push-only` for
+   backup. Where CI runs only on `pull_request`, a push with no PR open costs nothing.
+3. Run the full local suite (lint, typecheck, unit tests, build) before the FIRST push.
+4. When the block is done, open the PR once. CI runs once.
+5. A CI failure is fixed locally and the fixes are pushed together, not one push per symptom;
+   every push to an open PR re-runs billed CI.
+6. Records (backlog rows, lessons, changelog) ride the work PR. Never a records-only PR.
+7. Never a second PR while one is open; `gh-push-guard.py` refuses it
+   (override: `PR_BATCH_OVERRIDE="<reason>"`, for a live security fix or a broken checkout).
+8. Squash-merge, then delete the branch and the worktree the same hour. No stale branches.
 
-**Default for parallel-agent multi-PR sessions**: Pattern B (stage-and-batch).
-- Each agent opens its own PR. CI runs once on each (per-fix signal).
-- Auto-merge **stays OFF** until all agents complete.
-- Once all 5 PRs are CI-green, consolidate into integration PR via
-  cherry-pick (N → 1 commits on a new branch off main).
-- Run CI once on the integration PR (validates the combined diff).
-- Squash-merge the integration PR; close the originals as superseded.
-- Vercel does **one** prod build.
+CI cost for a block of N tasks: **1 run** (plus fix pushes), not N or N+1.
 
-**CI cost for N=5 independent PRs**:
-- Naive (auto-merge stacked): ~5-10 cycles (rebase thrash)
-- Pattern B (stage-and-batch): 5 individual + 1 integration = 6
-- Single integration from start: 1
-- Pick based on confidence in agent output. Pattern B is the safe default.
+**When work really is independent across agents** (parallel agents on disjoint files), they still
+commit to the one block branch (worktrees merge locally), not one PR each. Only genuinely separate
+deliverables with different owners or release timing get separate PRs, and then one at a time.
+
+**Merge queue** (section 2.4) is a fallback for repos where several humans open PRs at once. It is
+not needed for a solo operator following this default. Stacked PRs are not used.
 
 ---
 
@@ -273,89 +278,20 @@ Verification: a CLI-only PR should produce:
 
 ---
 
-## Multi-PR session DAG patterns
+## Multi-PR session patterns (superseded 2026-11-02)
 
-When parallel agents produce N PRs in a session, classify the DAG before
-choosing a merge strategy.
-
-### Pattern A: Sequential per-PR (default fallback)
-
-```
-PR-1 → CI → merge → main
-PR-2 → rebase on new main → CI → merge → main
-PR-3 → rebase → CI → merge → main
-```
-
-Use when: PRs touch shared files OR you need git-log granularity for
-bisect/rollback.
-
-CI cost: N (one per PR, with rebase re-runs).
-
-### Pattern B: Stage-and-batch (recommended default)
-
-```
-PR-1 → CI (parked, auto-merge OFF)
-PR-2 → CI (parked, auto-merge OFF)
-PR-3 → CI (parked, auto-merge OFF)
-↓ once all green ↓
-Integration PR (cherry-picks 1+2+3 onto fresh branch off main)
-       → CI (validates combined diff)
-       → squash-merge → main
-       → close PR-1, PR-2, PR-3 as "superseded by Integration"
-```
-
-Use when: PRs touch disjoint files (most parallel-agent fix work).
-
-CI cost: N (per-PR) + 1 (integration) = N+1.
-Vercel cost: 1 prod build (integration merge only).
-
-### Pattern C: Stacked PRs
-
-```
-PR-A → main (small, focused)
-PR-B → PR-A's branch (depends on A)
-PR-C → PR-B's branch (depends on B)
-```
-
-Each PR shows only its own diff (not A+B+C cumulative).
-When A merges, B auto-rebases to main; same for C after B.
-
-Use when: PRs are linearly dependent (each requires the prior).
-
-CI cost: N (each PR runs once, but in topological order).
-Vercel cost: 1 prod build IF you batch-merge with merge queue;
-otherwise N prod builds.
-
-### Pattern D: Merge queue (when GitHub merge queue is enabled)
-
-```
-PR-1, PR-2, PR-3 all enter queue independently.
-Queue rebases all 3 onto a synthetic "queue branch."
-Single CI run validates the combined diff.
-All 3 merge in one operation.
-```
-
-Use when: independent PRs AND merge queue is configured.
-
-CI cost: ~N+1 (per-PR + 1 queue batch).
-Vercel cost: 1 prod build.
-
-### Decision tree
-
-```
-Are PRs touching shared files?
-├── Yes → Pattern A (sequential)
-└── No
-    ├── Are PRs linearly dependent?
-    │   ├── Yes → Pattern C (stacked)
-    │   └── No → independent
-    │       ├── Merge queue available? → Pattern D
-    │       └── No merge queue → Pattern B (stage-and-batch)
-```
+The old Patterns A to D (sequential, stage-and-batch with an integration PR, stacked, merge queue)
+all assumed several PRs per session. Pattern B, the old "recommended default", paid N CI runs for
+the per-task PRs plus one for the integration PR. Under the work-block default there is one PR per
+block, so there is no DAG to route. If a session finds itself holding several open PRs anyway
+(inherited, or a bot opened them), merge them oldest first, one at a time, and do not open another
+until they are gone.
 
 ---
 
 ## Cost worked example
+
+*(Illustrative; written for the old several-PRs-per-session model. Under the work-block default the PR count is 1, which cuts the totals below further.)*
 
 Monorepo with 5 PRs: 3 touch `packages/acme-cli`, 2 touch `packages/acme-web`.
 
@@ -492,23 +428,67 @@ jobs:
 - **Single-package repo with no monorepo overhead**: path filters and
   `ignoredBuildStep` add complexity without savings. Skip Layers 2.1 and 3.
 - **Solo dev, low PR volume**: merge queue overhead may exceed savings.
-  Skip Layer 1 Pattern D.
+  Skip the merge queue (section 2.4).
 - **Team unfamiliar with merge queue / stacked PRs**: introduce one layer
   at a time. Layer 3 (`ignoredBuildStep`) is the safest first step.
 
 ---
 
-## Decision: applying this to your repos
+## Decision: where the money goes (measured, not guessed)
 
-For multi-repo accounts (one engineer working across several repos), sort them like this:
+Measured 2026-11-02. A prior version of this table ranked repos by package layout and rated
+one Next.js site repo "Low priority, caching only". The bill said otherwise.
 
-| Repo shape | Apply this stack? | Priority |
+| Fact | Value | Source |
 |---|---|---|
-| Monorepo (web + cli + mobile + shared packages) | Full stack | High - most PR traffic |
-| Single Next.js app | Layer 4 only (caching) | Low |
+| share of the October Actions bill from one Next.js site repo | **83%** | billing page, by repository |
+| one Next.js site repo, last 200 runs, 2026-10-28 to 11-02: CI | 1,097 wall-minutes | `gh run list` |
+| one Next.js site repo, same window: Deploy | 276 wall-minutes | `gh run list` |
+| one Next.js site repo, same window: Content CI | 231 wall-minutes | `gh run list` |
+| share of those runs that were PR events plus deploys | about 96% | `gh run list` |
 
-The big wins are on monorepos. Single-package repos benefit mainly from
-caching (Layer 4) and merge queue (Layer 1.D).
+What it means: the cost driver is the number of pull_request events times the weight of each
+workflow, not the repo's package layout. A single-app repo with heavy PR CI and a frequent deploy
+is the expensive one. Rank repos by `gh run list --limit 200` wall-minutes by workflow and event,
+and by the billing page, before touching anything. Wall-minutes understate the bill for non-Linux
+runners (macOS bills 10x, Windows 2x).
+
+Public repos get free Actions minutes; do not optimize them for cost.
+
+---
+
+## Workflow hygiene checklist (apply to every workflow in every repo)
+
+`project-baseline-check.sh` flags items 1, 2, 4 and 5 at session start (via
+`workflow-cost-check.py`). Fix them in the repo's next work PR, never a standalone PR.
+
+- [ ] **1. `concurrency` with `cancel-in-progress: true`** on every pull_request workflow, keyed by
+      `${{ github.workflow }}-${{ github.ref }}`, so a new push cancels the superseded run.
+- [ ] **2. `paths-ignore` for docs-only changes** (`**.md`, `docs/**`, backlog and lessons files) on
+      code CI. Because a required check that never starts blocks the merge, add a cheap `noop`
+      job under the same required check name (or a sibling workflow with the inverse `paths:`)
+      that reports success on docs-only PRs.
+      **Equally valid, and better when a required check must always report:** a changed-paths job
+      (`git diff --name-only` or `dorny/paths-filter`) whose output gates the heavy jobs through
+      `if: needs.<job>.outputs.<flag> == 'true'`, with an always-run summary job as the required
+      check (added 2026-11-02).
+- [ ] **3. Expensive jobs need the cheap gate**: `needs: quality` (lint plus typecheck) on test,
+      security, build and e2e jobs, so a lint failure does not also pay for the slow jobs.
+- [ ] **4. Deploy workflows skip docs-only merges** (`paths-ignore` on the push trigger). Content
+      that is rendered from MDX or similar is NOT docs-only and still deploys.
+- [ ] **5. Ubuntu runners only** (`ubuntu-latest`). macOS bills 10x and Windows 2x; justify any
+      exception in a comment and keep it to one job.
+- [ ] **6. `timeout-minutes` on every job.** The default is 360; a hung job bills all of it.
+- [ ] **7. Renovate (or Dependabot) grouped and weekly**: one grouped PR a week, not one per
+      package. Each bot PR is a full CI run.
+- [ ] **8. Publish content through a database, not a deploy**, where the site allows it. A content
+      edit that writes to a table costs no build; one that commits MDX costs CI plus a deploy.
+- [ ] **9. Public repos get free minutes**: record "public, free" and skip the above for cost.
+- [ ] **10. Draft PRs and skip tokens**: `if: github.event.pull_request.draft == false` on heavy
+      jobs where drafts are used (see the audit checklist below, Step 4).
+
+Verification for a docs-only PR: the required check reports success from the noop job in seconds,
+no Vercel preview builds, and the Actions tab shows no billable test or build minutes.
 
 ---
 
@@ -524,7 +504,7 @@ CI minutes for a typical Next.js + Playwright repo.
 Run: `gh run list --limit 50 --json name,conclusion,createdAt`
 
 Group by workflow name; multiply count × typical duration. The workflow
-with the highest product is your target. In one single-app repo (2026-05-04) it
+with the highest product is your target. In example-app (2026-05-04) it
 was `smart-e2e.yml` at ~40 min × every PR push = >90% of total CI minutes.
 
 ### Step 2: Scan that workflow's `on:` block
@@ -605,7 +585,11 @@ gh pr list --state merged --limit 50 --json files,number \
 If you find ≥3 such PRs in the last 50, the path filter pays for itself
 in the next sprint.
 
-### Step 7: Land it as a single chore PR
+### Step 7: Land it in the repo's next work PR (2026-11-02: not a standalone PR)
+
+A standalone CI-config PR pays a full CI run for a one-file change. Put it on the current work
+block's branch. Only when the repo has no open work block, make it one block with other pending
+chores. Commit message format:
 
 Title format: `chore(ci): skip <workflow> for irrelevant paths and draft PRs`
 
@@ -614,7 +598,7 @@ Body includes:
 - Estimated savings ("the merged PR #N would have skipped this")
 - Note that branch protection / drift-check still gates correctness
 
-### Worked example (a single-app repo, 2026-05-04)
+### Worked example (example-app PR #357, 2026-05-04)
 
 Cuts shipped:
 1. `paths-ignore` on `smart-e2e.yml`: `**/*.md`, `docs/**`,

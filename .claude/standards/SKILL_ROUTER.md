@@ -33,11 +33,13 @@ This document is the **intent-to-skill mapping table**. Reference it on every us
 
 ## Intent to Skill Map
 
-**33 skills, generated from the filesystem 2026-10-29 21:46.** 24 in `~/.claude/skills/`, 9 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
+**32 skills, generated from the filesystem 2026-11-17 14:49.** 24 in `~/.claude/skills/`, 8 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
 
 | Skill | Where | What it does | Route to it when the user says |
 |---|---|---|---|
 | `/a11y` | skills/ | Accessibility audit and remediation to WCAG 2.2 Level AA: automated scan, then the manual checks tooling cannot do (keyboard, screen reader, focus ord... | `accessibility`, `a11y`, `WCAG`, `screen reader`, `keyboard navigation`, `contrast`, `ARIA` |
+| `/architecture-survey` | skills/ | Module-level architecture survey: find where a codebase is hard to change by reading git hot spots and judging module depth (small interface, much beh... | `hard to change`, `ball of mud`, `architecture review`, `where should the boundaries be`, `improve the architecture`, `deep modules`, `shallow modules` |
+| `/brainstorm` | skills/ | Socratic design exploration: look up what the repo can answer, then interview the operator in numbered rounds (each question with a recommended answer... | `help me think through`, `explore approaches`, `what are the options`, `design this with me`, `I am not sure how to build this`, `grill me`, `stress-test this plan` |
 | `/cleancode` | skills/ | Technical-debt reduction and dead-code elimination: find genuinely unused code, duplication, and complexity, remove or refactor it safely with tests a... | `clean up code`, `dead code`, `technical debt`, `refactor`, `remove unused`, `simplify this`, `code smell` |
 | `/compliance` | skills/ | Privacy, data-protection and security-compliance work in one skill: audit against GDPR/CCPA/HIPAA/SOC2 as applicable, generate the policy and readines... | `compliance audit`, `GDPR`, `CCPA`, `HIPAA`, `SOC2`, `privacy audit`, `data compliance` |
 | `/db` | skills/ | Database schema, migrations, drift detection and data management, safely. | `DB migration`, `schema change`, `RLS policy`, `database drift`, `add a column`, `migrate the database`, `generate migration` |
@@ -57,12 +59,9 @@ This document is the **intent-to-skill mapping table**. Reference it on every us
 | `/redteam` | skills/ | Active exploitation and multi-step attack-chain analysis against a LOCAL development instance only. | `red team`, `try to hack`, `attack this`, `exploit`, `chain analysis`, `prove the vuln` |
 | `/repo-bootstrap` | skills/ | Apply the standard project baseline to a fresh or under-configured repo: test framework + a CI gate that blocks merges, .gitignore, CHANGELOG, pre-com... | `new repo setup`, `bootstrap this repo`, `apply project standards`, `set up CI here`, `scaffold this repo`, `get this repo to baseline` |
 | `/sec-ship` | skills/ | AI-judgment security pipeline: discover the attack surface, fan out 17 specialist agents mapped to OWASP Top 10:2025, triage by exploitability, fix at... | `is this secure?`, `security audit`, `OWASP`, `vulnerabilities`, `check for CVEs`, `pentest this`, `before we launch` |
-| `/session-conventions` | skills/ | The operator's working formats and procedures, relocated out of ~/.claude/CLAUDE.md on 2026-08-27 so they load on demand instead of on every turn: the... | `recap`, `snapshot`, `status?`, `where are we`, `lessons learned`, `log this`, `what git commands can I run` |
 | `/smoketest` | skills/ | Fast pre-ship sanity check: run every cheap mechanical layer (types, build, lint, unit tests, page probes, headers, stray logs, env vars, dep advisori... | `smoke test`, `quick sanity check`, `does it still work`, `quick check before I ship`, `sanity check` |
 | `/test-ship` | skills/ | Test coverage audit, gap-fill and verification: find what business logic is untested, write real tests for it (not smoke tests), run the full suite, a... | `test coverage`, `add tests`, `TDD`, `missing tests`, `write tests`, `is this tested`, `coverage gap` |
-| `/worklog` | skills/ | End-of-session and end-of-day work journal. | `worklog`, `log the session`, `journal this`, `write up what we did`, `daily log`, `end of day`, `close out the session` |
 | `/backup-verify` | commands/ | Restic / Cloud-Backup Restore-Test | `test the restore`, `is my backup actually working`, `verify backups`, `restore-test`, `have we ever restored` |
-| `/brainstorm` | commands/ | /brainstorm - Socratic design exploration: one question at a time, 2-3 approaches with tradeoffs, HARD-GATE before implementation, writes approved spe... | `help me think through`, `explore approaches`, `what are the options`, `design this with me`, `I am not sure how to build this` |
 | `/browse` | commands/ | /browse - Unified Browser Control: navigate, inspect, screenshot, test, audit - combines Playwright MCP + higher-level operations | `open the site`, `click through`, `screenshot this page`, `check it in a browser`, `does the page work`, `inspect the DOM` |
 | `/critique-adversarial` | commands/ | /critique-adversarial - Hostile cut-editor for articles. | `cut this down`, `it is too long`, `tighten this article`, `hostile edit`, `what can I remove`, `make it sharper` |
 | `/cron-audit` | commands/ | Cron + Scheduled-Job Health Audit | `are crons working`, `audit my crons`, `check scheduled jobs`, `silent cron failures`, `deploy webhook stuck` |
@@ -126,7 +125,7 @@ Multi-step exploit-chain analysis lives in `/redteam`, not `/sec-ship` (Steel Mo
 
 ### "Build or change a skill"
 ```
-/write-skill -> run it on a real task -> /worklog
+/write-skill -> run it on a real task
 ```
 
 ### Content and research
@@ -194,10 +193,9 @@ When multiple skills could match, use these tiebreakers:
 ### "Documentation" - three skills claim this space, they are not interchangeable
 - Docs are MISSING or thin, and need writing? -> `/docs` (the generate-and-audit engine)
 - Docs EXIST and may no longer be true? -> `/docs-sync` (reconciles them against the code)
-- Recording what THIS SESSION did and why? -> `/worklog` (the journal, not reference docs)
 - "Which documents did this change affect?" -> `/docs-sync`
 - **"Update the docs" / "update whatever documents this touched" -> `/docs-sync`.** There is no
-  `/update-docs` and one must not be created; a second skill on the same trigger surface splits the
+  separate update-docs skill and one must not be created; a second skill on the same trigger surface splits the
   routing and you get a different half of the job depending on which one matches first.
 - **APPENDING a record is a different act from reconciling a live document.** A new changelog entry,
   a backlog row flipped to DONE, a lessons entry, an ADR: those belong to `/gh-ship` **Stage 2.5**,

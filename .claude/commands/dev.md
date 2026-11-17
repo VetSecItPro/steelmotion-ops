@@ -402,7 +402,7 @@ Cleanup disclosure (in output when skill finishes):
 
 Note: `/dev` is exempt from the "Stop dev server" cleanup rule because its entire purpose is to START a dev server. The disclosure requirement still applies.
 
-<!-- Claude Code Skill by Steel Motion LLC - https://steelmotion.dev -->
+<!-- Claude Code Skill by Steel Motion LLC - https://steelmotionllc.com -->
 <!-- Part of the Claude Code Skills Collection -->
 <!-- Powered by Claude models: Haiku (fast extraction), Sonnet (balanced reasoning), Opus (deep analysis) -->
 <!-- License: MIT -->

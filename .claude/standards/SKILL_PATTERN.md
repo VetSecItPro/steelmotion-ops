@@ -123,7 +123,7 @@ The skill must integrate actual industry best practices, not theoretical descrip
 - NO generic advice - be specific and defensible
 
 ### 4. Generic and Placeholder-Based
-- NO company-specific references (not IronWorks, Steel Motion, or any)
+- NO company-specific references (no client, product or company names)
 - Use `{{product_name}}`, `{{company_name}}`, `{{target_audience}}` placeholders
 - Worked examples use hypothetical brands
 
@@ -144,7 +144,6 @@ Reference `~/.claude/standards/SITREP_FORMAT.md` with domain-specific additions.
 Rationalization table documenting common excuses and how to reject them.
 
 ### 8. Self-Improvement Hooks (NEW in v2.0)
-See `~/.claude/standards/SKILL_EVOLUTION.md` for the autoresearch-inspired self-improvement system. Every skill logs telemetry for future evolution.
 
 ---
 

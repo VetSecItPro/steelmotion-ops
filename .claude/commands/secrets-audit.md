@@ -7,7 +7,7 @@ when_to_use: Trigger phrases: "audit my secrets", "are env files backed up", "ro
 
 > **Standards inherited** (apply throughout this skill):
 > - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) - read + reason, don't pattern-match
-> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.secrets-audit-history.json`, learn across runs
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.reports/secrets-audit/history.json`, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) - scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) - content-verify before destructive action
 > - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) - every SITREP ends with "Suggested next"
@@ -18,8 +18,8 @@ when_to_use: Trigger phrases: "audit my secrets", "are env files backed up", "ro
 
 Secrets fail in three modes that no other skill catches:
 
-1. **Backup coverage gap** - the file exists, the env vars are read by code, but the file isn't in any backup target. Lost on disk failure or accidental clobber. (2026-05-03 `~/.service/.env` clobber: not in `BACKUP_PATHS`, no recovery possible from R2.)
-2. **Stale-key sprawl** - env vars defined in `.env` but never read by any consumer. Side-effect of provider migrations (e.g. Poe → ChatGPT consolidation left `POE_API_KEY` in host-a's service .env for weeks). Old keys are attack surface.
+1. **Backup coverage gap** - the file exists, the env vars are read by code, but the file isn't in any backup target. Lost on disk failure or accidental clobber. (2026-05-03 `~/.agent/.env` clobber: not in `BACKUP_PATHS`, no recovery possible from R2.)
+2. **Stale-key sprawl** - env vars defined in `.env` but never read by any consumer. Side-effect of provider migrations (e.g. an old provider migration left `OLD_PROVIDER_API_KEY` in host-a's app.env for weeks). Old keys are attack surface.
 3. **Rotation overdue** - keys older than the provider's recommended rotation period. No alerting because providers don't push rotation reminders.
 
 This skill is read-and-reason - `.env` parsing, code consumer detection, backup-config cross-referencing. It is NOT regex-fix-secrets - that's `/sec-ship`. The two skills compose: `/sec-ship` finds secrets in *committed* files; `/secrets-audit` audits the env-file-and-backup-target ecosystem.
@@ -34,16 +34,16 @@ Steel principles applied:
 
 - **#1 (verification before claim):** "the env file is backed up" requires confirming it appears in the running backup config, not just "looks like it should be"
 - **#6 (no hallucination):** rotation thresholds are provider-specific (Stripe rotates yearly, OpenAI quarterly per their docs); query the actual provider docs at audit time, don't assume
-- **#7 (no tech debt):** stale keys found during audit get flagged loudly; the skill surfaces them so you removes them in the same session
+- **#7 (no tech debt):** stale keys found during audit get flagged loudly; the skill surfaces them so you remove them in the same session
 
 ### Rationalization defense
 
 | Rationalization | Reality | Do |
 |---|---|---|
-| "These env vars are old, but the service still works, leave them alone" | Stale env vars are attack surface and create mystery later | Flag them; you decides remove vs keep |
+| "These env vars are old, but the service still works, leave them alone" | Stale env vars are attack surface and create mystery later | Flag them; you decide remove vs keep |
 | "It's in restic, it's backed up" | restic only backs up paths in `BACKUP_PATHS` - being on-disk does not mean covered | Cross-reference each `.env*` file against the live backup config |
-| "I'll rotate keys later" | "Later" never comes; key age is a function of you memory | Surface age + rotation guidance; let the SITREP nag |
-| "The provider will tell me if my key is compromised" | Providers don't proactively flag rotation; usage patterns mask abuse | Operator-driven rotation, on a schedule you owns |
+| "I'll rotate keys later" | "Later" never comes; key age is a function of your memory | Surface age + rotation guidance; let the SITREP nag |
+| "The provider will tell me if my key is compromised" | Providers don't proactively flag rotation; usage patterns mask abuse | Operator-driven rotation, on a schedule you own |
 | "We'll audit secrets before launching to customers" | Stale-key cleanup before launch is a 4-hour scramble; doing it now is 20 minutes | Audit early; audit often |
 
 ---
@@ -57,7 +57,7 @@ Steel principles applied:
 5. **Coverage cross-reference is mandatory.** Every `.env*` found gets cross-checked against `BACKUP_PATHS` (or platform-equivalent). Coverage gaps are the highest-severity finding.
 6. **Stale-key detection is consumer-based, not heuristic.** A key is "stale" if no code in the consumer repo grep-finds the env var name. Not "looks unused."
 7. **Rotation guidance is provider-specific.** Read provider docs to set the threshold; default to 90 days only when no provider-specific guidance is available.
-8. **History-driven.** Same as other audit skills - `.secrets-audit-history.json` per host.
+8. **History-driven.** Same as other audit skills - `.reports/secrets-audit/history.json` per host.
 9. **SITREP ends with Suggested next.**
 
 ---
@@ -88,9 +88,9 @@ Steel principles applied:
 | Pattern | Where | Example |
 |---|---|---|
 | `.env*` | Project repos cwd | `.env.local`, `.env.production` |
-| `~/.<service>/.env` | Service home dirs | `~/.agent/.env`, `~/.service/.env` |
-| `~/.<service>/<service>.json` | JSON config with embedded secrets | `~/.agent/agent.json` |
-| `/etc/secrets/*` | System-level secrets dirs | rare on you hosts |
+| `~/.<service>/.env` | Service home dirs | `~/.app/.env`, `~/.agent/.env` |
+| `~/.<service>/<service>.json` | JSON config with embedded secrets | `~/.app/app.json` |
+| `/etc/secrets/*` | System-level secrets dirs | rare on your hosts |
 | GitHub Action secrets | repo Settings > Secrets | `gh secret list` |
 | Vercel env vars | per-project | `vercel env ls` |
 | Cloudflare worker secrets | per-worker | `wrangler secret list` |
@@ -121,7 +121,7 @@ For each env var defined in each `.env*` file:
 
 1. Identify the consumer scope:
    - For project `.env*`: consumer is the repo
-   - For `~/.<service>/.env`: consumer is the service's source code (e.g. the service's package source)
+   - For `~/.<service>/.env`: consumer is the service's source code (e.g. app npm package, agent Python source)
    - For host-level `/etc/secrets/*`: consumer is anything on the host (skip - too broad)
 
 2. `grep -r <VAR_NAME> <consumer_path>` (excluding the env file itself)
@@ -152,7 +152,7 @@ NOTE: file mtime is a proxy for rotation date - you may want to override with ex
 
 Read `.secrets-audit-history-<host>.json`. Extract:
 - Last run's findings
-- `wip_keys_protected` - keys you has flagged "leave alone" (e.g. mid-migration, not yet rotated)
+- `wip_keys_protected` - keys you have flagged "leave alone" (e.g. mid-migration, not yet rotated)
 - `provider_rotation_thresholds` - cached values to avoid re-fetching provider docs every run
 
 ### Stage 1: Discovery
@@ -182,7 +182,7 @@ Sub-agent (sonnet) reads file mtimes + annotations, queries provider docs (cache
 
 ### Stage 6: SITREP + history
 
-Same pattern as `/cron-audit`. Report at `.secrets-audit-reports/SA-YYYYMMDD-HHMMSS.md`.
+Same pattern as `/cron-audit`. Report at `.reports/secrets-audit/SA-YYYYMMDD-HHMMSS.md`.
 
 ---
 
@@ -201,8 +201,8 @@ Locations:  6 env-file locations, 47 env vars total
  BACKUP COVERAGE
 ────────────────────────────────────────────────────────────────────────────────
 ✅ COVERED         5 locations in restic BACKUP_PATHS
-❌ UNCOVERED       1 location - /home/svc/some-newish-service/.env
-                   regression risk: same shape as ~/.service/.env clobber
+❌ UNCOVERED       1 location - /home/app/some-newish-service/.env
+                   regression risk: same shape as ~/.agent/.env clobber
 
 ────────────────────────────────────────────────────────────────────────────────
  GIT TRACKING SAFETY
@@ -215,12 +215,12 @@ Locations:  6 env-file locations, 47 env vars total
 ────────────────────────────────────────────────────────────────────────────────
 ✅ LIVE            42 vars referenced by ≥1 consumer file
 ⚠️ STALE            5 vars defined but no consumer grep-find:
-                     • POE_API_KEY      (~/.agent/.env, removed 2026-04-26)
+                     • OLD_PROVIDER_API_KEY      (~/.app/.env, removed 2026-04-26)
                      • OPENROUTER_API_KEY (same)
                      • OLLAMA_API_KEY   (same)
                      • OLLAMA_CLOUD_API_KEY (same)
                      • XAI_API_KEY      (same)
-                   Per memory project_llm_provider_split.md - these can be removed.
+                   These can be removed.
 
 ────────────────────────────────────────────────────────────────────────────────
  ROTATION HEALTH
@@ -253,11 +253,11 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 | All COVERED + all FRESH | none - re-audit monthly | clean state |
 | UNCOVERED-BACKUP findings | /secrets-audit --fix-coverage | apply patches |
 | TRACKED secret found | /sec-ship --comprehensive | tracked-in-git is a critical finding; full security pass |
-| STALE keys to remove | manual cleanup, then re-audit | you removes; skill confirms |
+| STALE keys to remove | manual cleanup, then re-audit | you remove; skill confirms |
 | OVERDUE keys | /secrets-audit --rotate \<provider\> | interactive rotation |
 | Cross-host gap | /secrets-audit --host \<sibling\> | extend coverage |
 
-**Skip if:** you just ran a fix flag and is verifying the SITREP cleared.
+**Skip if:** you just ran a fix flag and are verifying the SITREP cleared.
 
 ---
 
@@ -267,7 +267,7 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 Different lifecycle phase. `/sec-ship` audits *committed* code for secrets that shouldn't be there (the prevention layer). `/secrets-audit` assumes secrets are correctly in env files and audits the *operational health* of those files (backup, freshness, consumer-binding). Same domain, different time-axis.
 
 ### Why no auto-rotate
-Rotation is a multi-step, multi-system operation: generate new key → update every consumer's env → restart services → verify functionality on new key → revoke old key. Each step has rollback implications. The skill walks through it, but auto-rotating without you confirmation per step is too high-blast-radius for this skill's safety profile.
+Rotation is a multi-step, multi-system operation: generate new key → update every consumer's env → restart services → verify functionality on new key → revoke old key. Each step has rollback implications. The skill walks through it, but auto-rotating without your confirmation per step is too high-blast-radius for this skill's safety profile.
 
 ### Why mtime as proxy for rotation date
 Operators don't reliably annotate `# ROTATED:` comments. mtime is the cheapest reliable signal. The skill prefers explicit annotations when present and falls back to mtime when absent. False positives (file touched for unrelated reason) are tolerable because they cause re-audit; false negatives (file edited but mtime didn't update) are rare.
@@ -279,7 +279,7 @@ Operators don't reliably annotate `# ROTATED:` comments. mtime is the cheapest r
 A 90-day blanket threshold is wrong: Stripe recommends yearly, OpenAI quarterly, Cloudflare on use-case. WebFetch the provider docs at audit time (cached for the session) so the threshold is grounded. Cache invalidates per session - providers update guidance.
 
 ### Why TRACKED is refuse-to-fix
-git history rewrites are dangerous and you-specific (force-push policies, branch-protection rules, who else has cloned). The skill's job is to surface - you drives the rewrite tooling.
+git history rewrites are dangerous and specific to each team (force-push policies, branch-protection rules, who else has cloned). The skill's job is to surface - you drive the rewrite tooling.
 
 ---
 
@@ -290,6 +290,6 @@ git history rewrites are dangerous and you-specific (force-push policies, branch
 - Every LIVE provider-keyed var classified for ROTATION (FRESH/DUE/OVERDUE)
 - Sibling hosts surfaced
 - `.secrets-audit-history-<host>.json` updated
-- `.secrets-audit-reports/SA-*.md` written
+- `.reports/secrets-audit/SA-*.md` written
 - SITREP ends with "Suggested next"
 - Auto-fixes (if any) have backup files and verification

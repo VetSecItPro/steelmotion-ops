@@ -76,7 +76,7 @@ Layer results
   5 Probes   PASS
 
 Unresolved (blocks ship): <the HIGH findings, or "none">
-Report: .smoketest-reports/SMOKE-<id>.md
+Report: .reports/smoketest/SMOKE-<id>.md
 ```
 
 ### Suggested next

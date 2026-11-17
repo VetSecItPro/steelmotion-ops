@@ -80,7 +80,7 @@ Keep progress messages to the user short:
 **Good:**
 ```
 [3/8] Performance audit: 82/100 (B) - 0 critical, 2 warnings
-Report: .perf-reports/perf-20260212-103000.md
+Report: .reports/perf/perf-20260212-103000.md
 ```
 
 **Bad:**

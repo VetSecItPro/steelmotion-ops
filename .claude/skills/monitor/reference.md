@@ -4,7 +4,7 @@ Read at Stage 0.6 (initialise the report) and Stage 7 (finalise it).
 
 ## Report file
 
-`.monitor-reports/MON-<YYYYMMDD-HHMM>.md`. Written progressively so it survives compaction and a
+`.reports/monitor/MON-<YYYYMMDD-HHMM>.md`. Written progressively so it survives compaction and a
 lost session. Append-only across runs; never overwrite a prior report.
 
 ```markdown
@@ -51,7 +51,7 @@ lost session. Append-only across runs; never overwrite a prior report.
 
 ## History
 
-`.monitor-reports/history.json`, appended at Stage 7.
+`.reports/monitor/history.json`, appended at Stage 7.
 
 ```json
 {
@@ -80,7 +80,7 @@ only on a run that scored A or better, so a degraded run cannot quietly become t
 
 ## Resume state
 
-`.monitor-reports/state-<run-id>.json` holds progress while a run is in flight: stages completed,
+`.reports/monitor/state-<run-id>.json` holds progress while a run is in flight: stages completed,
 routes checked so far, findings accumulated. A run interrupted mid-flight resumes from the last
 completed stage rather than restarting, provided the state file is under an hour old. Delete it on
 successful completion.
@@ -115,7 +115,7 @@ Deferred
 Trend
   <prev score> -> <now> since <prior run id>
 
-Report  .monitor-reports/MON-<id>.md
+Report  .reports/monitor/MON-<id>.md
 ===============================================================
 ```
 

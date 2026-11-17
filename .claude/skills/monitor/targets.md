@@ -100,10 +100,10 @@ worth looking at and prevents re-deriving something already known.
 
 | Directory | Skill | Use |
 |---|---|---|
-| `.gh-ship-history.json`, `.ship-reports/` | `/gh-ship` | what was deployed, which PR, which sha - sets the trigger and the comparison point |
-| `.qatest-reports/` | `/qatest` | known-failing routes; do not re-report them as new |
-| `.sec-ship-reports/` | `/sec-ship` | header and SSL findings already raised; cross-reference rather than duplicate |
-| `.perf-reports/` | `/perf` | prior response-time baselines |
+| `.reports/gh-ship/history.json`, `.reports/ship/` | `/gh-ship` | what was deployed, which PR, which sha - sets the trigger and the comparison point |
+| `.reports/qatest/` | `/qatest` | known-failing routes; do not re-report them as new |
+| `.reports/sec-ship/` | `/sec-ship` | header and SSL findings already raised; cross-reference rather than duplicate |
+| `.reports/perf/` | `/perf` | prior response-time baselines |
 
 A finding another skill already raised and the operator already triaged is noise here. Reference it;
 do not re-open it.

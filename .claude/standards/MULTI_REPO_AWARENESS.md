@@ -44,13 +44,13 @@ Real-world workspaces have multiple repos. Examples:
 - `~/projects/platform/` contains `dashboard`, `infra-repo`, etc.
 - A monorepo with sub-projects each in their own git submodule
 
-If the skill operates on cwd silently, you forgets the others. Then they discover days later that "I shipped one repo but the sibling has uncommitted changes." Surfacing prevents this class of bug.
+If the skill operates on cwd silently, you forget the others. Then you discover days later that "I shipped one repo but the sibling has uncommitted changes." Surfacing prevents this class of bug.
 
 ## SITREP integration
 
 ```
 🌐 Sibling repos in workspace
-   mission-control: branch=main, uncommitted=0, unpushed=0  ✅
+   dashboard: branch=main, uncommitted=0, unpushed=0  ✅
    infra-repo:     branch=main, uncommitted=2, unpushed=1  ⚠️
                     [run /gh-ship from inside if changes pending]
 ```

@@ -2,7 +2,7 @@
 
 ## Report
 
-`.a11y-reports/A11Y-<YYYYMMDD-HHMM>.md`.
+`.reports/a11y/A11Y-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Accessibility Report: <project>

@@ -4,7 +4,7 @@
 
 ## Why this exists
 
-The skill collection works best as **chains, not islands.** /sec-ship before /gh-ship before /monitor. /investigate before /incident. /test-ship before /sec-ship. Without explicit suggestions, you has to remember which skill to fire next.
+The skill collection works best as **chains, not islands.** /sec-ship before /gh-ship before /monitor. /investigate before /incident. /test-ship before /sec-ship. Without explicit suggestions, you have to remember which skill to fire next.
 
 Auto-suggest pre-computes the next move based on:
 - The skill's outcome (success/partial/blocked)
@@ -95,14 +95,14 @@ When a skill completes and its SITREP is in the conversation context, Claude SHO
 
 1. Note the suggested-next block exists
 2. Surface to you: "I see /sec-ship recommended /monitor - should I run that?"
-3. If you confirms: invoke
-4. If you gives different direction: follow that, but mention the original suggestion was overridden so context is preserved
+3. If you confirm: invoke
+4. If you give different direction: follow that, but mention the original suggestion was overridden so context is preserved
 
 This is a soft chain, not a hard one. The recommendation is a HINT to you + Claude. Either can override.
 
 ## When NOT to auto-suggest
 
-- Skill is your-action-only (e.g., /smoketest is a quick check, not part of a chain)
+- Skill is manual-only (e.g., /smoketest is a quick check, not part of a chain)
 - Skill failed catastrophically and rolled back (suggest manual review, not chaining)
 - Skill explicitly delivered a "stop and think" outcome (e.g., /brainstorm asking for design choice)
 

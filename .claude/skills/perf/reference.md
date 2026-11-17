@@ -2,7 +2,7 @@
 
 ## Report
 
-`.perf-reports/PERF-<YYYYMMDD-HHMM>.md`, written progressively.
+`.reports/perf/PERF-<YYYYMMDD-HHMM>.md`, written progressively.
 
 ```markdown
 # Performance Report: <project>
@@ -33,7 +33,7 @@
 
 ## History
 
-`.perf-reports/history.json`: per-run metrics plus `baselines` per route. Update a baseline only
+`.reports/perf/history.json`: per-run metrics plus `baselines` per route. Update a baseline only
 when a run passes its budgets, so a slow run cannot become the new normal.
 
 ## SITREP

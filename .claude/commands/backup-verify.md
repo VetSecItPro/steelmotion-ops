@@ -7,7 +7,7 @@ when_to_use: Trigger phrases: "test the restore", "is my backup actually working
 
 > **Standards inherited** (apply throughout this skill):
 > - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) - read + reason, don't pattern-match
-> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.backup-verify-history.json`, learn across runs
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.reports/backup-verify/history.json`, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) - scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) - content-verify before destructive action
 > - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) - every SITREP ends with "Suggested next"
@@ -16,7 +16,7 @@ when_to_use: Trigger phrases: "test the restore", "is my backup actually working
 
 ## PARADIGM
 
-The 2026-05-03 `~/.service/.env` clobber proved both halves of the backup-rot pattern:
+The 2026-05-03 `~/.agent/.env` clobber proved both halves of the backup-rot pattern:
 1. **Coverage gap** - the file wasn't in `BACKUP_PATHS` (a `/secrets-audit` problem)
 2. **Restore was never tested** - even if it HAD been backed up, no one had ever attempted a restore from R2 to verify the credentials still worked, the bucket policy still allowed your IP, and the restic password file was actually readable
 
@@ -56,7 +56,7 @@ Steel principles applied:
 3. **Read-only against the backup target.** This skill never deletes snapshots, never forgets, never re-init's the repo.
 4. **Multi-target aware.** Operator may have multiple backup targets (R2 for `host-a`, B2 archive for old data, GitHub for sanitized infra). Audit each target separately.
 5. **Verify credentials work BEFORE the restore attempt.** A 401 on auth means the backup config is stale; surface that as the finding instead of a confused restore-failed message.
-6. **History-driven.** `.backup-verify-history.json` per host tracks last successful restore-test date.
+6. **History-driven.** `.reports/backup-verify/history.json` per host tracks last successful restore-test date.
 7. **Sample, don't full-restore.** Pull a small representative subset (100MB cap or 10 files cap, whichever first). Full-restore tests are operator-driven, not automated.
 8. **SITREP ends with Suggested next.**
 
@@ -110,7 +110,7 @@ Before any restore attempt:
 
 Read `.backup-verify-history-<host>.json`. Extract:
 - Last successful restore-test date per target
-- `flagged_targets[]` - you-marked "leave alone" (e.g. mid-migration)
+- `flagged_targets[]` - marked by you "leave alone" (e.g. mid-migration)
 - Known-good sample-files used for hash comparison
 
 Auto-gitignore the history file.
@@ -131,7 +131,7 @@ Classifications:
 - `CREDS-EXPIRED` - auth fails (401/403)
 - `REPO-UNREACHABLE` - network/DNS issue (5xx, timeout)
 - `MISCONFIG` - env vars missing, password file unreadable
-- `UNKNOWN` - fall through to you review
+- `UNKNOWN` - fall through to your review
 
 ### Stage 3: Snapshot freshness check
 
@@ -179,7 +179,7 @@ If snapshot count is way under expected: surface as `RETENTION-DRIFT`.
 
 ### Stage 6: SITREP + history
 
-Write report to `.backup-verify-reports/BV-YYYYMMDD-HHMMSS.md`. Append to `.backup-verify-history-<host>.json`.
+Write report to `.reports/backup-verify/BV-YYYYMMDD-HHMMSS.md`. Append to `.backup-verify-history-<host>.json`.
 
 If all targets are `OK + FRESH + RESTORED-MATCH`: SITREP says CLEAN.
 If any target has issues: SITREP categorizes and recommends remediation.
@@ -275,5 +275,5 @@ Same reason as `/cron-audit` and `/secrets-audit` - each host has its own backup
 - Hash-compare results recorded
 - Temp restore dir verified DELETED
 - `.backup-verify-history-<host>.json` updated
-- `.backup-verify-reports/BV-*.md` written
+- `.reports/backup-verify/BV-*.md` written
 - SITREP ends with "Suggested next"

@@ -15,7 +15,7 @@ alongside one that exists.
 
 ## Report
 
-`.docs-reports/DOCS-<YYYYMMDD-HHMM>.md`.
+`.reports/docs/DOCS-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Documentation Report: <project>

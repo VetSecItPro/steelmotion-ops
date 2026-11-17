@@ -2,7 +2,7 @@
 
 ## Report
 
-`.deps-reports/DEPS-<YYYYMMDD-HHMM>.md`, written progressively.
+`.reports/deps/DEPS-<YYYYMMDD-HHMM>.md`, written progressively.
 
 ```markdown
 # Dependency Report: <project>
@@ -30,7 +30,7 @@
 
 ## History
 
-`.deps-reports/history.json`: per-run counts, and `patterns_observed` for updates that broke and how
+`.reports/deps/history.json`: per-run counts, and `patterns_observed` for updates that broke and how
 they were fixed - so a known-bad major upgrade is approached with the fix in hand next time
 (e.g. "zod 3->4 needs the .parse signature change; unit passed, integration caught it").
 
