@@ -33,7 +33,7 @@ This document is the **intent-to-skill mapping table**. Reference it on every us
 
 ## Intent to Skill Map
 
-**32 skills, generated from the filesystem 2026-11-17 14:48.** 24 in `~/.claude/skills/`, 8 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
+**32 skills, generated from the filesystem 2026-11-17 14:49.** 24 in `~/.claude/skills/`, 8 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
 
 | Skill | Where | What it does | Route to it when the user says |
 |---|---|---|---|

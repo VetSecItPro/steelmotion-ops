@@ -39,6 +39,8 @@ GENERIC_RULES: list[tuple[str, str]] = [
     (r"\s*\((?:env|hub) #\d+[^()]*\)", ""),                                      # a whole "(env #N, date)" aside
     (r"(?:,|;)?\s*(?:env|hub) #\d+(?:\.\d+)?(?:(?:,\s*| and | to )#\d+(?:\.\d+)?)*", ""),  # a trailing ", env #N" mention
     (r"~/vibecode-projects/", "~/projects/"),
+    # steelmotion.dev was never the company's domain (it did not resolve on 2026-11-17); the site is steelmotionllc.com.
+    (r"https://steelmotion\.dev", "https://steelmotionllc.com"),
     # Pointers into the maintainer's own task tooling, which is not published.
     (r",? and add the\s+project to `~/\.claude/task-list-projects\.json` so the Task List page shows it", ""),
     (r"See `~/\.claude/standards/SKILL_EVOLUTION\.md`[^\n]*\n", ""),

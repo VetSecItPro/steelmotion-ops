@@ -33,5 +33,10 @@
     "file": "standards/SKILL_ROUTER.md",
     "old": "There is no\n  `/update-docs` and one must not be created;",
     "new": "There is no\n  separate update-docs skill and one must not be created;"
+  },
+  {
+    "file": "skills/docs-sync/test_check_docs.py",
+    "old": "\"\"\"Backlog #144. A stamp",
+    "new": "\"\"\"A stamp"
   }
 ]

@@ -513,7 +513,7 @@ class GitBackedTests(unittest.TestCase):
         self.assertIn("touched", self.r.kinds(payload))
 
     def test_doc_reconciled_in_the_same_commit_as_its_anchor_is_not_suspect(self):
-        """Backlog #144. A stamp written on a feature branch can never name the
+        """A stamp written on a feature branch can never name the
         squash-merge sha, because that sha does not exist yet. The squash then
         carries the doc AND its anchors in one commit, so a naive sha..HEAD diff
         reports the doc stale against its own reconciliation - permanently, and
