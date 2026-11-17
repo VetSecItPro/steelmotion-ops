@@ -26,6 +26,7 @@ PUBLIC_PATTERNS: dict[str, str] = {
     "Vercel project or team id": r"\b(?:prj|team)_[A-Za-z0-9]{16,}",
     "Supabase project ref": r"\b[a-z]{20}\.supabase\.co\b",
     "private network address": r"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b",
+    "numbered private repo folder": r"(?<![\w.])\d{2}\.(?!(?:json|yaml|yml|toml|html|tsx|jsx|txt|png|svg|css|log)\b)[a-z][a-z0-9-]{3,}\b",
     "Tailscale address": r"\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b",
 }
 

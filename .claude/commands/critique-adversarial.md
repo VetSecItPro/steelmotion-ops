@@ -359,4 +359,3 @@ SITREP - /critique-adversarial
 ARGUMENTS: $ARGUMENTS
 
 <!-- /critique-adversarial - context-aware hostile cut-editor for long-form articles -->
-<!-- Adapts prophet-a-novel/.claude/commands/adversarial.md for article form -->

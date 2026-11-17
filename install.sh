@@ -5,7 +5,7 @@ set -euo pipefail
 # Usage: bash <(curl -s https://raw.githubusercontent.com/VetSecItPro/steelmotion-ops/main/install.sh)
 #
 # Copies skills to ~/.claude/skills/, commands to ~/.claude/commands/, standards to ~/.claude/standards/,
-# and the helper scripts and backlog template to ~/.claude/. Anything it would replace is copied first to
+# and the helper scripts, backlog template and two agents to ~/.claude/. Anything it would replace is copied first to
 # ~/.claude/.steelmotion-ops-backup-<timestamp>/, so a local change is never lost.
 
 REPO="${STEELMOTION_OPS_REPO:-https://github.com/VetSecItPro/steelmotion-ops.git}"
@@ -18,7 +18,7 @@ trap 'rm -rf "$WORK"' EXIT
 echo "Installing Claude Code skills..."
 git clone --quiet --depth 1 "$REPO" "$WORK/repo"
 SRC="$WORK/repo/.claude"
-mkdir -p "$CLAUDE_DIR/skills" "$CLAUDE_DIR/commands" "$CLAUDE_DIR/standards" "$CLAUDE_DIR/templates"
+mkdir -p "$CLAUDE_DIR/skills" "$CLAUDE_DIR/commands" "$CLAUDE_DIR/standards" "$CLAUDE_DIR/templates" "$CLAUDE_DIR/agents"
 
 BACKED_UP=0
 backup() {  # $1: a path under ~/.claude about to be replaced
@@ -56,7 +56,7 @@ for file in "$SRC/standards/"*.md; do
 done
 
 TOOLS=0
-for rel in ci-local.sh generate-skill-router.py check-skill-router.sh templates/backlog.md; do
+for rel in ci-local.sh generate-skill-router.py check-skill-router.sh templates/backlog.md agents/readonly-verifier.md agents/scoped-implementer.md; do
   [ -f "$SRC/$rel" ] || continue
   backup "$CLAUDE_DIR/$rel"
   cp "$SRC/$rel" "$CLAUDE_DIR/$rel"

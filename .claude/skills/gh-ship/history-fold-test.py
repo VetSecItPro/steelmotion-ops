@@ -2,7 +2,7 @@
 """Known-answer tests for history-fold.py. Run: python3 ~/.claude/skills/gh-ship/history-fold-test.py
 
 Added 2026-10-18: the fold-in of pending history rows was prose in Stage 2.5 and
-was skipped on a writing repo PR #261, leaving two rows waiting. The fold is now a script; these cases
+was skipped on one repo's PR, leaving two rows waiting. The fold is now a script; these cases
 pin its behavior.
 """
 import json, os, subprocess, sys, tempfile

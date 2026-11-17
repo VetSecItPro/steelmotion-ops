@@ -110,7 +110,7 @@ Before any restore attempt:
 
 Read `.backup-verify-history-<host>.json`. Extract:
 - Last successful restore-test date per target
-- `flagged_targets[]` - you-marked "leave alone" (e.g. mid-migration)
+- `flagged_targets[]` - marked by you "leave alone" (e.g. mid-migration)
 - Known-good sample-files used for hash comparison
 
 Auto-gitignore the history file.
@@ -131,7 +131,7 @@ Classifications:
 - `CREDS-EXPIRED` - auth fails (401/403)
 - `REPO-UNREACHABLE` - network/DNS issue (5xx, timeout)
 - `MISCONFIG` - env vars missing, password file unreadable
-- `UNKNOWN` - fall through to you review
+- `UNKNOWN` - fall through to your review
 
 ### Stage 3: Snapshot freshness check
 

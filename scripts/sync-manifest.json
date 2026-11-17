@@ -64,6 +64,8 @@
     "ci-local.sh",
     "generate-skill-router.py",
     "check-skill-router.sh",
-    "templates/backlog.md"
+    "templates/backlog.md",
+    "agents/readonly-verifier.md",
+    "agents/scoped-implementer.md"
   ]
 }

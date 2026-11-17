@@ -71,15 +71,15 @@ often the only one you get.
 
 | Artifact | Was true when | Failed as |
 |---|---|---|
-| A tracked Canvas export | 6 hours earlier | Reported a correct ship as **141 failures**. Found by `16-canvas-courses-99`; the first fix derived age from mtimes and was itself defeated by a checkout |
+| A tracked data export | 6 hours earlier | Reported a correct ship as **141 failures**. Found by another session; the first fix derived age from mtimes and was itself defeated by a checkout |
 | `SKILL_ROUTER.md`, hand-typed | months earlier | Named **31 skills against an estate of 40**, routed 6 that did not exist, had never heard of 15 that did. Now generated from the filesystem |
-| `pnpm.overrides` in `05.steelmotion` | when each floor was written | **27 high-severity vulns behind an actively maintained 20-entry block**, five floors outrun by their own advisories. Raising them took 48 findings to 3 |
+| `pnpm.overrides` in a Next.js site repo | when each floor was written | **27 high-severity vulns behind an actively maintained 20-entry block**, five floors outrun by their own advisories. Raising them took 48 findings to 3 |
 
 None of the three announced the drift. **A pin, a routing table and a cached artifact all encode a
 fact that was true once, and none of them tell you when the world moves past them.** If a check can
 pass without reaching the primary system, treat its green as unproven until it says otherwise.
 
-*Origin: raised by `16-canvas-courses-99` from a live production incident, sharpened across two
+*Origin: raised by another session from a live production incident, sharpened across two
 sessions, adopted by operator decision 2026-08-27.*
 
 ### 2. NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST

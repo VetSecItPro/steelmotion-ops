@@ -33,7 +33,7 @@ This document is the **intent-to-skill mapping table**. Reference it on every us
 
 ## Intent to Skill Map
 
-**32 skills, generated from the filesystem 2026-11-17 14:41.** 24 in `~/.claude/skills/`, 8 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
+**32 skills, generated from the filesystem 2026-11-17 14:48.** 24 in `~/.claude/skills/`, 8 in `~/.claude/commands/`. The two directories are disjoint; both are live. Regenerate with `python3 ~/.claude/generate-skill-router.py` after any skill is added, renamed or removed.
 
 | Skill | Where | What it does | Route to it when the user says |
 |---|---|---|---|
@@ -125,7 +125,7 @@ Multi-step exploit-chain analysis lives in `/redteam`, not `/sec-ship` (Steel Mo
 
 ### "Build or change a skill"
 ```
-/write-skill -> run it on a real task -> /worklog
+/write-skill -> run it on a real task
 ```
 
 ### Content and research
@@ -193,10 +193,9 @@ When multiple skills could match, use these tiebreakers:
 ### "Documentation" - three skills claim this space, they are not interchangeable
 - Docs are MISSING or thin, and need writing? -> `/docs` (the generate-and-audit engine)
 - Docs EXIST and may no longer be true? -> `/docs-sync` (reconciles them against the code)
-- Recording what THIS SESSION did and why? -> `/worklog` (the journal, not reference docs)
 - "Which documents did this change affect?" -> `/docs-sync`
 - **"Update the docs" / "update whatever documents this touched" -> `/docs-sync`.** There is no
-  `/update-docs` and one must not be created; a second skill on the same trigger surface splits the
+  separate update-docs skill and one must not be created; a second skill on the same trigger surface splits the
   routing and you get a different half of the job depending on which one matches first.
 - **APPENDING a record is a different act from reconciling a live document.** A new changelog entry,
   a backlog row flipped to DONE, a lessons entry, an ADR: those belong to `/gh-ship` **Stage 2.5**,

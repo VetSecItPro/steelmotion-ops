@@ -1,1 +1,1 @@
-python3 scripts/leak_check.py && python3 -m unittest discover -s tests && bash .claude/check-skill-router.sh && bash -n install.sh && bash -n .claude/ci-local.sh
+python3 scripts/leak_check.py && python3 -m unittest discover -s tests && bash .claude/check-skill-router.sh && python3 .claude/generate-skill-router.py --check && bash -n install.sh && bash -n .claude/ci-local.sh

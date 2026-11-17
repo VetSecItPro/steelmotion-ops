@@ -6,7 +6,7 @@
 > **Rewritten in place 2026-11-02.** The old "recommended default" (Pattern B: N PRs
 > plus an integration PR) cost N+1 CI runs and contradicted the operator's rule: one work block,
 > one branch, one PR. It is replaced below by the single-branch work-block default. The measured
-> repo table replaces the old priority table, which rated the main site repo "Low" while it was 83% of
+> repo table replaces the old priority table, which rated one Next.js site repo "Low" while it was 83% of
 > the October bill.
 
 ## Executive principle
@@ -50,9 +50,6 @@ Apply each layer independently. Each compounds the previous savings.
 ### Layer 1: The work-block default (one branch, one PR)
 
 **The default, for every session in every repo: one work block = one branch = one PR.**
-Operator, 2026-11-02: "I'm tired of having too many damn PRs ... push a lot of work in there,
-and then ... one PR ... so we don't have stale branches and work trees ... I'm not an enterprise.
-I don't have unlimited funds."
 
 The loop:
 1. Cut one branch (and one worktree if another session shares the repo) for the block.
@@ -440,15 +437,14 @@ jobs:
 ## Decision: where the money goes (measured, not guessed)
 
 Measured 2026-11-02. A prior version of this table ranked repos by package layout and rated
-the main site repo "Low priority, caching only". The bill said otherwise.
+one Next.js site repo "Low priority, caching only". The bill said otherwise.
 
 | Fact | Value | Source |
 |---|---|---|
-| GitHub Actions spend, October 2026 | **$129.51** | billing page |
-| of which the main site repo | **$106.96** (83%) | billing page, by repository |
-| the main site repo, last 200 runs, 2026-10-28 to 11-02: CI | 1,097 wall-minutes | `gh run list` |
-| the main site repo, same window: Deploy | 276 wall-minutes | `gh run list` |
-| the main site repo, same window: Content CI | 231 wall-minutes | `gh run list` |
+| share of the October Actions bill from one Next.js site repo | **83%** | billing page, by repository |
+| one Next.js site repo, last 200 runs, 2026-10-28 to 11-02: CI | 1,097 wall-minutes | `gh run list` |
+| one Next.js site repo, same window: Deploy | 276 wall-minutes | `gh run list` |
+| one Next.js site repo, same window: Content CI | 231 wall-minutes | `gh run list` |
 | share of those runs that were PR events plus deploys | about 96% | `gh run list` |
 
 What it means: the cost driver is the number of pull_request events times the weight of each
@@ -475,7 +471,7 @@ Public repos get free Actions minutes; do not optimize them for cost.
       **Equally valid, and better when a required check must always report:** a changed-paths job
       (`git diff --name-only` or `dorny/paths-filter`) whose output gates the heavy jobs through
       `if: needs.<job>.outputs.<flag> == 'true'`, with an always-run summary job as the required
-      check (added 2026-11-02; the main site repo's `ci.yml` is the reference).
+      check (added 2026-11-02).
 - [ ] **3. Expensive jobs need the cheap gate**: `needs: quality` (lint plus typecheck) on test,
       security, build and e2e jobs, so a lint failure does not also pay for the slow jobs.
 - [ ] **4. Deploy workflows skip docs-only merges** (`paths-ignore` on the push trigger). Content

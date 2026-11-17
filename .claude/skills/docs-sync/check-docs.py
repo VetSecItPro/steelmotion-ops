@@ -62,7 +62,7 @@ BROKEN, SUSPECT, INFO = "broken", "suspect", "info"
 # Anchors extracted from prose by pattern reproduce every false positive a naive grep
 # makes, then inherit them into a register whose selling point is arithmetic certainty.
 # A harvested anchor is a guess wearing a schema. Documents quote counter-examples
-# ("not `audit-pages.py` but `canvas-audit-pages.py`") and record old names in rename
+# ("not `audit-pages.py` but `site-audit-pages.py`") and record old names in rename
 # histories; both are SUPPOSED not to exist. So harvested anchors can never fail a
 # build - the cost asymmetry is brutal, because a false BROKEN in a merge gate invites
 # somebody to edit a governing document until CI stops complaining.

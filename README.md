@@ -14,7 +14,7 @@ The Claude Code skills and shared standards used day to day at [Steel Motion LLC
 bash <(curl -s https://raw.githubusercontent.com/VetSecItPro/steelmotion-ops/main/install.sh)
 ```
 
-Skills go to `~/.claude/skills/`, commands to `~/.claude/commands/`, standards to `~/.claude/standards/`, and the helper scripts and backlog template to `~/.claude/`. Anything with the same name is replaced, and the installer copies the old version to `~/.claude/.steelmotion-ops-backup-<timestamp>/` first.
+Skills go to `~/.claude/skills/`, commands to `~/.claude/commands/`, standards to `~/.claude/standards/`, and the helper scripts, backlog template and two agent definitions (`readonly-verifier`, `scoped-implementer`) to `~/.claude/`. Anything with the same name is replaced, and the installer copies the old version to `~/.claude/.steelmotion-ops-backup-<timestamp>/` first.
 
 Some skills assume a few conventions: skill reports in a gitignored `.reports/<skill>/` folder, a `.ci-local` file holding the repo's local CI command, and a `<name>-backlog.md` per project. `/repo-bootstrap` sets these up in a repo.
 
@@ -66,7 +66,19 @@ Some skills assume a few conventions: skill reports in a gitignored `.reports/<s
 
 ## How a skill runs
 
-A skill detects the stack it is pointed at rather than assuming one, works in phases with a verification step at each, cleans up after itself, and ends with a report that leads with its status (fixed, pending, blocked) and a suggested next step. Reports go to a gitignored `.<skill>-reports/` folder in the project.
+A skill detects the stack it is pointed at rather than assuming one, works in phases with a verification step at each, cleans up after itself, and ends with a report that leads with its status (fixed, pending, blocked) and a suggested next step. Reports go to a gitignored `.reports/<skill>/` folder in the project.
+
+## Not included
+
+The skills come from a setup with a few more pieces around them. They work without these, but some text mentions them:
+
+- **A push guard** that only lets `/gh-ship` push and asks for a reason before re-running CI. Without it, the `GH_SHIP_ACTIVE=1` prefix and `CI_RERUN_REASON` in `/gh-ship` are harmless no-ops.
+- **A global gitleaks pre-commit hook.** `/gh-ship` runs gitleaks itself when no such hook is set.
+- **A pull-request review bot.** `/gh-ship` reads a review decision when one exists and moves on when none does.
+- **Backlog sync tooling** named in `BACKLOG_STANDARD`; the standard and the template stand on their own.
+- **A personal `~/.claude/CLAUDE.md`.** A few skills cite numbered sections of one; the rule they rely on is stated where it is used.
+
+Timestamps in `/docs-sync` and `ci-local.sh` use US Central Time; change the zone in those two files if you work elsewhere.
 
 ## How this copy is kept current
 

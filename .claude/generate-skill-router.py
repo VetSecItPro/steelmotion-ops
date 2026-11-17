@@ -114,7 +114,7 @@ def main():
 def check():
     """--check: fail if any HAND-WRITTEN section names a skill that does not exist.
 
-    Suggested by the Canvas session 2026-08-27, after a near-miss where the hand-written
+    Suggested 2026-08-27, after a near-miss where the hand-written
     flag reference was nearly lost to a pointer claiming it lived in the generated
     inventory. A comment saying a section is "preserved across regeneration" is a claim,
     not a check. This is the check.

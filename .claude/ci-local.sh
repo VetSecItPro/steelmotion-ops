@@ -2,7 +2,7 @@
 # Run this repo's local CI (the command in .ci-local) and stamp the commit it passed on.
 #
 # WHY. CI minutes are billed; a PR opened on a commit that fails a check the laptop could have run pays
-# for a whole CI cycle to learn it, then another to confirm the fix (the main site repo averaged 2.5 cycles a
+# for a whole CI cycle to learn it, then another to confirm the fix (one Next.js site repo averaged 2.5 cycles a
 # PR in November 2026, about 48 minutes each). gh-push-guard.py refuses `gh pr create` in a repo that
 # declares .ci-local until this script has passed on HEAD.
 #
@@ -18,21 +18,21 @@ cd "$root" || exit 2
 head="$(git rev-parse HEAD)"
 start=$(date +%s)
 # Always a throwaway worktree of HEAD. Two ways a checkout lies about HEAD:
-# - a dirty tree, often ANOTHER session's uncommitted edit (the main site repo, 2026-11-05), or an untracked module CI never sees;
+# - a dirty tree, often ANOTHER session's uncommitted edit (one Next.js site repo, 2026-11-05), or an untracked module CI never sees;
 # - gitignored local files that CI never has (2026-11-11: a gitignored art folder named in the docs
 #   passed the links test here and failed it on GitHub). Running in place on a clean tree hid the second one.
-# Cost measured before the change: the main site repo 347 s in a worktree against a 311 s median in place.
+# Cost measured before the change: one Next.js site repo 347 s in a worktree against a 311 s median in place.
 wt="$(mktemp -d "${TMPDIR:-/tmp}/ci-local.XXXXXX")"
 trap 'git -C "$root" worktree remove --force "$wt" >/dev/null 2>&1 || true' EXIT  # also on Ctrl-C or a timeout
 git worktree add -q --detach "$wt" "$head" || { echo "ci-local: could not create a clean worktree of HEAD"; exit 2; }
 # Dependencies, not inputs: CI installs them, so the worktree gets them too.
 # A real install, not a symlink: Turbopack refuses a node_modules that resolves outside the project root
-# (the main site repo, 2026-11-05: "Could not find the Next.js package"). pnpm hardlinks from its store, so it is quick.
+# (one Next.js site repo, 2026-11-05: "Could not find the Next.js package"). pnpm hardlinks from its store, so it is quick.
 if [ -f "$wt/pnpm-lock.yaml" ]; then (cd "$wt" && pnpm install --frozen-lockfile --prefer-offline --silent) || { echo "ci-local: install failed in the clean worktree"; exit 2; }
 elif [ -f "$wt/package-lock.json" ]; then (cd "$wt" && npm ci --prefer-offline --no-audit --no-fund --silent) || { echo "ci-local: install failed in the clean worktree"; exit 2; }
 elif [ -f "$wt/yarn.lock" ]; then (cd "$wt" && yarn install --frozen-lockfile --silent) || { echo "ci-local: install failed in the clean worktree"; exit 2; }
 fi
-# A Python virtualenv (31.tv-home: tools/.venv) is a gitignored install CI rebuilds from its requirements; link it
+# A Python virtualenv (tools/.venv) is a gitignored install CI rebuilds from its requirements; link it
 # rather than rebuild it. Only a directory named .venv or venv holding pyvenv.cfg, so no other ignored file follows.
 while IFS= read -r cfg; do
   rel="${cfg#./}"; rel="${rel%/pyvenv.cfg}"

@@ -45,6 +45,23 @@ GENERIC_RULES: list[tuple[str, str]] = [
 ]
 
 
+# Grammar left behind where the live text once swapped "the operator" for "you" (verbs stayed third person).
+GRAMMAR_RULES: list[tuple[str, str]] = [
+    (r"\byou (discover|remove|decide|own|give|confirm|forget|clone|drive)s\b", r"you \1"),
+    (r"\byou has\b", "you have"),
+    (r"\byou just ran (.+?) and is verifying", r"you just ran \1 and are verifying"),
+    (r"\ba function of you memory", "a function of your memory"),
+    (r"\bon you hosts\b", "on your hosts"),
+    (r"\bfall through to you review", "fall through to your review"),
+    (r"\bwithout you (review|confirmation)", r"without your \1"),
+    (r"\ba manual you decision", "a manual decision for you"),
+    (r"\bare dangerous and you-specific", "are dangerous and specific to each team"),
+    (r"\byou-marked\b", "marked by you"),
+    (r"\byour-action-only\b", "manual-only"),
+    (r"you forget the others\. Then they discover", "you forget the others. Then you discover"),
+]
+
+
 def load_manifest() -> dict:
     return json.loads(MANIFEST.read_text())
 
@@ -56,8 +73,35 @@ def load_local_rules(root: Path = ROOT) -> list[tuple[str, str]]:
     return [(pattern, repl) for pattern, repl in json.loads(path.read_text()).get("replace", [])]
 
 
+EDITS = ROOT / "scripts" / "public-edits.json"
+
+
+def load_edits(root: Path = ROOT) -> list[dict]:
+    """Exact-text edits per file: public ones (committed) plus private ones (the local rules file, because
+    their old text names private things)."""
+    edits = json.loads(EDITS.read_text()) if EDITS.exists() else []
+    local = root / leak_check.LOCAL_RULES
+    if local.exists():
+        edits += json.loads(local.read_text()).get("edits", [])
+    return edits
+
+
+def apply_edits(edits: list[dict]) -> list[str]:
+    """Applies each edit to the synced file. An edit whose old text is gone is reported, never skipped:
+    the live text changed, and the fix must be looked at again."""
+    stale = []
+    for edit in edits:
+        path = DEST / edit["file"]
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        if edit["old"] not in text:
+            stale.append(f"{edit['file']}: {edit['old'][:60]!r}")
+            continue
+        path.write_text(text.replace(edit["old"], edit["new"]), encoding="utf-8")
+    return stale
+
+
 def clean(text: str, local_rules: list[tuple[str, str]]) -> str:
-    for pattern, repl in GENERIC_RULES + local_rules:
+    for pattern, repl in GENERIC_RULES + local_rules + GRAMMAR_RULES:
         text = re.sub(pattern, repl, text)
     return text
 
@@ -140,7 +184,7 @@ def sync(source: Path) -> int:
     missing += [t for t in manifest.get("tools", []) if not (source / t).exists()]
     if missing:
         raise SystemExit("not in the live setup: " + ", ".join(missing))
-    for sub in ("skills", "commands", "standards", "templates"):
+    for sub in ("skills", "commands", "standards", "templates", "agents"):
         shutil.rmtree(DEST / sub, ignore_errors=True)
     for tool in manifest.get("tools", []):
         (DEST / tool).unlink(missing_ok=True)
@@ -149,6 +193,11 @@ def sync(source: Path) -> int:
     n += sum(copy_tree(source / "commands" / f"{c}.md", DEST, f"commands/{c}.md", manifest, rules, published) for c in manifest["commands"])
     n += sum(copy_tree(source / "standards" / f"{s}.md", DEST, f"standards/{s}.md", manifest, rules, published) for s in manifest["standards"])
     n += sum(copy_tree(source / t, DEST, t, manifest, rules, published) for t in manifest.get("tools", []))
+    stale = apply_edits(load_edits())
+    if stale:
+        print("edits whose text is no longer in the live files (fix scripts/public-edits.json or the local rules):")
+        print("\n".join("  " + s for s in stale))
+        return 1
     # The generator writes the router beside itself, so this rebuilds the PUBLISHED router from the published
     # skills, with the right counts, instead of filtering the maintainer's.
     if (DEST / "generate-skill-router.py").exists():

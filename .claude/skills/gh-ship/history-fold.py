@@ -6,7 +6,7 @@
 
 History lives at `.reports/gh-ship/history.json` (gitignored, 2026-11-05). A repo that chose to
 TRACK its history keeps the legacy `.gh-ship-history.json` at its root, and this script uses that file
-whenever git tracks it (a writing repo and another repo did on 2026-11-05).
+whenever git tracks it (two repos did on 2026-11-05).
 
 Stage 13 never commits: when the history file is tracked, it appends its row to
 `.git/gh-ship-history.pending.json` instead, and the NEXT run must fold those rows into its own

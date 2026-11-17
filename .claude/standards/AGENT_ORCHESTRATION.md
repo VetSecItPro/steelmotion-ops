@@ -71,7 +71,7 @@ Use ONLY when the task is pure text pattern matching with no judgment required:
 binding constraint. Measured 2026-10-16: subagents were ~90% of fresh input tokens and 91% of their
 calls ran on Opus 5.5, because a subagent with no `model` inherits the parent's. Always pass `model`
 and `effort` explicitly, and give every agent a `description` that leads with its task number when
-it has one (`#247 CySA+ currency check`). The rule and its table: `~/.claude/CLAUDE.md`
+it has one (`#12 Add receipts to checkout`). The rule and its table: `~/.claude/CLAUDE.md`
 section 8 "Subagents".
 
 ### `sonnet` - The Default for Most Agent Work

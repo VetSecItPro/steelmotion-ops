@@ -34,16 +34,16 @@ Steel principles applied:
 
 - **#1 (verification before claim):** "the env file is backed up" requires confirming it appears in the running backup config, not just "looks like it should be"
 - **#6 (no hallucination):** rotation thresholds are provider-specific (Stripe rotates yearly, OpenAI quarterly per their docs); query the actual provider docs at audit time, don't assume
-- **#7 (no tech debt):** stale keys found during audit get flagged loudly; the skill surfaces them so you removes them in the same session
+- **#7 (no tech debt):** stale keys found during audit get flagged loudly; the skill surfaces them so you remove them in the same session
 
 ### Rationalization defense
 
 | Rationalization | Reality | Do |
 |---|---|---|
-| "These env vars are old, but the service still works, leave them alone" | Stale env vars are attack surface and create mystery later | Flag them; you decides remove vs keep |
+| "These env vars are old, but the service still works, leave them alone" | Stale env vars are attack surface and create mystery later | Flag them; you decide remove vs keep |
 | "It's in restic, it's backed up" | restic only backs up paths in `BACKUP_PATHS` - being on-disk does not mean covered | Cross-reference each `.env*` file against the live backup config |
-| "I'll rotate keys later" | "Later" never comes; key age is a function of you memory | Surface age + rotation guidance; let the SITREP nag |
-| "The provider will tell me if my key is compromised" | Providers don't proactively flag rotation; usage patterns mask abuse | Operator-driven rotation, on a schedule you owns |
+| "I'll rotate keys later" | "Later" never comes; key age is a function of your memory | Surface age + rotation guidance; let the SITREP nag |
+| "The provider will tell me if my key is compromised" | Providers don't proactively flag rotation; usage patterns mask abuse | Operator-driven rotation, on a schedule you own |
 | "We'll audit secrets before launching to customers" | Stale-key cleanup before launch is a 4-hour scramble; doing it now is 20 minutes | Audit early; audit often |
 
 ---
@@ -90,7 +90,7 @@ Steel principles applied:
 | `.env*` | Project repos cwd | `.env.local`, `.env.production` |
 | `~/.<service>/.env` | Service home dirs | `~/.app/.env`, `~/.agent/.env` |
 | `~/.<service>/<service>.json` | JSON config with embedded secrets | `~/.app/app.json` |
-| `/etc/secrets/*` | System-level secrets dirs | rare on you hosts |
+| `/etc/secrets/*` | System-level secrets dirs | rare on your hosts |
 | GitHub Action secrets | repo Settings > Secrets | `gh secret list` |
 | Vercel env vars | per-project | `vercel env ls` |
 | Cloudflare worker secrets | per-worker | `wrangler secret list` |
@@ -152,7 +152,7 @@ NOTE: file mtime is a proxy for rotation date - you may want to override with ex
 
 Read `.secrets-audit-history-<host>.json`. Extract:
 - Last run's findings
-- `wip_keys_protected` - keys you has flagged "leave alone" (e.g. mid-migration, not yet rotated)
+- `wip_keys_protected` - keys you have flagged "leave alone" (e.g. mid-migration, not yet rotated)
 - `provider_rotation_thresholds` - cached values to avoid re-fetching provider docs every run
 
 ### Stage 1: Discovery
@@ -220,7 +220,7 @@ Locations:  6 env-file locations, 47 env vars total
                      • OLLAMA_API_KEY   (same)
                      • OLLAMA_CLOUD_API_KEY (same)
                      • XAI_API_KEY      (same)
-                   Per memory project_llm_provider_split.md - these can be removed.
+                   These can be removed.
 
 ────────────────────────────────────────────────────────────────────────────────
  ROTATION HEALTH
@@ -253,11 +253,11 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 | All COVERED + all FRESH | none - re-audit monthly | clean state |
 | UNCOVERED-BACKUP findings | /secrets-audit --fix-coverage | apply patches |
 | TRACKED secret found | /sec-ship --comprehensive | tracked-in-git is a critical finding; full security pass |
-| STALE keys to remove | manual cleanup, then re-audit | you removes; skill confirms |
+| STALE keys to remove | manual cleanup, then re-audit | you remove; skill confirms |
 | OVERDUE keys | /secrets-audit --rotate \<provider\> | interactive rotation |
 | Cross-host gap | /secrets-audit --host \<sibling\> | extend coverage |
 
-**Skip if:** you just ran a fix flag and is verifying the SITREP cleared.
+**Skip if:** you just ran a fix flag and are verifying the SITREP cleared.
 
 ---
 
@@ -267,7 +267,7 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 Different lifecycle phase. `/sec-ship` audits *committed* code for secrets that shouldn't be there (the prevention layer). `/secrets-audit` assumes secrets are correctly in env files and audits the *operational health* of those files (backup, freshness, consumer-binding). Same domain, different time-axis.
 
 ### Why no auto-rotate
-Rotation is a multi-step, multi-system operation: generate new key → update every consumer's env → restart services → verify functionality on new key → revoke old key. Each step has rollback implications. The skill walks through it, but auto-rotating without you confirmation per step is too high-blast-radius for this skill's safety profile.
+Rotation is a multi-step, multi-system operation: generate new key → update every consumer's env → restart services → verify functionality on new key → revoke old key. Each step has rollback implications. The skill walks through it, but auto-rotating without your confirmation per step is too high-blast-radius for this skill's safety profile.
 
 ### Why mtime as proxy for rotation date
 Operators don't reliably annotate `# ROTATED:` comments. mtime is the cheapest reliable signal. The skill prefers explicit annotations when present and falls back to mtime when absent. False positives (file touched for unrelated reason) are tolerable because they cause re-audit; false negatives (file edited but mtime didn't update) are rare.
@@ -279,7 +279,7 @@ Operators don't reliably annotate `# ROTATED:` comments. mtime is the cheapest r
 A 90-day blanket threshold is wrong: Stripe recommends yearly, OpenAI quarterly, Cloudflare on use-case. WebFetch the provider docs at audit time (cached for the session) so the threshold is grounded. Cache invalidates per session - providers update guidance.
 
 ### Why TRACKED is refuse-to-fix
-git history rewrites are dangerous and you-specific (force-push policies, branch-protection rules, who else has cloned). The skill's job is to surface - you drives the rewrite tooling.
+git history rewrites are dangerous and specific to each team (force-push policies, branch-protection rules, who else has cloned). The skill's job is to surface - you drive the rewrite tooling.
 
 ---
 

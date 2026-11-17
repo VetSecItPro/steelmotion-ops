@@ -98,7 +98,7 @@ Key properties, per the CI cost standard:
 - **`concurrency` with `cancel-in-progress: true` on every pull_request workflow** - a new
   push must stop the old run instead of letting both bill. Lock-holding jobs are the exception below.
 - **Few jobs, one install.** Each job pays checkout, setup and whole-minute rounding; small checks run as
-  steps of one job (the main site repo Content CI: 13 jobs cost about 22 minutes a run for seconds of work).
+  steps of one job (one Next.js site repo Content CI: 13 jobs cost about 22 minutes a run for seconds of work).
 - **Ubuntu runners.** macOS bills 10x and Windows 2x; a non-Ubuntu runner carries
   `# runner-justified: <why>` on the line above, or `ci-hygiene-check.py` reports it every session.
 - **`concurrency` with `cancel-in-progress: false` on any lock-holding job** (deploy, helm, terraform,

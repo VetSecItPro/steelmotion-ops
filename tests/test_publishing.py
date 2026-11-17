@@ -20,8 +20,9 @@ PLANTED = {
     "Supabase project ref": "https://abcdefghijklmnopqrst.supabase.co",
     "private network address": "ssh to 192.168.1.20",
     "Tailscale address": "host at 100.101.102.103",
+    "numbered private repo folder": "the work in 16.canvas-courses",
 }
-CLEAN = "Run `bash ~/.claude/ci-local.sh`; paths like /home/runner/work and /home/app/ are placeholders."
+CLEAN = "Saved to 2026-11-05.json and v1.2; Next 15.x is fine. Run `bash ~/.claude/ci-local.sh`; paths like /home/runner/work and /home/app/ are placeholders."
 
 
 def scan_text(text: str, terms: list[str] | None = None) -> list[str]:

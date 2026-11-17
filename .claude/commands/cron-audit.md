@@ -16,9 +16,9 @@ when_to_use: Trigger phrases: "are crons working", "audit my crons", "check sche
 
 ## PARADIGM
 
-A scheduled job that's **running** is not a job that's **doing its job**. The 2026-05-03 silent-deploy-gap proved it: `deploy-webhook.service` was active for 4+ days while MC sat 80+ commits behind main, because no GitHub webhook was wired to fire it. Process was healthy. Outcome was not.
+A scheduled job that's **running** is not a job that's **doing its job**. The 2026-05-03 silent-deploy-gap proved it: `deploy-webhook.service` was active for 4+ days while the dashboard sat 80+ commits behind main, because no GitHub webhook was wired to fire it. Process was healthy. Outcome was not.
 
-Cron-audit's job is to find that gap **proactively**, before you discovers it via stale dashboards or angry users.
+Cron-audit's job is to find that gap **proactively**, before you discover it via stale dashboards or angry users.
 
 This skill is a planning document for Claude to execute - bash blocks are illustrative, not literal. The decision tree is Claude reading the actual journal output / log files / cron syntax and reasoning about whether the schedule is healthy.
 
@@ -110,7 +110,7 @@ Capture `START_TIME`, `TARGET_HOST`, `TARGET_USERS[]` (default: current user + a
 Read `.reports/cron-audit/history.json` (cwd-relative if local, else fetch from `~/.cron-audit-history-<host>.json`):
 - Last run's findings
 - `patterns_observed` for known regression shapes
-- `wip_alerts_protected` - alert channels you has marked "leave alone" (e.g., temporarily disabled bot)
+- `wip_alerts_protected` - alert channels you have marked "leave alone" (e.g., temporarily disabled bot)
 
 Auto-gitignore the history file at every run.
 
@@ -209,9 +209,9 @@ Each fix:
 5. Logs the fix application to `.reports/cron-audit/history.json` so future runs see it as a known-good fix
 
 `--fix` NEVER:
-- Modifies an entry you has marked `wip_alerts_protected`
+- Modifies an entry you have marked `wip_alerts_protected`
 - Touches GitHub Actions YAML (those go through PRs, not direct edits)
-- Disables a cron entry (only patches scripts; if a cron itself should be removed, that's a manual you decision)
+- Disables a cron entry (only patches scripts; if a cron itself should be removed, that's a manual decision for you)
 
 ### Stage 6: SITREP + history append
 
@@ -274,7 +274,7 @@ Schedules:  18 (5 user-cron, 11 systemd-user-timer, 2 github-actions-schedule)
  ALERT-CHANNEL SANITY
 ────────────────────────────────────────────────────────────────────────────────
 ✅ agent-bot (TELEGRAM_BOT_TOKEN)        valid, resolves to @ExampleAgentBot
-✅ Fix-bot    (TELEGRAM_FIX_BOT_TOKEN)    valid, resolves to @NolanFixWorker_bot
+✅ Fix-bot    (TELEGRAM_FIX_BOT_TOKEN)    valid, resolves to @ExampleFixBot
 
 ────────────────────────────────────────────────────────────────────────────────
  SIBLING HOSTS NOT AUDITED THIS RUN
@@ -304,7 +304,7 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 | Sibling host not audited | /cron-audit --host \<sibling\> | extend coverage |
 | Alert-channel expired token | /sec-ship --secrets-rotation or manual rotation | credential refresh |
 
-**Skip if:** you just ran `/cron-audit --fix` and is verifying the SITREP is clean.
+**Skip if:** you just ran `/cron-audit --fix` and are verifying the SITREP is clean.
 
 ---
 
@@ -314,10 +314,10 @@ Per [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL
 `/monitor` is HTTP-route-and-deploy-focused - its mental model is "is the website up?" Cron-audit's mental model is "are the silent processes producing the work I expect?" The two domains share little. A merged skill would be 2x complexity for 2x users; better to keep them separate and chain.
 
 ### Why audit-only by default
-The 2026-05-03 fixes (notify_fix_bot wrapper, EXIT-trap pattern, channel-routing fix) were operator-driven choices made after reviewing each script. A skill that auto-rewrites scripts without you review would generate inconsistent fixes; your judgment about which scripts route to which bot is contextual.
+The 2026-05-03 fixes (notify_fix_bot wrapper, EXIT-trap pattern, channel-routing fix) were operator-driven choices made after reviewing each script. A skill that auto-rewrites scripts without your review would generate inconsistent fixes; your judgment about which scripts route to which bot is contextual.
 
 ### Why `exec` detection is its own check
-`exec` is the silent-failure smoking gun documented in your memory (`feedback_exec_masks_failures.md`). Catching it specifically - rather than as part of generic "audit script" - means the SITREP can call out the exact pattern with the exact recovery procedure (capture-then-act).
+`exec` is the silent-failure smoking gun seen again and again in real scripts. Catching it specifically - rather than as part of generic "audit script" - means the SITREP can call out the exact pattern with the exact recovery procedure (capture-then-act).
 
 ### Why alert-channel sanity is in-scope
 Half the silent-failure incidents this quarter weren't "the cron didn't fire" but "the cron fired, failed, and the alert it tried to send went into a dead channel." Auditing the cron without auditing its alert path is half a check.

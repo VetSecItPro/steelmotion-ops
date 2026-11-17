@@ -107,4 +107,4 @@ For any skill being audited for self-improvement:
 
 Per-project history files live at the repo root, gitignored. They never get committed. They survive across local sessions and Claude restarts because they're filesystem state.
 
-If you clones the repo fresh, history starts empty. That's fine - the skill builds it up over its first few runs in the new clone.
+If you clone the repo fresh, history starts empty. That's fine - the skill builds it up over its first few runs in the new clone.

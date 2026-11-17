@@ -300,10 +300,10 @@ class DetectorTests(unittest.TestCase):
         """Skill output lives in gitignored dot-directories by house rule.
         Demanding those be registered is noise, and noise gets gates disabled."""
         self.r.write("docs/tracked.md", "# T")
-        self.r.write(".canvas-audit/verdicts-batch1.md", "# audit output")
+        self.r.write(".site-audit/verdicts-batch1.md", "# audit output")
         self.r.write(".reports/docs/run-01.md", "# report")
         self.r.register([{"path": "docs/tracked.md", "provenance": "curated", "verified_sha": "0" * 40, "anchors": {}}],
-                        doc_roots=["docs", ".", ".canvas-audit"])
+                        doc_roots=["docs", ".", ".site-audit"])
         code, payload = self.r.run()
         self.assertEqual(code, 0, payload)
 
@@ -335,11 +335,11 @@ class DetectorTests(unittest.TestCase):
         """A repo may name the register anything. Excluding a hardcoded basename let
         it become evidence for its own anchors the moment one did."""
         self.r.write("src/a.ts", "export function stillHere() {}")
-        self.r.write("CANVAS-DOC-REGISTER.json", json.dumps({"version": 1, "docs": [
+        self.r.write("PROJECT-DOC-REGISTER.json", json.dumps({"version": 1, "docs": [
             {"path": "GUIDE.md", "provenance": "curated", "verified_sha": "0" * 40,
              "anchors": {"symbols": ["ghostSymbol"]}}]}, indent=2))
         self.r.write("GUIDE.md", "# Guide")
-        code, payload = self.r.run("--register", str(self.r.root / "CANVAS-DOC-REGISTER.json"))
+        code, payload = self.r.run("--register", str(self.r.root / "PROJECT-DOC-REGISTER.json"))
         self.assertEqual(code, 1, payload)
         self.assertIn("symbol", self.r.kinds(payload))
 
@@ -348,9 +348,9 @@ class DetectorTests(unittest.TestCase):
         the build on it would make the gate red on every run for a correct absence."""
         self.r.write("docs/a.md", "# A")
         self.r.write("src/real.ts", "x")
-        self.r.write(".gitignore", "canvas-380-audit-baseline.json\n")
+        self.r.write(".gitignore", "audit-baseline.json\n")
         self.r.register([{"path": "docs/a.md", "provenance": "curated", "verified_sha": "PLACEHOLDER",
-                          "anchors": {"paths": ["src/real.ts", "canvas-380-audit-baseline.json"]}}])
+                          "anchors": {"paths": ["src/real.ts", "audit-baseline.json"]}}])
         sha = self.r.git_init()
         reg = self.r.root / "docs/doc-register.json"
         reg.write_text(reg.read_text().replace("PLACEHOLDER", sha), encoding="utf-8")
@@ -397,16 +397,16 @@ class DetectorTests(unittest.TestCase):
         self.assertNotIn("declared-not-enforced", self.r.kinds(payload))
 
     def test_harvested_anchor_cannot_fail_a_build(self):
-        """The canvas-courses case: CLAUDE.md quotes `audit-pages.py` as a COUNTER-EXAMPLE
+        """The renamed-script case: CLAUDE.md quotes `audit-pages.py` as a COUNTER-EXAMPLE
         inside its own naming rule, and names it again in a rename record. It is supposed
         not to exist. A regex harvest turns that into a BROKEN anchor, and 'fix the doc
         until CI is green' would delete the rule's own worked examples."""
         self.r.write("docs/naming.md",
-                     "Not `audit-pages.py` but `canvas-audit-pages.py`.")
-        self.r.write("scripts/canvas-audit-pages.py", "print(1)")
+                     "Not `audit-pages.py` but `site-audit-pages.py`.")
+        self.r.write("scripts/site-audit-pages.py", "print(1)")
         self.r.register([{"path": "docs/naming.md", "verified_sha": "0" * 40,
                           "anchors": {"paths": ["audit-pages.py",
-                                                "scripts/canvas-audit-pages.py"]}}])
+                                                "scripts/site-audit-pages.py"]}}])
         code, payload = self.r.run(allow_empty=False)
         self.assertEqual(code, 2, payload)
         self.assertNotIn("broken", {f["severity"] for f in payload["findings"]})
@@ -430,24 +430,24 @@ class DetectorTests(unittest.TestCase):
         self.assertIn("no-curated-docs", self.r.kinds(payload))
 
     def test_bare_basename_that_lives_elsewhere_is_surfaced_not_guessed(self):
-        """Docs cite `canvas-audit-pages.py` bare while the file is scripts/canvas-audit-pages.py.
+        """Docs cite `site-audit-pages.py` bare while the file is scripts/site-audit-pages.py.
         Adding a search path would hide resolver gaps; a neighbouring checker lost its
         scripts/ fallback in a rewrite and turned nine live scripts into twelve dead
         citations. So the ambiguity is reported and the curator stores the resolved path."""
-        self.r.write("scripts/canvas-audit-pages.py", "print(1)")
+        self.r.write("scripts/site-audit-pages.py", "print(1)")
         self.r.write("docs/a.md", "# A")
         self.r.register([{"path": "docs/a.md", "provenance": "curated", "verified_sha": "0" * 40,
-                          "anchors": {"paths": ["canvas-audit-pages.py"]}}])
+                          "anchors": {"paths": ["site-audit-pages.py"]}}])
         code, payload = self.r.run(allow_empty=False)
         self.assertEqual(code, 2, payload)
         self.assertIn("unresolved-basename", self.r.kinds(payload))
-        self.assertIn("scripts/canvas-audit-pages.py", json.dumps(payload))
+        self.assertIn("scripts/site-audit-pages.py", json.dumps(payload))
 
     def test_resolved_path_is_clean(self):
-        self.r.write("scripts/canvas-audit-pages.py", "print(1)")
+        self.r.write("scripts/site-audit-pages.py", "print(1)")
         self.r.write("docs/a.md", "# A")
         self.r.register([{"path": "docs/a.md", "provenance": "curated", "verified_sha": "0" * 40,
-                          "anchors": {"paths": ["scripts/canvas-audit-pages.py"]}}])
+                          "anchors": {"paths": ["scripts/site-audit-pages.py"]}}])
         self.assertEqual(self.r.run(allow_empty=False)[0], 0)
 
     def test_bare_basename_that_exists_nowhere_still_breaks(self):
@@ -463,7 +463,7 @@ class DetectorTests(unittest.TestCase):
         """README.md resolves three ways in a real repo here. Naming the first match
         would have the curator freeze a path that may be the wrong one, and a wrong
         RESOLVED path is worse than a bare string: it looks settled and diffs clean."""
-        for d in ("guides", "CANVAS-RESEARCH", "canvas-380-ig-grading"):
+        for d in ("guides", "RESEARCH", "grading-notes"):
             self.r.write(f"{d}/README.md", "# readme")
         self.r.write("docs/a.md", "# A")
         self.r.register([{"path": "docs/a.md", "provenance": "curated", "verified_sha": "0" * 40,
@@ -473,8 +473,8 @@ class DetectorTests(unittest.TestCase):
         self.assertIn("ambiguous-basename", self.r.kinds(payload))
         blob = json.dumps(payload)
         self.assertIn("matching 3 files", blob)
-        self.assertIn("CANVAS-RESEARCH/README.md", blob)
-        self.assertIn("canvas-380-ig-grading/README.md", blob)
+        self.assertIn("RESEARCH/README.md", blob)
+        self.assertIn("grading-notes/README.md", blob)
         self.assertIn("guides/README.md", blob)
         self.assertNotIn("unresolved-basename", self.r.kinds(payload))
 

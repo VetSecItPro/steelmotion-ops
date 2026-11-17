@@ -25,5 +25,6 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/claude" && cp -R .claude/. "$RUNNER_TEMP/claude/"
           bash "$RUNNER_TEMP/claude/check-skill-router.sh"
+          python3 "$RUNNER_TEMP/claude/generate-skill-router.py" --check
       - name: Shell syntax
         run: bash -n install.sh && bash -n .claude/ci-local.sh && bash -n .claude/check-skill-router.sh

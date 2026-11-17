@@ -1,7 +1,6 @@
 # /gh-ship - stage procedures
 
-Read at Stage 0 and as each stage begins. `SKILL.md` holds the rules; this holds the how. The story
-behind each rule is in `provenance-archive.md`; do not read it during a run. Carry this state:
+Read at Stage 0 and as each stage begins. `SKILL.md` holds the rules; this holds the how. Carry this state:
 
 ```
 START_EPOCH (date +%s), ORIGINAL_BRANCH, ORIGINAL_COMMIT, OWNER_REPO, DEFAULT_BRANCH
@@ -47,8 +46,10 @@ policy in `SKILL.md`.
 
 **0f Stale branches.** `git branch --merged <default>`: note for the SITREP. Do not act.
 
-**0g Content safety.** The global pre-commit hook (`~/.claude/git-hooks/pre-commit`) runs gitleaks on
-every commit, so do not re-run a secrets regex here. **Exception:** a repo-local `core.hooksPath`
+**0g Content safety.** If a global pre-commit hook already runs gitleaks on every commit (check
+`git config --global core.hooksPath`), do not re-run it here. **Otherwise, and always when no such hook
+exists, run `gitleaks protect --staged --redact` yourself after Stage 4's `git add`; if gitleaks is not
+installed, stop and say so.** The same holds when a repo-local `core.hooksPath`
 (`git config --local core.hooksPath`, which husky sets) replaces the global hooks entirely, so run
 `gitleaks protect --staged --redact` yourself after Stage 4's `git add`. Then check what a scanner misses: a `.env*`, `*.pem`, `credentials*` or a file over
 50 MB in the intended paths, or build output (`node_modules/`, `.next/`, `dist/`, `build/`,
@@ -118,7 +119,7 @@ about foreign changes.
    list. After the Stage 4 commit succeeds, run it again with `--done`, which removes the pending
    file only when every row is committed. Exit 2 means damaged JSON (nothing changed: fix the file);
    exit 3 means `--done` ran before the commit. Prose was not enough: this step was skipped on
-   a writing repo PR #261.
+   one repo's PR.
 
 List every file this stage wrote, by name, in the run log; Stage 4 stages all of them. A repo's own
 conventions outrank these defaults. Never invent a record to look productive: a fabricated entry is
@@ -176,7 +177,7 @@ in the SITREP, write the Stage 13 row, and stop. The next full `/gh-ship` on the
 the PR.
 
 **Actions cost guards.** CI is billed per minute and every push to an open PR reruns
-all of it (the main site repo: about 48 minutes a cycle). Before `gh pr create`, in a repo with `.ci-local`, run
+all of it (one Next.js site repo: about 48 minutes a cycle). Before `gh pr create`, in a repo with `.ci-local`, run
 `bash ~/.claude/ci-local.sh` on the committed HEAD; the push guard refuses the create until that passed on
 this exact commit. Fold every remaining change into the branch BEFORE the PR opens: after it opens, a push
 needs a reason (Stage 9).

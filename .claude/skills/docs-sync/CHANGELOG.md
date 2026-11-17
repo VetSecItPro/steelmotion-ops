@@ -35,7 +35,7 @@ Nothing yet.
 ## [2.0.0] - 2026-09-10
 
 Made the tool usable. v1 was correct and had never been run against a register in any repo on this
-machine: 0 of 42 project directories held one, `16.canvas-courses` included. The gap was never the
+machine: 0 of 42 project directories held one. The gap was never the
 detectors, it was the cost of first contact and a doctrine that said nothing about how a document
 absorbs new work.
 
@@ -67,7 +67,7 @@ absorbs new work.
   changes. The skill is used after the work and before the commit, which is exactly where a
   `verified_sha..HEAD` diff is blind. Renames report both paths.
 - `docs-check.workflow.yml` is repo-agnostic. It shipped as the generic template while hardcoding
-  `scripts/canvas-check-docs.py` and `CANVAS-DOC-REGISTER.json` in four places.
+  `scripts/project-check-docs.py` and `PROJECT-DOC-REGISTER.json` in four places.
 - `review: manual` is retired in favour of `update_mode: frozen`.
 
 ### Fixed

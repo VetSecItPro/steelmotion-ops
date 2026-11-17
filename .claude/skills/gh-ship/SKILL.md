@@ -14,11 +14,9 @@ disable-model-invocation: false
 | `stages.md` | Stage 0, then as each stage begins | per-stage procedure, detection tables, CI fix strategies |
 | `recovery.md` | any failure, or before a destructive action | rollback, verify-before-destroy helpers, history schema |
 | `audit.md` | Stage 11.7 and 12.5, when they run | proactive repo audit, CI workflow improvement |
-| `provenance-archive.md` | never during a run | the incidents and measurements behind each rule |
 
 **Related skills.** Feeds from `/test-ship`, `/sec-ship`, `/smoketest`, `/subagent-dev`. Feeds into
-`/monitor` (post-deploy) and `/qatest` (QA the preview). Stage 2.5 calls `/docs-sync`. `/worklog` is
-the session journal and deliberately not part of this pipeline.
+`/monitor` (post-deploy) and `/qatest` (QA the preview). Stage 2.5 calls `/docs-sync`.
 
 ## Modes
 
