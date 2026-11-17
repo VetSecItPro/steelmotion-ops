@@ -20,7 +20,7 @@ Search order, implemented in `discover_register()`:
 {
   "version": 2,
   "checker_version": "2.0.0",
-  "repo": "17.scratchpad",
+  "repo": "tooling-repo",
   "doc_roots": ["."],
   "ignore": ["CHANGELOG.md", "**/adr/**", "*-lessons-learned.md"],
   "docs": [

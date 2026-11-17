@@ -80,7 +80,7 @@ Steel principles as they apply here:
 4. The orchestrator never reads source directly. It dispatches and collects ≤200-token summaries.
 5. Fix at root cause, verify by re-running the scanner that found it.
 6. Every verified fix gets a regression test (Agent 15).
-7. Read `.sec-ship-history.json` first; try known-good fixes before inventing one.
+7. Read `.reports/sec-ship/history.json` first; try known-good fixes before inventing one.
 8. Coverage attestation is mandatory in every SITREP.
 
 ## Modes
@@ -108,7 +108,7 @@ proceed with the safer (wider) one rather than asking.
 | Repo state | Mode | Why |
 |---|---|---|
 | On a feature branch with commits ahead of the default branch | `--diff` | pre-PR check; scope to what changed |
-| No prior run in `.sec-ship-reports/`, or none within 30 days | `--comprehensive` | no baseline exists; establish one |
+| No prior run in `.reports/sec-ship/`, or none within 30 days | `--comprehensive` | no baseline exists; establish one |
 | Last run < 7 days old and the diff since is dependency files only | `--supply-chain` | only the supply surface moved |
 | The diff since the last run touches only CI, Dockerfile, IaC | `--infra` | only the infra surface moved |
 | The diff touches prompts, tool definitions, agent loops or LLM SDK calls | `--ai` | agent 8 is the surface that changed |
@@ -131,7 +131,7 @@ change under review is a prompt, a tool definition or an agent loop.
 **`--key-rotation`** closes the loop with `/secrets-audit`, which finds OVERDUE keys. Per provider:
 generate the new key, update every `.env*` that referenced the old one (grep-find first, never blind
 replace), restart consumers and verify traffic on the new key, then revoke the old one. Append the
-event to `~/.agent/rotation-log.json`. Each destructive step needs explicit confirmation.
+event to `~/.app/rotation-log.json`. Each destructive step needs explicit confirmation.
 
 ## Confidence
 
@@ -189,7 +189,7 @@ applicable, dispatched and skipped with the precondition met per skip, and the r
 "Skipped to save context" is not a legal entry - that is a defect in the agent prompt.
 
 **Per-agent budget.** Prompt ≤ 600 tokens. Returned summary ≤ 200 tokens. Full findings ≤ 5,000
-tokens written to `.sec-ship-reports/findings/agent-<N>.json`, never read by the orchestrator. After
+tokens written to `.reports/sec-ship/findings/agent-<N>.json`, never read by the orchestrator. After
 each wave the orchestrator writes a ~50-token rolling counter and does not re-read prior summaries.
 If a prompt approaches 600 tokens, tighten it before dispatching - padding at the prompt layer
 becomes verbose returns becomes orchestrator bloat.
@@ -203,7 +203,7 @@ per `reference.md`.
 
 **0.5 Reconcile with prior audits - before any scanner runs.**
 
-Read the newest reports in `.sec-ship-reports/` and `.sec-ship-history.json` FIRST. A finding the
+Read the newest reports in `.reports/sec-ship/` and `.reports/sec-ship/history.json` FIRST. A finding the
 operator has already seen and settled is noise the second time, and re-deriving it costs a full
 scan. Classify every known finding before deciding what to scan:
 
@@ -235,7 +235,7 @@ If no prior report exists, say so - "no baseline, establishing one" - and scan i
 
 **1 Attack surface.** Map what is exposed before scanning: HTTP entry points, auth boundaries,
 untrusted-input flows, trust boundaries, external integrations and webhook receivers. Write
-`.sec-ship-reports/attack-surface.md`. This is what makes Agents 3-6, 10, 11 and 14 targeted rather
+`.reports/sec-ship/attack-surface.md`. This is what makes Agents 3-6, 10, 11 and 14 targeted rather
 than generic.
 
 **2 Scan.** **Read `agents.md`**, then dispatch by wave. Parallel within a wave, sequential across.

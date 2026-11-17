@@ -16,7 +16,7 @@ Examples: `/gh-ship`, `/sec-ship`, `/test-ship`, `/qatest`, `/monitor`, `/deps`
 ### 1. Per-project history file
 
 Each invocation appends to a per-project history file at the repo root:
-`.<skill>-history.json` (e.g., `.gh-ship-history.json`, `.sec-ship-history.json`)
+`.reports/<skill>/history.json` (e.g., `.reports/gh-ship/history.json`, `.reports/sec-ship/history.json`)
 
 The file is gitignored automatically by Stage 0.
 
@@ -56,7 +56,7 @@ Schema:
 ### 2. Read at Stage 0 / pre-flight
 
 ```
-At Stage 0, read .<skill>-history.json if it exists.
+At Stage 0, read .reports/<skill>/history.json if it exists.
 Extract patterns_observed → known fix shapes.
 Extract last run's outcome → if failed, prepare for elevated caution.
 Extract any "wip_branches_protected" or similar sticky-state across runs.
@@ -96,7 +96,7 @@ If a pattern recurs across MANY projects (e.g., "GHCR 403 from missing package-A
 
 For any skill being audited for self-improvement:
 
-- [ ] Define `.<skill>-history.json` schema in skill doc
+- [ ] Define `.reports/<skill>/history.json` schema in skill doc
 - [ ] Add Stage 0.5 "read history" step
 - [ ] Add final stage "append to history" step
 - [ ] Reference `patterns_observed` in fix-loop logic

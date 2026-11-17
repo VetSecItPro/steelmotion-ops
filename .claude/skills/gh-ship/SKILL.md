@@ -20,6 +20,19 @@ disable-model-invocation: false
 `/monitor` (post-deploy) and `/qatest` (QA the preview). Stage 2.5 calls `/docs-sync`. `/worklog` is
 the session journal and deliberately not part of this pipeline.
 
+## Modes
+
+| Invocation | Does | Stops |
+|---|---|---|
+| `/gh-ship` | the full pipeline, Stage 0 to 14 | after the SITREP |
+| `/gh-ship --push-only` | Stages 0 to 6: validate, record, commit, push the work branch with upstream | **before Stage 7**: opens no PR, watches no CI, merges nothing |
+
+`--push-only` is how a work block is backed up while it is still being built (one block = one
+branch = one PR; a PR-less branch costs no CI minutes). Every task of the block ends with it or a
+plain local commit; the PR is opened once, by a later full `/gh-ship`, when the block is done. The
+history row (Stage 13) records `outcome: pushed-only`. The push guard needs no change: it already
+allows a prefixed push of a feature branch and never opens a PR.
+
 ## Paradigm
 
 A plan Claude executes, not a script to replay. Detect the repo's language, CI engine and deploy
@@ -73,17 +86,17 @@ A worktree, or a `.claude/worktrees/` directory, means assume concurrency.
 |---|---|---|
 | 0 | Pre-flight: tree classification, exclusion check, `gh` auth, detection, history read | all of it |
 | 0.5 | Sibling-repo scan | report siblings; never ship them |
-| 1 | Local validation | the repo's real lint/typecheck/test/build; fix, never suppress |
+| 1 | Local validation | the repo's real lint/typecheck/test/build; fix, never suppress; **before the FIRST push of a PR's branch the whole suite runs and a failing suite stops the push** |
 | 2 | Analyze changes | categorize; nothing left after safety filtering = exit early |
 | 2.5 | **Record what this ships** | changelog, backlog rows, lessons, ADR, `/docs-sync`, `history-fold.py` (prints waiting rows); **before the commit**; every check states an outcome |
 | 3 | Commit message | `<type>(<scope>): <description>`, body says WHY |
 | 4 | Stage and commit | explicit paths, including every Stage 2.5 file |
 | 5 | Branch | on the default branch: create one and record it as session-created |
 | 6 | Push | read the current branch, push it BY NAME; conflicts: merge the base in, never rebase a pushed branch |
-| 7 | Open PR | reuse an existing PR; after a 5xx or timeout on ANY write, check whether it landed before retrying |
+| 7 | Open PR (skipped by `--push-only`) | `ci-local.sh` passed on HEAD where `.ci-local` exists; reuse an existing PR; after a 5xx or timeout on ANY write, check whether it landed before retrying |
 | 8 | CI + preview | **`.mergeable` BEFORE waiting**; expected check count before any verdict |
 | 8.5 | **Review decision** | read `reviewDecision`; `CHANGES_REQUESTED` = fix loop; a human-only review = exit BLOCKED-ON-HUMAN |
-| 9 | CI fix loop | root cause only, max 3 attempts shared with the review loop |
+| 9 | CI fix loop | root cause only, max 3 attempts shared with the review loop; each fix push carries `CI_RERUN_REASON="..."` and reruns the whole CI, so batch fixes |
 | 10 | **Merge** | CI green AND review approved or not required AND preview verified or none; **`--squash`, never `--delete-branch`** |
 | 11 | **Verify production** | HTTP 200 + content marker; merge sha on the default branch |
 | 11.5 | **Verified-merge gate** | before any branch delete |
@@ -110,8 +123,10 @@ someone's possible work in progress: report it, never remove it. Before deleting
 
 ## History file
 
-`.gh-ship-history.json` is read at Stage 0 and written at Stage 13 using the schema in
-`recovery.md`. **Tracked or ignored is the repo's choice:** if `git ls-files --error-unmatch` says
+`.reports/gh-ship/history.json` is read at Stage 0 and written at Stage 13 using the schema in
+`recovery.md` (all skill output lives under the gitignored `.reports/<skill>/`). **Tracked or
+ignored is the repo's choice:** a repo that tracks the legacy root `.gh-ship-history.json` keeps it, and
+`history-fold.py` uses it; if `git ls-files --error-unmatch` says
 tracked, Stage 13 appends to `.git/gh-ship-history.pending.json` and the next run's Stage 2.5 folds
 it in; a `.gitignore` comment stating a policy is obeyed; neither means gitignore it and say so.
 **Failed and blocked runs get a row too.** A history of only successes measures nothing.

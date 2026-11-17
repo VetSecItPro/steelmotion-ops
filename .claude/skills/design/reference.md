@@ -23,7 +23,7 @@ clearest single measure that a system is taking hold.
 ## Output
 
 ```
-.design-reports/DESIGN-<YYYYMMDD-HHMM>.md
+.reports/design/DESIGN-<YYYYMMDD-HHMM>.md
 <or the project's existing design docs location, if one exists>
 ```
 

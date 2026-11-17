@@ -2,7 +2,7 @@
 
 ## Report
 
-`.redteam-reports/RT-<YYYYMMDD-HHMM>.md`, written progressively so it survives compaction and a lost
+`.reports/redteam/RT-<YYYYMMDD-HHMM>.md`, written progressively so it survives compaction and a lost
 session. This is a sensitive document - it is a map of how to attack the app. Keep it in the
 gitignored reports directory; never commit it.
 

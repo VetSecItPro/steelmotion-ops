@@ -50,7 +50,7 @@ If the skill operates on cwd silently, you forgets the others. Then they discove
 
 ```
 🌐 Sibling repos in workspace
-   mission-control: branch=main, uncommitted=0, unpushed=0  ✅
+   dashboard: branch=main, uncommitted=0, unpushed=0  ✅
    infra-repo:     branch=main, uncommitted=2, unpushed=1  ⚠️
                     [run /gh-ship from inside if changes pending]
 ```

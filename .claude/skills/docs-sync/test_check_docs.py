@@ -175,7 +175,7 @@ class DetectorTests(unittest.TestCase):
         self.assertIn("config", self.r.kinds(payload))
 
     def test_count_mismatch(self):
-        """The count-drift class: a doc asserting 25 modules against a repo holding 35."""
+        """The stale-count class: a doc asserting 25 modules against a repo holding 35."""
         for i in range(3):
             self.r.write(f"infra/modules/m{i}/main.tf", "resource {}")
         self.r.write("docs/infra.md", "# Infra\n\nThere are 5 modules.")
@@ -301,7 +301,7 @@ class DetectorTests(unittest.TestCase):
         Demanding those be registered is noise, and noise gets gates disabled."""
         self.r.write("docs/tracked.md", "# T")
         self.r.write(".canvas-audit/verdicts-batch1.md", "# audit output")
-        self.r.write(".docs-reports/run-01.md", "# report")
+        self.r.write(".reports/docs/run-01.md", "# report")
         self.r.register([{"path": "docs/tracked.md", "provenance": "curated", "verified_sha": "0" * 40, "anchors": {}}],
                         doc_roots=["docs", ".", ".canvas-audit"])
         code, payload = self.r.run()
@@ -397,7 +397,7 @@ class DetectorTests(unittest.TestCase):
         self.assertNotIn("declared-not-enforced", self.r.kinds(payload))
 
     def test_harvested_anchor_cannot_fail_a_build(self):
-        """The counter-example case: CLAUDE.md quotes `audit-pages.py` as a COUNTER-EXAMPLE
+        """The canvas-courses case: CLAUDE.md quotes `audit-pages.py` as a COUNTER-EXAMPLE
         inside its own naming rule, and names it again in a rename record. It is supposed
         not to exist. A regex harvest turns that into a BROKEN anchor, and 'fix the doc
         until CI is green' would delete the rule's own worked examples."""

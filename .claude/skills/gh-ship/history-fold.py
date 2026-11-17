@@ -4,10 +4,13 @@
     python3 ~/.claude/skills/gh-ship/history-fold.py [repo]          # fold, before the commit
     python3 ~/.claude/skills/gh-ship/history-fold.py --done [repo]   # after the commit succeeds
 
-Stage 13 never commits: when `.gh-ship-history.json` is tracked, it appends its row to
+History lives at `.reports/gh-ship/history.json` (gitignored, 2026-11-05). A repo that chose to
+TRACK its history keeps the legacy `.gh-ship-history.json` at its root, and this script uses that file
+whenever git tracks it (a writing repo and another repo did on 2026-11-05).
+
+Stage 13 never commits: when the history file is tracked, it appends its row to
 `.git/gh-ship-history.pending.json` instead, and the NEXT run must fold those rows into its own
-commit. That fold was prose until 2026-10-18 and was skipped on 04.novels PR #261 (scratchpad
-#205), so it is a script with known-answer tests (`history-fold-test.py`) and a printed count.
+commit. That fold was prose until 2026-10-18, so it is a script with known-answer tests (`history-fold-test.py`) and a printed count.
 
 Fold: appends pending rows in order, skips any already present, keeps the file's indentation,
 writes atomically, and leaves the pending file in place. --done: removes the pending file only
@@ -32,7 +35,9 @@ if rc != 0:
     print(f"gh-ship history fold: REFUSING, {repo} is not a git repo")
     sys.exit(2)
 gitdir = gitdir.strip()
-hist_path = os.path.join(repo, ".gh-ship-history.json")
+LEGACY, CURRENT = ".gh-ship-history.json", os.path.join(".reports", "gh-ship", "history.json")
+rel = LEGACY if git("ls-files", "--error-unmatch", LEGACY)[0] == 0 else CURRENT
+hist_path = os.path.join(repo, rel)
 pend_path = os.path.join(gitdir, "gh-ship-history.pending.json")
 
 
@@ -61,7 +66,7 @@ pending = load(pend_path, "the pending file")
 pending = pending if isinstance(pending, list) else pending.get("runs", [])
 
 if done:
-    rc, committed = git("show", "HEAD:.gh-ship-history.json")
+    rc, committed = git("show", f"HEAD:{rel}")
     try:
         have = {key(r) for r in runs_of(json.loads(committed))} if rc == 0 else set()
     except ValueError:
@@ -77,7 +82,7 @@ if done:
 if os.path.exists(hist_path):
     with open(hist_path, encoding="utf-8") as f:
         raw = f.read()
-    hist = load(hist_path, ".gh-ship-history.json")
+    hist = load(hist_path, rel)
 else:
     raw, hist = "", {"schema_version": 2, "runs": []}
 
@@ -101,13 +106,14 @@ for line in raw.splitlines()[1:]:
 if raw and "\n" not in raw.strip():
     indent = None  # the file was compact; keep it compact
 
-fd, tmp = tempfile.mkstemp(dir=repo, prefix=".gh-ship-history.", suffix=".tmp")
+os.makedirs(os.path.dirname(hist_path), exist_ok=True)
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(hist_path), prefix=".history.", suffix=".tmp")
 with os.fdopen(fd, "w", encoding="utf-8") as f:
     json.dump(hist, f, indent=indent, ensure_ascii=False)
     f.write("\n")
 os.replace(tmp, hist_path)
 
-rc, _ = git("ls-files", "--error-unmatch", ".gh-ship-history.json")
-tracked = "tracked: stage .gh-ship-history.json in this commit" if rc == 0 else "untracked (history file is not in git)"
+rc, _ = git("ls-files", "--error-unmatch", rel)
+tracked = f"tracked: stage {rel} in this commit" if rc == 0 else "untracked (history file is not in git)"
 print(f"gh-ship history fold: waiting rows: {len(pending)}, folded: {added}, already present: {skipped}; {tracked}; "
       f"after the commit run with --done")

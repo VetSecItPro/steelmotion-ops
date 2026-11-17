@@ -22,7 +22,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Newest first.
   The finding was non-gating, so nothing ever failed because of it. The cost was
   that the checker was permanently yellow, and a checker that is always yellow is
   one people stop reading, which spends the credibility of the real findings beside
-  it. Measured in `17.scratchpad` and filed there as backlog #144.
+  it. Measured on a real repo.
 
   Three tests, including one asserting that an anchor moving in a commit that leaves
   the document alone is **still** suspect, so the fix cannot become a way for real
@@ -35,7 +35,7 @@ Nothing yet.
 ## [2.0.0] - 2026-09-10
 
 Made the tool usable. v1 was correct and had never been run against a register in any repo on this
-machine: 0 of 42 project directories held one, including the busiest one. The gap was never the
+machine: 0 of 42 project directories held one, `16.canvas-courses` included. The gap was never the
 detectors, it was the cost of first contact and a doctrine that said nothing about how a document
 absorbs new work.
 

@@ -144,7 +144,6 @@ Reference `~/.claude/standards/SITREP_FORMAT.md` with domain-specific additions.
 Rationalization table documenting common excuses and how to reject them.
 
 ### 8. Self-Improvement Hooks (NEW in v2.0)
-See `~/.claude/standards/SKILL_EVOLUTION.md` for the autoresearch-inspired self-improvement system. Every skill logs telemetry for future evolution.
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Report
 
-`.cleancode-reports/CLEAN-<YYYYMMDD-HHMM>.md`.
+`.reports/cleancode/CLEAN-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Cleanup Report: <project>

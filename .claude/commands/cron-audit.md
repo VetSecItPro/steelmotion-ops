@@ -7,7 +7,7 @@ when_to_use: Trigger phrases: "are crons working", "audit my crons", "check sche
 
 > **Standards inherited** (apply throughout this skill):
 > - [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) - read + reason, don't pattern-match
-> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.cron-audit-history.json`, learn across runs
+> - [Self-Improvement Protocol](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) - log to `.reports/cron-audit/history.json`, learn across runs
 > - [Multi-Repo Awareness](~/.claude/standards/MULTI_REPO_AWARENESS.md) - scan siblings, surface in SITREP, never cross-traverse
 > - [Verify Before Destroy](~/.claude/standards/VERIFY_BEFORE_DESTROY.md) - content-verify before destructive action
 > - [Skill Auto-Suggest Protocol](~/.claude/standards/SKILL_AUTOSUGGEST_PROTOCOL.md) - every SITREP ends with "Suggested next"
@@ -16,7 +16,7 @@ when_to_use: Trigger phrases: "are crons working", "audit my crons", "check sche
 
 ## PARADIGM
 
-A scheduled job that's **running** is not a job that's **doing its job**. The 2026-05-03 silent-deploy-gap proved it: `deploy-webhook.service` was active for 4+ days while the dashboard sat 80+ commits behind main, because no GitHub webhook was wired to fire it. Process was healthy. Outcome was not.
+A scheduled job that's **running** is not a job that's **doing its job**. The 2026-05-03 silent-deploy-gap proved it: `deploy-webhook.service` was active for 4+ days while MC sat 80+ commits behind main, because no GitHub webhook was wired to fire it. Process was healthy. Outcome was not.
 
 Cron-audit's job is to find that gap **proactively**, before you discovers it via stale dashboards or angry users.
 
@@ -60,7 +60,7 @@ Steel principles applied:
 5. **Detect `exec` masking.** Any script using `exec <cmd>` after defining EXIT/ERR traps has the trap silently disabled. Flag it.
 6. **Log with timestamps.** Every finding includes when the schedule last fired (or didn't), not just whether the service is running.
 7. **Log freshness window per schedule.** A `*/5 * * * *` cron should have a journal entry within the last 5 minutes; a `0 3 * * *` cron should have one within the last 24 hours.
-8. **History-driven.** Read `.cron-audit-history.json` first; surface regressions vs last run.
+8. **History-driven.** Read `.reports/cron-audit/history.json` first; surface regressions vs last run.
 9. **SITREP ends with Suggested next** per autosuggest protocol.
 
 ---
@@ -97,7 +97,7 @@ Steel principles applied:
 
 ### Multi-user host gotcha
 
-On host-a, you run as `ops` but the gateway runs as `svc`. Their crons are separate. Always sudo into each documented user OR use `loginctl list-users` to discover all linger-enabled accounts and audit each. The `ops`-user `crontab -l` will not show `svc`'s crons.
+On host-a, you run as `ops` but the gateway runs as `app`. Their crons are separate. Always sudo into each documented user OR use `loginctl list-users` to discover all linger-enabled accounts and audit each. The `ops`-user `crontab -l` will not show `app`'s crons.
 
 ---
 
@@ -107,7 +107,7 @@ On host-a, you run as `ops` but the gateway runs as `svc`. Their crons are separ
 
 Capture `START_TIME`, `TARGET_HOST`, `TARGET_USERS[]` (default: current user + any linger-enabled users on host).
 
-Read `.cron-audit-history.json` (cwd-relative if local, else fetch from `~/.cron-audit-history-<host>.json`):
+Read `.reports/cron-audit/history.json` (cwd-relative if local, else fetch from `~/.cron-audit-history-<host>.json`):
 - Last run's findings
 - `patterns_observed` for known regression shapes
 - `wip_alerts_protected` - alert channels you has marked "leave alone" (e.g., temporarily disabled bot)
@@ -161,7 +161,7 @@ For each schedule's `command` field, read the script (if local file) and reason 
    - Decision: if the cron fires daily-or-more, missing alerts = silent failures. Flag as ANTIPATTERN-NO-ALERTS.
 
 3. **Stale alert channel reference:**
-   - Pattern: script references `TELEGRAM_BOT_TOKEN` (the main bot) but the documented infra-failure pattern routes to `TELEGRAM_FIX_BOT_TOKEN` (per `~/.claude/CLAUDE.md` § Telegram channel routing rule)
+   - Pattern: script references `TELEGRAM_BOT_TOKEN` (the agent bot) but the documented infra-failure pattern routes to `TELEGRAM_FIX_BOT_TOKEN` (per `~/.claude/CLAUDE.md` § Telegram channel routing rule)
    - Decision: surface the cross-channel collapse. This is the same class of bug that got patched 2026-05-03.
 
 4. **Token expiry / credential rot:**
@@ -206,7 +206,7 @@ Each fix:
 2. Applies the patch
 3. Runs `bash -n script.sh` syntax-check
 4. If `--dry-run`: shows diff, doesn't write
-5. Logs the fix application to `.cron-audit-history.json` so future runs see it as a known-good fix
+5. Logs the fix application to `.reports/cron-audit/history.json` so future runs see it as a known-good fix
 
 `--fix` NEVER:
 - Modifies an entry you has marked `wip_alerts_protected`
@@ -215,7 +215,7 @@ Each fix:
 
 ### Stage 6: SITREP + history append
 
-Generate report at `.cron-audit-reports/CA-YYYYMMDD-HHMMSS.md` with:
+Generate report at `.reports/cron-audit/CA-YYYYMMDD-HHMMSS.md` with:
 
 1. **Inventory summary** - N schedules across M sources, K hosts
 2. **Findings table** - per finding: ID, severity, type, where, evidence
@@ -224,7 +224,7 @@ Generate report at `.cron-audit-reports/CA-YYYYMMDD-HHMMSS.md` with:
 5. **Manual recommendations** - items the skill won't auto-fix
 6. **Suggested next** block (per autosuggest protocol)
 
-Append to `.cron-audit-history.json`:
+Append to `.reports/cron-audit/history.json`:
 ```json
 {
   "run_id": "...",
@@ -259,22 +259,22 @@ Schedules:  18 (5 user-cron, 11 systemd-user-timer, 2 github-actions-schedule)
 ────────────────────────────────────────────────────────────────────────────────
  ANTI-PATTERN FINDINGS
 ────────────────────────────────────────────────────────────────────────────────
-[CA-1] HIGH   ANTIPATTERN-EXEC         /home/svc/restic-backup-wrapper.sh
+[CA-1] HIGH   ANTIPATTERN-EXEC         /home/app/restic-backup-wrapper.sh
               `exec` on line 47 masks failure-alert trap on line 12
               REGRESSION: matches pattern fixed 2026-05-03 (per history)
 
-[CA-2] MED    ANTIPATTERN-NO-ALERTS    /home/svc/some-old-cron.sh
+[CA-2] MED    ANTIPATTERN-NO-ALERTS    /home/app/some-old-cron.sh
               No alert channel wired; failures will be silent
 
-[CA-3] HIGH   TELEGRAM-CHANNEL-COLLAPSE /home/svc/legacy-monitor.sh
+[CA-3] HIGH   TELEGRAM-CHANNEL-COLLAPSE /home/app/legacy-monitor.sh
               `${TELEGRAM_FIX_BOT_TOKEN:-${TELEGRAM_BOT_TOKEN}}` collapses both
               bots into fix-bot. Per channel-routing.md anti-pattern.
 
 ────────────────────────────────────────────────────────────────────────────────
  ALERT-CHANNEL SANITY
 ────────────────────────────────────────────────────────────────────────────────
-✅ Main-bot (TELEGRAM_BOT_TOKEN)        valid, resolves to @example_chief_bot
-✅ Fix-bot    (TELEGRAM_FIX_BOT_TOKEN)    valid, resolves to @example_fix_bot
+✅ agent-bot (TELEGRAM_BOT_TOKEN)        valid, resolves to @ExampleAgentBot
+✅ Fix-bot    (TELEGRAM_FIX_BOT_TOKEN)    valid, resolves to @NolanFixWorker_bot
 
 ────────────────────────────────────────────────────────────────────────────────
  SIBLING HOSTS NOT AUDITED THIS RUN
@@ -334,6 +334,6 @@ Cron state is per-host. Comparing `host-a`'s schedule inventory against `host-b`
 - Alert channels sanity-tested
 - Sibling hosts surfaced (not auto-traversed)
 - `.cron-audit-history-<host>.json` updated
-- `.cron-audit-reports/CA-*.md` written
+- `.reports/cron-audit/CA-*.md` written
 - SITREP ends with "Suggested next"
 - If `--fix`: every patch has a backup file and a syntax-check pass

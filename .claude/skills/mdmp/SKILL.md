@@ -14,7 +14,8 @@ when_to_use: 'Trigger phrases: "big feature", "new architecture", "overhaul", "r
 | `steps.md` | throughout | the seven-step procedure in detail |
 | `reference.md` | Step 7 | decision record format, matrix, SITREP |
 
-**Standards inherited:** [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
+**Standards inherited:** [Domain Language](~/.claude/standards/DOMAIN_LANGUAGE.md) ·
+[AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
 [Steel Discipline](~/.claude/standards/STEEL_DISCIPLINE.md) ·
 [Agent Orchestration](~/.claude/standards/AGENT_ORCHESTRATION.md) ·
 [Context Management](~/.claude/standards/CONTEXT_MANAGEMENT.md) ·
@@ -89,6 +90,9 @@ the tie, and recommend the reversible one.
 4. **The recommendation carries a confidence and a trigger.** "High confidence unless the vendor's
    rate limits turn out lower than published, which would move this to COA-2."
 5. **No implementation before approval.** This skill produces a decision, not code.
+6. **One word per concept.** Read `GLOSSARY.md` first if it exists and state COAs in its terms. When
+   the mission uses a fuzzy or conflicting term, settle it with the operator in Step 2 and write it
+   in (`standards/DOMAIN_LANGUAGE.md`); the decision record then uses the settled word.
 
 ## Definition of done
 

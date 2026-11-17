@@ -88,7 +88,7 @@ Key enforcements for this skill:
 ## OUTPUT STRUCTURE
 
 ```
-.write-skill-reports/
+.reports/write-skill/
 ├── WS-YYYYMMDD-HHMMSS.md          # Session report
 ├── state-YYYYMMDD-HHMMSS.json     # Resume state
 ├── red-phase/
@@ -121,8 +121,8 @@ If a similar skill exists: propose enhancing it instead of creating new.
 ### 0.2 Create Infrastructure
 
 ```bash
-mkdir -p .write-skill-reports/red-phase .write-skill-reports/refactor-phase
-grep -q ".write-skill-reports" .gitignore 2>/dev/null || echo ".write-skill-reports/" >> .gitignore
+mkdir -p .reports/write-skill/red-phase .reports/write-skill/refactor-phase
+grep -q ".reports/write-skill" .gitignore 2>/dev/null || echo ".reports/write-skill/" >> .gitignore
 ```
 
 ---
@@ -140,7 +140,7 @@ Design a scenario that would trigger the skill if it existed. Include:
 - **The desired outcome:** What "good" looks like
 - **The likely failure modes:** What you suspect will go wrong
 
-Save to `.write-skill-reports/red-phase/scenario.md`.
+Save to `.reports/write-skill/red-phase/scenario.md`.
 
 ### 1.2 Dispatch Fresh Agent (No Skill)
 
@@ -156,7 +156,7 @@ Context:
 
 Respond to the user. Do your best work. Handle the request to completion.
 
-After you're done, write to .write-skill-reports/red-phase/agent-output-no-skill.md:
+After you're done, write to .reports/write-skill/red-phase/agent-output-no-skill.md:
 - What you did
 - Why you made the choices you made
 - Any assumptions
@@ -174,7 +174,7 @@ Read the agent's output. Compare against the desired outcome. Identify:
 - **Output issues:** Missing sections, wrong format, false completion claims?
 - **Scope drift:** Did it do more/less than asked?
 
-Document each failure in `.write-skill-reports/red-phase/failure-analysis.md`:
+Document each failure in `.reports/write-skill/red-phase/failure-analysis.md`:
 
 ```markdown
 ## Failure 1: [Name]
@@ -347,12 +347,18 @@ Before responding, load this skill:
 
 Now respond to the user following the skill's discipline.
 
-After you're done, write to .write-skill-reports/refactor-phase/agent-output-with-skill.md:
+After you're done, write to .reports/write-skill/refactor-phase/agent-output-with-skill.md:
 - What you did
-- Which sections of the skill you followed
-- Any rationalizations you considered and rejected
-- Any parts of the skill you were tempted to skip (but didn't)
+- A checklist of the skill's definition-of-done items, each met or not met with one line of evidence
+- Any skill instruction that was unclear, contradictory, impossible or wasteful in practice, one line
+  each, with a suggested rewording ("none" if none)
 ```
+
+**Ask for observable output, never for the agent's inner deliberation.** On 2026-10-30 two
+Phase 3 runs on Sonnet 5.5 died with API error `[reasoning_extraction]` when this template asked for
+"rationalizations you considered and rejected" and "parts you were tempted to skip"; the same test
+with the checklist wording above completed. The checklist also finds more: the run that completed
+returned nine concrete loopholes with rewordings.
 
 ### 3.2 Analyze Remaining Loopholes
 

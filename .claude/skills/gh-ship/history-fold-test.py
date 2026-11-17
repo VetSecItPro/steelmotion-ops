@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Known-answer tests for history-fold.py. Run: python3 ~/.claude/skills/gh-ship/history-fold-test.py
 
-Added 2026-10-18 (scratchpad #205): the fold-in of pending history rows was prose in Stage 2.5 and
-was skipped on 04.novels PR #261, leaving two rows waiting. The fold is now a script; these cases
+Added 2026-10-18: the fold-in of pending history rows was prose in Stage 2.5 and
+was skipped on a writing repo PR #261, leaving two rows waiting. The fold is now a script; these cases
 pin its behavior.
 """
 import json, os, subprocess, sys, tempfile
 
+LEGACY, CURRENT = ".gh-ship-history.json", os.path.join(".reports", "gh-ship", "history.json")
 FOLD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history-fold.py")
 
 
@@ -20,10 +21,13 @@ def repo(history, pending=None, indent=2, track=True):
     for k, v in (("user.email", "t@t"), ("user.name", "t"), ("core.hooksPath", "/dev/null")):
         sh("git", "config", k, v, cwd=d)
     if history is not None:
-        with open(os.path.join(d, ".gh-ship-history.json"), "w") as f:
+        # A tracked history is the legacy root file; an untracked one lives under .reports/.
+        rel = LEGACY if track else CURRENT
+        os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+        with open(os.path.join(d, rel), "w") as f:
             f.write(history if isinstance(history, str) else json.dumps(history, indent=indent) + "\n")
         if track:
-            sh("git", "add", ".gh-ship-history.json", cwd=d)
+            sh("git", "add", rel, cwd=d)
     sh("git", "commit", "-q", "--allow-empty", "-m", "init", cwd=d)
     if pending is not None:
         with open(os.path.join(d, ".git", "gh-ship-history.pending.json"), "w") as f:
@@ -36,8 +40,13 @@ def fold(d, *args):
     return p.returncode, p.stdout + p.stderr
 
 
+def hist(d):
+    legacy = os.path.join(d, LEGACY)
+    return legacy if os.path.exists(legacy) else os.path.join(d, CURRENT)
+
+
 def rows(d):
-    h = json.load(open(os.path.join(d, ".gh-ship-history.json")))
+    h = json.load(open(hist(d)))
     return h["runs"] if isinstance(h, dict) else h
 
 
@@ -81,10 +90,10 @@ check("duplicate row skipped", rc == 0 and "folded: 1" in out and "already prese
 
 # 5. damaged history file: refuse, change nothing
 d = repo('{"runs": [ broken', [R1])
-before = open(os.path.join(d, ".gh-ship-history.json")).read()
+before = open(hist(d)).read()
 rc, out = fold(d)
 check("damaged history: non-zero exit, file and pending untouched",
-      rc == 2 and "REFUSING" in out and open(os.path.join(d, ".gh-ship-history.json")).read() == before and pending_exists(d))
+      rc == 2 and "REFUSING" in out and open(hist(d)).read() == before and pending_exists(d))
 
 # 6. damaged pending file: refuse, change nothing
 d = repo({"runs": [OLD]}, None)
@@ -100,7 +109,7 @@ rc, out = fold(d, "--done")
 check("--done before commit: refuses, pending kept", rc == 3 and "not committed" in out and pending_exists(d))
 
 # 8. --done after the commit: removes pending
-sh("git", "add", ".gh-ship-history.json", cwd=d)
+sh("git", "add", LEGACY, cwd=d)
 sh("git", "commit", "-q", "-m", "fold", cwd=d)
 rc, out = fold(d, "--done")
 check("--done after commit: pending removed", rc == 0 and not pending_exists(d))
@@ -108,13 +117,25 @@ check("--done after commit: pending removed", rc == 0 and not pending_exists(d))
 # 9. formatting kept: a 4-space-indented file stays 4-space-indented
 d = repo({"runs": [OLD]}, [R1], indent=4)
 fold(d)
-txt = open(os.path.join(d, ".gh-ship-history.json")).read()
+txt = open(hist(d)).read()
 check("indent preserved (4 spaces)", '\n    "runs"' in txt and txt.endswith("\n") and len(rows(d)) == 2)
 
 # 10. untracked history file: still folds, says so (Stage 13 normally appends in place there)
 d = repo({"runs": [OLD]}, [R1], track=False)
 rc, out = fold(d)
 check("untracked history: folds and reports untracked", rc == 0 and "folded: 1" in out and "untracked" in out)
+
+# 11. no history file and nothing tracked: the fold creates .reports/gh-ship/history.json
+d = repo(None, [R1], track=False)
+rc, out = fold(d)
+check("no history yet: creates .reports/gh-ship/history.json", rc == 0 and os.path.exists(os.path.join(d, CURRENT))
+      and not os.path.exists(os.path.join(d, LEGACY)) and len(rows(d)) == 1)
+
+# 12. a tracked legacy file wins over .reports/ (a repo's choice to track its history is kept)
+d = repo({"runs": [OLD]}, [R1])
+rc, out = fold(d)
+check("tracked legacy file: folds into it, says tracked", rc == 0 and "tracked: stage .gh-ship-history.json" in out
+      and not os.path.exists(os.path.join(d, CURRENT)) and len(rows(d)) == 2)
 
 print(f"{sum(results)} of {len(results)} passed")
 sys.exit(0 if all(results) else 1)

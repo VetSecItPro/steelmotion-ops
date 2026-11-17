@@ -75,8 +75,8 @@ the SITREP that it is open and waiting.
 
 ## Repeat-finding suppression
 
-Before reporting anything from this audit, read prior `.gh-ship-history.json` entries and any
-`.gh-ship-reports/` output. Classify each finding:
+Before reporting anything from this audit, read prior `.reports/gh-ship/history.json` entries and any
+`.reports/gh-ship/` output. Classify each finding:
 
 - **new** - report normally
 - **regression** - previously fixed, now back. Report with the prior run id.

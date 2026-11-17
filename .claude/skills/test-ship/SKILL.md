@@ -14,7 +14,8 @@ when_to_use: 'Trigger phrases: "test coverage", "add tests", "TDD", "missing tes
 | `phases.md` | throughout | audit, prioritise, write, verify, self-heal |
 | `reference.md` | report | report format, SITREP, coverage-delta reporting |
 
-**Standards inherited:** [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
+**Standards inherited:** [Domain Language](~/.claude/standards/DOMAIN_LANGUAGE.md) ·
+[AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
 [Steel Discipline](~/.claude/standards/STEEL_DISCIPLINE.md) ·
 [Self-Improvement](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) ·
 [Agent Orchestration](~/.claude/standards/AGENT_ORCHESTRATION.md) ·
@@ -51,6 +52,9 @@ the reason to skip tests during development.
    less than 60% that covers every auth path. Report what is covered, not just how much.
 7. **Untestable code is a design signal.** If something cannot be tested without heroics, it is too
    coupled. Note it; recommend the refactor; do not contort a test around bad structure.
+8. **Name tests in the project's words.** If `GLOSSARY.md` exists, test titles and helper names use
+   its terms and never a word it lists under `_Avoid_`. A test title is a spec line; it should read
+   the way the operator talks about the domain.
 
 ## Modes
 

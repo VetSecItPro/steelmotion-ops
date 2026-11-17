@@ -2,7 +2,7 @@
 
 ## Report
 
-`.investigate-reports/INV-<YYYYMMDD-HHMM>.md`.
+`.reports/investigate/INV-<YYYYMMDD-HHMM>.md`.
 
 ```markdown
 # Investigation: <symptom>
@@ -32,7 +32,7 @@ Files: <paths>
 
 ## History
 
-`.investigate-reports/history.json`: `patterns_observed` for recurring bug shapes and their
+`.reports/investigate/history.json`: `patterns_observed` for recurring bug shapes and their
 mechanism - "null after migration = unbackfilled rows", "flaky test = shared fixture state". A known
 shape gets its confirmed mechanism tried first next time.
 

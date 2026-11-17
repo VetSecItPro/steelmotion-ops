@@ -9,7 +9,7 @@
 
 ## Changelogs Ship With Releases (GLOBAL - ALL PROJECTS)
 
-**Every repo that ships a versioned artifact maintains a changelog at its root.** Default filename is `CHANGELOG.md`. When working across multiple sibling repos that all have changelogs, prefix the filename with a 2-3 letter repo identifier so they're disambiguated in editor tabs / IDE search (e.g. `MC-CHANGELOG.md` for mission-control, `COS-CHANGELOG.md` for infra-repo/customer-pod-suite). Single-repo projects: just `CHANGELOG.md`.
+**Every repo that ships a versioned artifact maintains a changelog at its root.** Default filename is `CHANGELOG.md`. When working across multiple sibling repos that all have changelogs, prefix the filename with a 2-3 letter repo identifier so they're disambiguated in editor tabs / IDE search (e.g. `MC-CHANGELOG.md` for dashboard, `COS-CHANGELOG.md` for infra-repo/customer-pod-suite). Single-repo projects: just `CHANGELOG.md`.
 
 The shipped artifact is whatever's pinned by consumers - Docker image tag, npm version, git SHA referenced in another repo's lockfile, anything that someone else depends on by version.
 
@@ -45,7 +45,7 @@ The single source of truth depends on the question being asked:
 |---|---|
 | "What changed between sm4 and sm5?" | Repo's changelog (`COS-CHANGELOG.md` / `MC-CHANGELOG.md` / `CHANGELOG.md`) |
 | "Why did we choose 3-container architecture?" | ADRs (`docs/decisions.md`) |
-| "How do I re-apply Patch 5 after an upgrade?" | Per-patch playbook (e.g. `docs/vendor-patches.md`) |
+| "How do I re-apply Patch 5 after an upgrade?" | Per-patch playbook (e.g. `docs/app-patches.md`) |
 | "What broke in production last week?" | `LESSONS-LEARNED.md` (gitignored, project-root) |
 | "What did I work on yesterday?" | `*-backlog.md` § Daily log (gitignored) |
 | "What does this commit do?" | `git log` / PR description |

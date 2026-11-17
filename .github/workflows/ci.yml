@@ -1,0 +1,29 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Leak check (public patterns)
+        run: python3 scripts/leak_check.py
+      - name: Tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Skill router matches the skills
+        run: |
+          mkdir -p "$RUNNER_TEMP/claude" && cp -R .claude/. "$RUNNER_TEMP/claude/"
+          bash "$RUNNER_TEMP/claude/check-skill-router.sh"
+      - name: Shell syntax
+        run: bash -n install.sh && bash -n .claude/ci-local.sh && bash -n .claude/check-skill-router.sh

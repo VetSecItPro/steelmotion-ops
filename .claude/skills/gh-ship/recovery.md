@@ -139,7 +139,7 @@ Stop and report rather than pressing on:
 Every abort still writes the history entry and emits a SITREP. A silent failure teaches nothing.
 
 
-## History schema (`.gh-ship-history.json`, schema_version 2)
+## History schema (`.reports/gh-ship/history.json`, schema_version 2)
 
 Written at Stage 13, read at Stage 0 (0e). Respect the repo's tracking policy from `SKILL.md`.
 
@@ -182,7 +182,7 @@ write, with the old rows untouched.
 |---|---|
 | `run_id` | `TZ=America/Chicago date +%Y-%m-%dT%H:%M:%S%z`, Central, with offset |
 | `ci_attempts` | number of CI runs on this PR, first one included; 0 for a repo with no CI |
-| `outcome` | `success` \| `blocked-on-human` \| `review-unresolved` \| `ci-unfixable` \| `aborted` \| `rolled-back` |
+| `outcome` | `success` \| `blocked-on-human` \| `review-unresolved` \| `ci-unfixable` \| `aborted` \| `rolled-back` \| `pushed-only` (`--push-only` mode) |
 | `deploy_verified` | `yes` \| `no` \| `n/a` |
 | `audit` | `ran` \| `skipped`; the last audit date is the `run_id` of the newest row with `ran` |
 | `mirror` | `synced` \| `failed` \| `none-declared` |

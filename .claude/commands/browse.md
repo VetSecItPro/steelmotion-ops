@@ -350,7 +350,7 @@ This skill follows the [Status Update Protocol](~/.claude/standards/STATUS_UPDAT
 > Reference: [Resource Cleanup Protocol](~/.claude/standards/CLEANUP_PROTOCOL.md)
 
 Skill-specific cleanup:
-- Reports and artifacts live in gitignored `.browse-reports/` directories
+- Reports and artifacts live in gitignored `.reports/browse/` directories
 - Any temporary files or sessions are closed at the end of the run
 - No persistent resources are left behind unless explicitly requested
 

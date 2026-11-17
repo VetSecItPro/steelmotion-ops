@@ -43,7 +43,7 @@ repo. A definition can withhold `Edit` and `Write`. Two consequences worth desig
 Definitions load **at session start**. A newly written agent file is not available in the
 session that created it. Field-test after a restart, never before.
 
-Reference implementations: `17.scratchpad/.claude/agents/readonly-verifier.md` and
+Reference implementations: `.claude/agents/readonly-verifier.md` and
 `scoped-implementer.md`.
 
 ---
@@ -522,15 +522,15 @@ At the start of each skill run (during pre-flight), check for recent reports fro
 
 ```
 Related skill report directories to check:
-- .security-reports/        (sec-ship findings)
-- .cleancode-reports/       (cleancode findings)
-- .compliance-reports/      (compliance findings)
-- .compliance-docs-reports/ (compliance-docs outputs)
-- .test-reports/            (test-ship findings)
-- .perf-reports/            (perf findings)
-- .a11y-reports/            (a11y findings)
-- .deps-reports/            (deps findings)
-- .docs-reports/            (docs findings)
+- .reports/sec-ship/        (sec-ship findings)
+- .reports/cleancode/       (cleancode findings)
+- .reports/compliance/      (compliance findings)
+- .reports/compliance/ (compliance-docs outputs)
+- .reports/test/            (test-ship findings)
+- .reports/perf/            (perf findings)
+- .reports/a11y/            (a11y findings)
+- .reports/deps/            (deps findings)
+- .reports/docs/            (docs findings)
 
 For each directory that exists:
 1. Find the most recent state file (state-*.json)

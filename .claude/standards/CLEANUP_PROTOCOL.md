@@ -283,7 +283,7 @@ When a skill resumes from a crash/context reset, the first thing it does is chec
 
 ```bash
 # Resume protocol - orphan detection
-STATE_FILE=".${SKILL}-reports/state-*.json"
+STATE_FILE=".reports/${SKILL}/state-*.json"
 if [ -f $STATE_FILE ]; then
   # Check if previous run's dev server is still running
   PREV_PID=$(jq -r '.resources.devServerPid // empty' $STATE_FILE)
@@ -438,7 +438,7 @@ Based on the resource audit, here are the cleanup requirements per skill:
 | Skill | Report Dir | Needs Gitignore Fix |
 |-------|-----------|:-------------------:|
 | `/compliance` | `.compliance/` | YES - add enforcement |
-| `/sec-ship` | `.security-reports/` | Verify existing |
+| `/sec-ship` | `.reports/sec-ship/` | Verify existing |
 | `/a11y` | `.a11y/` | YES - add enforcement |
 | `/browse` | `.browse/` | YES - add enforcement |
 | `/investigate` | `.investigate/` | YES - add enforcement |

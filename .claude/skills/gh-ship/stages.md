@@ -40,7 +40,7 @@ to the upstream repo.
 
 A repo can have both a preview deploy and a self-hosted production deploy. Verify both.
 
-**0e History.** Read `.gh-ship-history.json` and `.git/gh-ship-history.pending.json` if present:
+**0e History.** Read `.reports/gh-ship/history.json` and `.git/gh-ship-history.pending.json` if present:
 `patterns_observed` (known CI failure shapes and the fix that worked), the last run's `outcome`, the
 last `audit` date, and `wip_branches_protected` (sticky: never delete these). Apply the history-file
 policy in `SKILL.md`.
@@ -69,6 +69,13 @@ a build that fails. A missing conventional script: run the underlying tool and n
 errors get a code fix: never `--no-verify`, `@ts-ignore` or a widened type. Stuck: surface the error
 and abort rather than push something broken.
 
+**First push of a branch: the full local suite, no exceptions**.
+Before the first `git push` of this branch, run lint, typecheck, unit tests and build, each as the
+repo defines it (0d). Any failure stops the push: fix at root cause and re-run the whole suite.
+A repo with no build or no tests runs what it has and states the gap. Later pushes to an already
+pushed branch run the checks that cover the changed files, but a PR-create run re-checks the whole
+suite if the branch has never had it. `--push-only` runs this too.
+
 ## Stage 2 - analyze changes
 
 `git status --short`, `git diff --staged --stat`, `git diff --stat`. Categorize by file count,
@@ -95,7 +102,7 @@ about foreign changes.
    `## [Unreleased]` with Keep a Changelog headings. Write what a consumer needs, not the diff
    summary. Otherwise: "no versioned artifact".
 2. **Backlog rows.** The repo's `*-backlog.md` (environment work:
-   `17.scratchpad/environment-improvement-backlog.md`). Every row this run completes goes to DONE
+   the environment backlog). Every row this run completes goes to DONE
    with Central date and time, never deleted. Work with no row gets one now, already DONE.
 3. **Lessons.** Append to the repo's lessons file anything this run learned, either direction, in
    two or three sentences, dated Central: what went wrong (especially what Claude got wrong
@@ -107,11 +114,11 @@ about foreign changes.
 6. **Pending history: run the script, every time, and put its line in the report.**
    `python3 ~/.claude/skills/gh-ship/history-fold.py` folds any rows waiting in
    `.git/gh-ship-history.pending.json` into the history file and prints
-   `waiting rows: N, folded: M`. If it says "tracked", add `.gh-ship-history.json` to the Stage 4
+   `waiting rows: N, folded: M`. If it says "tracked", add `.reports/gh-ship/history.json` to the Stage 4
    list. After the Stage 4 commit succeeds, run it again with `--done`, which removes the pending
    file only when every row is committed. Exit 2 means damaged JSON (nothing changed: fix the file);
    exit 3 means `--done` ran before the commit. Prose was not enough: this step was skipped on
-   04.novels PR #261 (scratchpad #205).
+   a writing repo PR #261.
 
 List every file this stage wrote, by name, in the run log; Stage 4 stages all of them. A repo's own
 conventions outrank these defaults. Never invent a record to look productive: a fabricated entry is
@@ -163,6 +170,16 @@ sides. Merge, not rebase: a rebase re-hits an append-heavy file (changelog, back
 per commit and needs a force push. Network failure: Stage 7 rule, then retry 3x (2s, 5s, 10s).
 
 ## Stage 7 - pull request
+
+`--push-only` ends before this stage: print the branch, the pushed sha and "no PR opened (push-only)"
+in the SITREP, write the Stage 13 row, and stop. The next full `/gh-ship` on the same branch opens
+the PR.
+
+**Actions cost guards.** CI is billed per minute and every push to an open PR reruns
+all of it (the main site repo: about 48 minutes a cycle). Before `gh pr create`, in a repo with `.ci-local`, run
+`bash ~/.claude/ci-local.sh` on the committed HEAD; the push guard refuses the create until that passed on
+this exact commit. Fold every remaining change into the branch BEFORE the PR opens: after it opens, a push
+needs a reason (Stage 9).
 
 Reuse the PR for this branch if one exists (`--state all`: reopen a closed, unmerged one rather than open a duplicate). Otherwise
 `GH_SHIP_ACTIVE=1 gh pr create -R "$OWNER_REPO" --body-file <file>`: WHY in 2-3 bullets, key files,
@@ -272,6 +289,11 @@ leave the PR open, exit BLOCKED. Never merge, never dismiss.
 ```bash
 gh run view <failed-run-id> -R "$OWNER_REPO" --log-failed | tail -200
 ```
+
+**Every fix push here reruns the whole CI.** Reproduce the failure locally first, fix every
+failure you can see in one commit, run `bash ~/.claude/ci-local.sh` where the repo has `.ci-local`, then push
+ONCE with the reason in the command: `GH_SHIP_ACTIVE=1 CI_RERUN_REASON="<what failed and what fixed it>" git push
+origin <branch>`. The guard refuses a re-push without it and logs each one to `~/.claude/logs/actions-ledger.jsonl`.
 
 Read the log and understand it. Check `patterns_observed` first: a known shape whose fix worked gets
 that fix first; one whose fix failed gets something different.

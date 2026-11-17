@@ -13,7 +13,8 @@ when_to_use: 'Trigger phrases: "clean up code", "dead code", "technical debt", "
 | `targets.md` | Phase 1 | what to look for, per category, and how to prove it is safe to touch |
 | `reference.md` | Phase 4 | report, SITREP, before/after metrics |
 
-**Standards inherited:** [AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
+**Standards inherited:** [Domain Language](~/.claude/standards/DOMAIN_LANGUAGE.md) ·
+[AI-Judgment Paradigm](~/.claude/standards/AI_JUDGMENT_PARADIGM.md) ·
 [Steel Discipline](~/.claude/standards/STEEL_DISCIPLINE.md) ·
 [Self-Improvement](~/.claude/standards/SELF_IMPROVEMENT_PROTOCOL.md) ·
 [Status Updates](~/.claude/standards/STATUS_UPDATES.md) ·
@@ -47,6 +48,8 @@ A smaller, riskier diff loses to a larger, provable one every time.
    deleting.
 7. **Measure the result.** Report the actual reduction (lines, files, dependencies, complexity), not
    "cleaner".
+8. **Renames use the glossary.** If `GLOSSARY.md` exists, a rename moves toward its terms, never to
+   a word it lists under `_Avoid_`; a name that is not in it is not renamed for taste.
 
 ## Modes
 

@@ -66,7 +66,7 @@ when_to_use: 'Trigger phrases: "post-deploy check", "is prod healthy?", "health 
 | Situation | Scope |
 |---|---|
 | Invoked right after a deploy (a `/gh-ship` run just completed) | `--quick`, then escalate to full if anything is off |
-| No prior report in `.monitor-reports/` | full - establishes the baseline |
+| No prior report in `.reports/monitor/` | full - establishes the baseline |
 | Last report < 24h old and nothing deployed since | `--quick` - nothing has changed |
 | An incident is open, or the last run scored < 70 | `--deep` |
 | Anything else | full |
@@ -127,6 +127,6 @@ remediate.
   missing
 - Every route checked for status **and** content
 - Score computed only over categories actually measured, with the renormalisation shown
-- Report written to `.monitor-reports/MON-<YYYYMMDD-HHMM>.md`, history appended
+- Report written to `.reports/monitor/MON-<YYYYMMDD-HHMM>.md`, history appended
 - SITREP ends with a verdict and "Suggested next" - `/incident` on an F, `/investigate` on a
   persistent D, nothing on an A
